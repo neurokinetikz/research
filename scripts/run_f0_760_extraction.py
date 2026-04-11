@@ -404,13 +404,76 @@ def load_hbn(set_path):
 # GENERIC PROCESSOR
 # =========================================================================
 
-def process_subjects(subjects, loader_fn, out_dir, dataset_label):
+# Global variable for parallel worker (set before Pool.map)
+_WORKER_LOADER_NAME = None
+_WORKER_LOADER_KWARGS = None
+_WORKER_OUT_DIR = None
+
+
+def _extract_one_subject(args):
+    """Worker function for parallel extraction. Must be top-level for pickling."""
+    sub_id, load_arg = args
+    out_path = os.path.join(_WORKER_OUT_DIR, f'{sub_id}_peaks.csv')
+    band_path = os.path.join(_WORKER_OUT_DIR, f'{sub_id}_band_info.csv')
+
+    if os.path.exists(out_path):
+        return {'subject_id': sub_id, 'status': 'skipped', 'n_peaks': 0}
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        # Reconstruct loader from name
+        if _WORKER_LOADER_NAME == 'eegmmidb':
+            raw = load_eegmmidb(int(sub_id[1:]))
+        elif _WORKER_LOADER_NAME == 'lemon':
+            raw = load_lemon(sub_id, condition=_WORKER_LOADER_KWARGS.get('condition', 'EC'))
+        elif _WORKER_LOADER_NAME == 'dortmund':
+            raw = load_dortmund(sub_id, task=_WORKER_LOADER_KWARGS.get('task', 'EyesClosed'),
+                                acq=_WORKER_LOADER_KWARGS.get('acq', 'pre'),
+                                ses=_WORKER_LOADER_KWARGS.get('ses', '1'))
+        elif _WORKER_LOADER_NAME == 'chbmp':
+            raw = load_chbmp(sub_id)
+        elif _WORKER_LOADER_NAME == 'hbn':
+            raw = load_hbn(load_arg)
+        else:
+            return {'subject_id': sub_id, 'status': 'error', 'n_peaks': 0}
+
+    if raw is None:
+        return {'subject_id': sub_id, 'status': 'no_data', 'n_peaks': 0}
+
+    fs = raw.info['sfreq']
+    duration = raw.n_times / fs
+
+    try:
+        peaks_df, band_info = extract_adaptive_subject(raw, F0, fs)
+    except Exception as e:
+        del raw; gc.collect()
+        return {'subject_id': sub_id, 'status': 'error', 'n_peaks': 0}
+
+    peaks_df.to_csv(out_path, index=False)
+    band_info.to_csv(band_path, index=False)
+
+    n_peaks = len(peaks_df)
+    mean_r2 = band_info['mean_r_squared'].mean()
+
+    del raw; gc.collect()
+    return {
+        'subject_id': sub_id, 'status': 'ok', 'n_peaks': n_peaks,
+        'duration_sec': round(duration, 1),
+        'mean_r_squared': round(mean_r2, 4) if not np.isnan(mean_r2) else np.nan,
+    }
+
+
+def process_subjects(subjects, loader_name, out_dir, dataset_label,
+                     loader_kwargs=None, parallel=1):
+    global _WORKER_LOADER_NAME, _WORKER_LOADER_KWARGS, _WORKER_OUT_DIR
+
     os.makedirs(out_dir, exist_ok=True)
-    summary_rows = []
     t_start = time.time()
 
     log.info(f"\n{dataset_label} (f0={F0}): {len(subjects)} subjects")
     log.info(f"  Output: {out_dir}")
+    if parallel > 1:
+        log.info(f"  Parallel workers: {parallel}")
 
     bands = build_adaptive_bands(F0, TARGET_FS)
     bands = merge_narrow_bands(bands)
@@ -421,57 +484,37 @@ def process_subjects(subjects, loader_fn, out_dir, dataset_label):
         log.info(f"  {b['name']:>12s}  {tgt:>18s}  {b['nperseg']:>8d}  "
                  f"{b['nperseg']/TARGET_FS:>7.1f}s  {b['freq_res']:>8.4f}Hz")
 
-    for i, (sub_id, load_arg) in enumerate(subjects):
-        out_path = os.path.join(out_dir, f'{sub_id}_peaks.csv')
-        band_path = os.path.join(out_dir, f'{sub_id}_band_info.csv')
+    if parallel > 1:
+        # Parallel mode
+        from multiprocessing import Pool
+        _WORKER_LOADER_NAME = loader_name
+        _WORKER_LOADER_KWARGS = loader_kwargs or {}
+        _WORKER_OUT_DIR = out_dir
 
-        if os.path.exists(out_path):
-            log.info(f"  [{i+1}/{len(subjects)}] {sub_id}: skipping")
-            continue
+        with Pool(parallel, initializer=_init_worker,
+                  initargs=(loader_name, loader_kwargs or {}, out_dir)) as pool:
+            results = pool.map(_extract_one_subject, subjects)
 
-        t0 = time.time()
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            raw = loader_fn(sub_id, load_arg)
+        summary_rows = results
+        for r in results:
+            if r['status'] == 'ok':
+                log.info(f"  {r['subject_id']}: {r['n_peaks']} peaks R²={r.get('mean_r_squared', 0):.3f}")
+    else:
+        # Sequential mode (original)
+        summary_rows = []
+        for i, (sub_id, load_arg) in enumerate(subjects):
+            result = _extract_one_subject((sub_id, load_arg))
+            summary_rows.append(result)
 
-        if raw is None:
-            summary_rows.append({'subject_id': sub_id, 'status': 'no_data', 'n_peaks': 0})
-            continue
+            if result['status'] == 'ok':
+                log.info(f"  [{i+1}/{len(subjects)}] {sub_id}: {result['n_peaks']} peaks "
+                         f"R²={result.get('mean_r_squared', 0):.3f}")
+            elif result['status'] == 'skipped':
+                log.info(f"  [{i+1}/{len(subjects)}] {sub_id}: skipping")
 
-        fs = raw.info['sfreq']
-        duration = raw.n_times / fs
-
-        try:
-            peaks_df, band_info = extract_adaptive_subject(raw, F0, fs)
-        except Exception as e:
-            log.error(f"  {sub_id}: {e}")
-            summary_rows.append({'subject_id': sub_id, 'status': 'error', 'n_peaks': 0})
-            del raw; gc.collect()
-            continue
-
-        peaks_df.to_csv(out_path, index=False)
-        band_info.to_csv(band_path, index=False)
-
-        elapsed = time.time() - t0
-        n_peaks = len(peaks_df)
-        mean_r2 = band_info['mean_r_squared'].mean()
-        n_bands = (band_info['n_channels_passed'] > 0).sum()
-
-        summary_rows.append({
-            'subject_id': sub_id, 'status': 'ok', 'n_peaks': n_peaks,
-            'n_channels': len(raw.ch_names), 'duration_sec': round(duration, 1),
-            'n_bands': int(n_bands),
-            'mean_r_squared': round(mean_r2, 4) if not np.isnan(mean_r2) else np.nan,
-            'time_sec': round(elapsed, 1)})
-
-        log.info(f"  [{i+1}/{len(subjects)}] {sub_id}: {n_peaks} peaks "
-                 f"({n_bands} bands) R²={mean_r2:.3f} {elapsed:.1f}s")
-
-        del raw; gc.collect()
-
-        if (i + 1) % 20 == 0:
-            pd.DataFrame(summary_rows).to_csv(
-                os.path.join(out_dir, 'extraction_summary.csv'), index=False)
+            if (i + 1) % 20 == 0:
+                pd.DataFrame(summary_rows).to_csv(
+                    os.path.join(out_dir, 'extraction_summary.csv'), index=False)
 
     summary_df = pd.DataFrame(summary_rows)
     summary_df.to_csv(os.path.join(out_dir, 'extraction_summary.csv'), index=False)
@@ -482,6 +525,14 @@ def process_subjects(subjects, loader_fn, out_dir, dataset_label):
     if n_ok > 0:
         ok = summary_df[summary_df['status'] == 'ok']
         log.info(f"  Total peaks: {ok['n_peaks'].sum():,}")
+
+
+def _init_worker(loader_name, loader_kwargs, out_dir):
+    """Initialize global state in each worker process."""
+    global _WORKER_LOADER_NAME, _WORKER_LOADER_KWARGS, _WORKER_OUT_DIR
+    _WORKER_LOADER_NAME = loader_name
+    _WORKER_LOADER_KWARGS = loader_kwargs or {}
+    _WORKER_OUT_DIR = out_dir
 
 
 # =========================================================================
@@ -501,6 +552,8 @@ def main():
                         help='Session number for Dortmund (1 or 2)')
     parser.add_argument('--separate-theta-alpha', action='store_true',
                         help='Use separate FOOOF fits for theta and alpha (for comparison)')
+    parser.add_argument('--parallel', type=int, default=1,
+                        help='Number of parallel workers (default: 1 = sequential)')
     args = parser.parse_args()
 
     # Override global merge flag if --separate-theta-alpha is set
@@ -509,6 +562,8 @@ def main():
         MERGE_THETA_ALPHA = False
         OUTPUT_BASE = OUTPUT_BASE + '_separate'
 
+    n_parallel = args.parallel
+
     if args.dataset == 'eegmmidb':
         data_dir = '/Volumes/T9/eegmmidb'
         subs = sorted(set(
@@ -516,8 +571,8 @@ def main():
             if d.startswith('S') and os.path.isdir(os.path.join(data_dir, d))))
         subjects = [(f'S{int(s[1:]):03d}', None) for s in subs]
         out_dir = os.path.join(OUTPUT_BASE, 'eegmmidb')
-        process_subjects(subjects, lambda sid, _=None: load_eegmmidb(int(sid[1:])),
-                         out_dir, 'EEGMMIDB')
+        process_subjects(subjects, 'eegmmidb', out_dir, 'EEGMMIDB',
+                         parallel=n_parallel)
 
     elif args.dataset == 'lemon':
         data_dir = '/Volumes/T9/lemon_data/eeg_preprocessed/EEG_MPILMBB_LEMON/EEG_Preprocessed_BIDS_ID/EEG_Preprocessed'
@@ -526,8 +581,8 @@ def main():
         subjects = [(os.path.basename(f).replace(f'_{cond}.set', ''), None) for f in files]
         suffix = f'_EO' if cond == 'EO' else ''
         out_dir = os.path.join(OUTPUT_BASE, f'lemon{suffix}')
-        process_subjects(subjects, lambda sid, _=None: load_lemon(sid, condition=cond),
-                         out_dir, f'LEMON {cond}')
+        process_subjects(subjects, 'lemon', out_dir, f'LEMON {cond}',
+                         loader_kwargs={'condition': cond}, parallel=n_parallel)
 
     elif args.dataset == 'dortmund':
         data_dir = '/Volumes/T9/dortmund_data_dl'
@@ -543,9 +598,9 @@ def main():
         suffix = '' if (cond == 'EC-pre' and ses == '1') else f'_{cond.replace("-", "_")}'
         ses_suffix = f'_ses2' if ses == '2' else ''
         out_dir = os.path.join(OUTPUT_BASE, f'dortmund{suffix}{ses_suffix}')
-        process_subjects(subjects,
-                         lambda sid, _=None: load_dortmund(sid, task=task, acq=acq, ses=ses),
-                         out_dir, f'Dortmund {cond} ses-{ses}')
+        process_subjects(subjects, 'dortmund', out_dir, f'Dortmund {cond} ses-{ses}',
+                         loader_kwargs={'task': task, 'acq': acq, 'ses': ses},
+                         parallel=n_parallel)
 
     elif args.dataset == 'chbmp':
         data_dir = '/Volumes/T9/CHBMP/BIDS_dataset'
@@ -560,7 +615,8 @@ def main():
                     seen.add(p)
                     break
         out_dir = os.path.join(OUTPUT_BASE, 'chbmp')
-        process_subjects(subjects, lambda sid, _=None: load_chbmp(sid), out_dir, 'CHBMP')
+        process_subjects(subjects, 'chbmp', out_dir, 'CHBMP',
+                         parallel=n_parallel)
 
     elif args.dataset == 'hbn':
         releases = ['R1', 'R2', 'R3', 'R4', 'R6'] if args.release.lower() == 'all' else [args.release]
@@ -576,8 +632,8 @@ def main():
                     subjects.append((sub_id, f))
                     seen.add(sub_id)
             out_dir = os.path.join(OUTPUT_BASE, f'hbn_{release}')
-            process_subjects(subjects, lambda sid, path: load_hbn(path),
-                             out_dir, f'HBN {release}')
+            process_subjects(subjects, 'hbn', out_dir, f'HBN {release}',
+                             parallel=n_parallel)
 
 
 if __name__ == '__main__':
