@@ -1,0 +1,24 @@
+# Credentials
+.gcp/
+.claude/
+
+# Extracted data (all versions)
+exports*/
+
+# Raw wiki data
+raw
+
+# Outputs (keep only markdown reports)
+outputs/*
+!outputs/*.md
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Obsidian
+.obsidian/
+
+# OS
+.DS_Store

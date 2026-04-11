@@ -1,0 +1,801 @@
+\documentclass[11pt,a4paper]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\graphicspath{{../exports_peak_distribution/eegmmidb_fooof/}}
+\usepackage{booktabs}
+\usepackage{array}
+% \usepackage{multirow}  % Not used in current document
+\usepackage{geometry}
+\usepackage{setspace}
+% \usepackage{gensymb}  % Not available - using manual definition below
+% \usepackage{siunitx}  % Not used in current document
+\newcommand{\degree}{$^\circ$}  % Manual definition for degree symbol
+\usepackage{textcomp}
+% \usepackage{textgreek}  % Not available and not used
+\usepackage{threeparttable}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{caption}
+% \usepackage{subcaption}  % Not available and not used
+\usepackage{tcolorbox}
+\usepackage{longtable}
+
+% Unicode character support
+\usepackage{newunicodechar}
+\newunicodechar{⁵}{\textsuperscript{5}}
+\newunicodechar{⁴}{\textsuperscript{4}}
+\newunicodechar{⁰}{\textsuperscript{0}}
+\newunicodechar{ⁿ}{\textsuperscript{n}}
+\newunicodechar{≤}{\leq}
+\newunicodechar{≈}{\approx}
+\newunicodechar{−}{\ensuremath{-}}
+\newunicodechar{₀}{$_0$}
+\newunicodechar{₁}{$_1$}
+\newunicodechar{₂}{$_2$}
+\newunicodechar{₃}{$_3$}
+\newunicodechar{₄}{$_4$}
+\newunicodechar{₅}{$_5$}
+\newunicodechar{₆}{$_6$}
+\newunicodechar{₇}{$_7$}
+\newunicodechar{₈}{$_8$}
+\newunicodechar{₉}{$_9$}
+\newunicodechar{⁷}{\textsuperscript{7}}
+\newunicodechar{√}{\sqrt{}}
+\newunicodechar{ⱼ}{\textsubscript{j}}
+\newunicodechar{ₖ}{_k}
+\newunicodechar{≥}{\geq{}}
+\newunicodechar{⁶}{\textsuperscript{6}}
+\newunicodechar{⁻}{\textsuperscript{-}}
+
+% Language support (removed russian which is not installed)
+\usepackage[english]{babel}
+
+% Page setup
+\geometry{margin=1in}
+\onehalfspacing
+
+% Hyperref setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+% Custom commands
+\newcommand{\phisym}{\varphi}
+\newcommand{\fzero}{f_0}
+\newcommand{\nobleo}{n_1}
+
+% Colored boxes for key equations
+\newtcolorbox{keyequation}{
+    colback=blue!5!white,
+    colframe=blue!75!black,
+    fonttitle=\bfseries,
+    title=Key Equation
+}
+
+\newtcolorbox{keyinsight}{
+    colback=green!5!white,
+    colframe=green!50!black,
+    fonttitle=\bfseries,
+    title=Key Insight
+}
+
+\newtcolorbox{criticalpoint}{
+    colback=red!5!white,
+    colframe=red!50!black,
+    fonttitle=\bfseries,
+    title=Critical Methodological Point
+}
+
+% Bibliography (biblatex with APA style)
+% Overleaf uses biber backend which properly sorts references alphabetically
+\usepackage[style=apa,backend=biber,sorting=nyt]{biblatex}
+\addbibresource{eegmmidb_refs.bib}
+
+\title{Golden Ratio EEG Architecture Emerges Near Schumann Frequencies but Does Not Constrain State Modulation}
+
+\author{Michael Lacy\\
+\small Independent Researcher\\
+\small \href{mailto:michael.lacy@gmail.com}{michael.lacy@gmail.com}}
+
+\date{April 2026}
+
+\begin{document}
+
+\maketitle
+
+% =========================================================================
+\begin{abstract}
+Recent work has identified a golden ratio ($\phisym$) architecture in human EEG spectral peaks, where oscillatory frequencies organize along the lattice $f(n) = \fzero \times \phisym^n$ with $\fzero = 7.60$ Hz. Two questions follow from this finding, and the literature has treated them as one: does $\phisym$ describe \emph{where} oscillatory modes exist (an architectural question), and does cognitive state modulate energy across modes in a $\phisym$-specific way (a dynamical question)? We disentangle these using the EEG Motor Movement/Imagery Dataset (EEGMMIDB; 109 subjects, 14 within-subject conditions, 1.86 million FOOOF-detected spectral peaks).
+
+The architectural question receives a conditional yes. The core lattice structure replicates---aggregate boundary depletion ($0.41\times$) and noble enrichment ($1.10\times$)---and a joint ($\fzero$, base) grid search across 549 candidate lattices identifies $(\fzero = 8.5, b = \phisym)$ as the global optimum ($\text{SS} = 45.6$), with $\phisym$ ranked first in 100\% of 1,000 bootstraps with non-overlapping 95\% CIs. However, this advantage is anchor-dependent: $\phisym$ ranks first within a bounded individual-base window ($\fzero = 7.6$--$8.5$~Hz) whose lower boundary exhibits a sharp sigmoid transition encompassing the Schumann--ionosphere cavity eigenfrequency ($7.49$~Hz); outside this range, the advantage collapses---$\pi$ and base~2 dominate below $7.6$~Hz, base~1.8 at $\fzero = 9$--$10$~Hz.
+
+The dynamical question receives a negative answer at the resolution achievable with current methods. Position-specific tests reveal significant within-subject spectral reallocation with medium effect sizes: in gamma, visual input shifts peaks from boundary toward attractor positions ($\Delta\pi_{\text{att}} = +0.070$, $p_{\text{Bonf}} = 0.003$, $r = +0.44$), while motor task further enhances attractor occupancy ($r = +0.52$)---effectively a center-vs-edge redistribution given the mixture model's two-component resolution in this band. But this reallocation persists across all anchor frequencies (5--12 Hz), all exponential bases except $e$, and random mixture positions ($p_{\text{emp}} = 0.44$)---it is not $\phisym$-specific.
+
+Beyond $\phisym$'s individual dominance, irrational bases ($\phisym$, $\sqrt{2}$, $e$, $\pi$) collectively outperform rational bases (1.4, 3/2, 1.7, 1.8, 2) across an ``irrational advantage window'' ($\fzero = 7.1$--$9.4$~Hz, bootstrap $p < 0.001$, Cohen's $d = 1.22$--$1.60$) that entirely contains the Schumann Resonance variation range. Non-exponential controls (linear grids $\fzero + n \cdot k$) fail to detect any systematic structure (mean $\text{SS} \approx 0$), validating exponential scaling as the correct functional form. Cross-resolution replication (nperseg = 256, 1.42 million peaks) confirms all structural findings with larger class-level effect sizes.
+
+The $\phisym$-lattice thus describes the fixed scaffolding of available oscillatory modes, while cognitive state modulates energy allocation across modes through a mechanism indifferent to the specific spacing between them. Within the anchor window, $\phisym$ is the uniquely best-fitting scaling ratio; the qualification is anchor-dependence, not base ambiguity.
+\end{abstract}
+
+\section*{Significance Statement}
+The golden ratio ($\phisym$) has been proposed as an organizing principle for neural oscillation frequencies, but prior work has not separated the question of \emph{where} oscillatory modes exist from \emph{how} cognitive state redistributes energy among them. Using 109 subjects performing motor execution, imagery, and rest (1.86 million spectral peaks), we show these are distinct questions with different answers. A joint search over anchor frequencies and scaling ratios (549 candidate lattices) identifies $\phisym$ at $\fzero = 8.5$~Hz as the global optimum---but only within a 1~Hz window whose lower boundary transitions sharply near the Schumann--ionosphere eigenfrequency ($7.49$~Hz). The dynamic reallocation of spectral energy during visual and motor engagement ($r = 0.31$--$0.52$) is real but operates identically under any exponential spacing. This dissociation reframes $\phisym$'s role: it describes the fixed scaffolding of oscillatory modes without constraining how the brain redistributes energy among them. Irrational bases collectively outperform rationals with large effect sizes (Cohen's $d = 1.22$--$1.60$), while non-exponential (linear grid) controls produce no detectable structural signal, validating the exponential functional form. These findings replicate at coarser spectral resolution (1.42 million peaks, nperseg = 256), and the anchor-dependence of $\phisym$'s advantage has implications for principled definitions of EEG frequency bands.
+
+% =========================================================================
+\section{Introduction}
+\label{sec:intro}
+
+The frequency organization of human neural oscillations has traditionally been described in terms of discrete bands (delta, theta, alpha, beta, gamma) whose boundaries are defined by convention rather than principled criteria \parencite{buzsaki2013scaling, klimesch2013algorithm}. Recent theoretical work has proposed that the golden ratio ($\phisym = 1.618...$) may provide a natural organizing principle, with optimal anti-synchronization properties between frequency bands preventing destructive cross-frequency interference \parencite{pletzer2010golden, kramer2022golden}.
+
+A companion study \parencite{lacy2026golden} demonstrated that EEG spectral peaks across multiple independent datasets organize along a golden ratio lattice $f(n) = \fzero \times \phisym^n$ with $\fzero = 7.60$ Hz. Within each $\phisym$-octave (the interval $[\fzero \cdot \phisym^k, \, \fzero \cdot \phisym^{k+1})$), eight positions carry distinct predictions: boundary positions (at octave edges) should be depleted of peaks, while noble positions---particularly the first noble position at $\phisym^{-1} \approx 0.618$ within the octave---should be enriched. That study confirmed these predictions across 244,955 single-channel peaks from meditation, cognitive flow, emotion, and visual perception paradigms. Multi-channel GED analysis of 1,584,561 spatially coherent peaks provides independent confirmation using a fundamentally different criterion (Section~\ref{sec:ged}).
+
+Two questions follow from this finding, and the literature has treated them as one. The first is \emph{architectural}: does the golden ratio provide the best description of \emph{where} oscillatory modes exist in the frequency spectrum, or would any exponential base produce an equivalent fit? The second is \emph{dynamical}: does cognitive state modulate energy allocation across modes in a way that is specific to $\phisym$-lattice coordinates, or would any reasonable sub-band parcellation detect the same redistribution? These questions have different implications. An affirmative answer to the first would establish $\phisym$ as a structural organizing principle; an affirmative answer to the second would establish it as a computational one. They may also have different answers.
+
+The EEG Motor Movement/Imagery Dataset (EEGMMIDB) provides an ideal testbed for both questions. With 109 subjects each performing 14 conditions---resting with eyes open, resting with eyes closed, and 12 runs of motor execution and motor imagery---the dataset offers both within-subject control and large statistical power. Critically, the rest conditions include separate eyes-open and eyes-closed recordings, enabling decomposition of visual input effects from motor task effects.
+
+Here we apply $\phisym$-lattice analysis to 1.86 million FOOOF-detected spectral peaks from EEGMMIDB, and systematically test base specificity by giving each of nine exponential bases ($\phisym$, $e$, $\pi$, $\sqrt{2}$, 2, 1.4, 1.5, 1.7, 1.8) its own natural lattice positions. The architectural question receives a conditional yes: the core aggregate lattice structure replicates, and a joint ($\fzero$, base) grid search across 549 candidate lattices identifies $(\fzero = 8.5, b = \phisym)$ as the global optimum, with $\phisym$ ranked first in 100\% of 1,000 bootstraps with non-overlapping CIs---though this advantage is confined to a bounded anchor window ($\fzero = 7.6$--$8.5$~Hz). The dynamical question receives a negative answer at the resolution achievable with current methods: position-specific tests reveal significant within-subject spectral reallocation---in gamma, visual input shifts peaks from boundary toward attractor ($p_{\text{Bonf}} = 0.003$, $r = +0.44$)---but this effect persists across all anchor frequencies, all tested bases, and random mixture positions ($p_{\text{emp}} = 0.44$). The $\phisym$-lattice describes the fixed architecture of available oscillatory modes; cognitive state modulates how energy is distributed across them through a mechanism indifferent to the specific spacing.
+
+% =========================================================================
+\section{Methods}
+\label{sec:methods}
+
+\subsection{Dataset}
+\label{sec:dataset}
+
+We analyzed the EEG Motor Movement/Imagery Dataset (EEGMMIDB) from PhysioNet \parencite{goldberger2000physiobank, schalk2004bci2000}. The dataset comprises 64-channel EEG recordings from 109 subjects, each performing 14 one-minute runs:
+
+\begin{itemize}
+    \item \textbf{R01}: Resting, eyes open (rest-EO)
+    \item \textbf{R02}: Resting, eyes closed (rest-EC)
+    \item \textbf{R03, R05, R07, R09, R11, R13}: Motor execution (left hand, right hand, both hands, feet)
+    \item \textbf{R04, R06, R08, R10, R12, R14}: Motor imagery of the same movements
+\end{itemize}
+
+Recordings used the BCI2000 system at 160 Hz sampling rate with the international 10-10 electrode system. This yields 1,526 total sessions (109 subjects $\times$ 14 runs), with 218 rest sessions (109 eyes-open + 109 eyes-closed) and 1,308 task sessions (654 execution + 654 imagery).
+
+\subsection{Spectral Parameterization}
+\label{sec:fooof}
+
+Power spectral densities were computed using Welch's method (nperseg $= 640$, i.e.\ 4.0~s segments at 160~Hz, 50\% overlap), yielding a frequency resolution of $\Delta f = 160/640 = 0.25$ Hz. Spectral parameterization was performed using SpecParam/FOOOF \parencite{donoghue2020fooof} with parameters: frequency range 1--50 Hz, maximum 20 peaks, peak threshold $= 0.001$, minimum peak height $= 0.0001$, peak width limits $= [0.2, 20]$ Hz. These liberal parameters maximize peak detection sensitivity, yielding 1,863,167 peaks across all sessions and channels.
+
+\subsection{$\phisym$-Lattice Analysis}
+\label{sec:lattice}
+
+Each detected peak frequency $f$ was mapped to a lattice coordinate \parencite{lacy2026golden}:
+\begin{equation}
+    u = \left[\log_\phisym\left(\frac{f}{\fzero}\right)\right] \bmod 1
+    \label{eq:lattice}
+\end{equation}
+where $\fzero = 7.60$ Hz. This collapses peaks from all frequency bands onto the unit interval $[0, 1)$, where eight predicted positions carry specific enrichment predictions based on golden ratio number theory \parencite{pletzer2010golden, hardy1979introduction}.
+
+Peaks were assigned to $\phisym$-octave bands: theta (4.70--7.60 Hz), alpha (7.60--12.30 Hz), beta-low (12.30--19.90 Hz), beta-high (19.90--32.19 Hz), and gamma (32.19--45.00 Hz; truncated from the theoretical $\phisym$-octave upper boundary of $\fzero \times \phisym^4 = 52.09$~Hz to the FOOOF fitting range).
+
+\subsection{KDE Mode Estimation and Bootstrap CIs}
+\label{sec:kde}
+
+For each band $\times$ condition combination, we estimated the within-octave density mode using Gaussian kernel density estimation (bandwidth $= 0.02$, following the companion study). To identify the global maximum, the KDE was evaluated on a grid of 200 equally spaced points on $[0.01, 0.99]$ and the grid point with maximum density was taken as the mode. For computational tractability in bootstrap and permutation analyses, lattice coordinate arrays exceeding 5,000 points were randomly subsampled to $N = 5{,}000$ before KDE fitting; the mode is stable at this sample size given the bandwidth. Bootstrap 95\% confidence intervals were computed from 1,000 resamples with replacement.
+
+Note that at bandwidth $= 0.02$, the within-octave KDE can be multimodal, with multiple peaks of comparable height. The bootstrap CI reflects this: when the global maximum shifts between peaks across resamples, the CI widens to span the competing modes. This is the statistically correct behavior---it reveals genuine uncertainty in mode identification---but means that mode point estimates should be interpreted cautiously for bands with wide CIs.
+
+\subsection{Three-Condition Decomposition}
+\label{sec:conditions}
+
+To disentangle visual input from motor task effects, we used a three-cell design:
+\begin{enumerate}
+    \item \textbf{Rest-EO}: R01 (109 sessions)---eyes-open resting baseline
+    \item \textbf{Rest-EC}: R02 (109 sessions)---eyes-closed resting baseline
+    \item \textbf{Task}: R03--R14 (1,308 sessions)---motor execution and imagery, all eyes-open
+\end{enumerate}
+
+Comparing rest-EO vs.\ task isolates the motor component (matched visual input). Comparing rest-EO vs.\ rest-EC isolates the visual component (no motor activity in either). Comparing rest-EC vs.\ task confounds both effects.
+
+\subsection{Permutation Testing}
+\label{sec:permutation}
+
+Mode differences between conditions were tested via within-subject paired permutation (5,000 iterations), exploiting EEGMMIDB's within-subject design where each of 109 subjects contributes sessions in all conditions. For rest-EO vs.\ rest-EC contrasts, each subject's two condition labels were independently flipped with probability 0.5, removing all between-subject variance from the null distribution. For rest vs.\ task contrasts, each subject's 12 task sessions were pooled before pairing with their single rest session, with the rest/pooled-task label independently flipped per subject. The two-sided $p$-value was computed as the fraction of null mode differences with absolute value $\geq$ the observed absolute difference. Observed modes were computed on the full (unsubsampled) data for stability; permutation-loop modes used subsampling to $N = 5{,}000$ for computational tractability. Bonferroni correction was applied for 6 planned contrasts ($\alpha_{\text{corrected}} = 0.0083$).
+
+\subsection{Targeted Binary Contrast}
+\label{sec:targeted}
+
+To circumvent the instability of mode estimation on multimodal distributions, we defined a per-subject binary statistic: for each subject in each condition, we computed the proportion of peaks above a threshold bisecting the two positions of interest. For gamma and alpha, the threshold was $u = 0.559$ (midpoint of attractor at $0.500$ and noble$_1$ at $0.618$), testing whether peaks shift between these two positions across conditions. For beta-low, the threshold was $u = 0.899$ (midpoint of inv\_noble$_4$ at $0.854$ and inv\_noble$_6$ at $0.944$), testing the motor-signature gradient. Wilcoxon signed-rank tests were applied to the 109 within-subject proportion differences. Bonferroni correction was applied for 9 planned contrasts ($\alpha_{\text{corrected}} = 0.0056$). Effect sizes are reported as rank-biserial correlations ($r = 1 - 4W / [n(n+1)]$), where $W = \min(T^+, T^-)$ is the smaller of the two Wilcoxon rank sums returned by \texttt{scipy.stats.wilcoxon}. Because $W = \min(T^+, T^-)$, this formula yields a non-negative magnitude; the direction of the effect is determined by the sign of the median difference (positive when condition~A exceeds condition~B). The threshold was chosen as the arithmetic midpoint of the two reference positions; because the mixture model cannot resolve these components at $\sigma \approx 0.16$, the binary contrast effectively tests whether peaks concentrate above or below the midpoint of the octave's central region, providing a coarser but more stable statistic than the mixture model.
+
+\subsection{Phi-Position Mixture Model}
+\label{sec:mixture}
+
+To characterize how peaks are allocated across lattice positions, we fitted a Gaussian mixture model with five components at fixed means corresponding to the canonical phi-lattice positions: boundary ($0.000$), attractor ($0.500$), noble$_1$ ($0.618$), inv\_noble$_4$ ($0.854$), and inv\_noble$_6$ ($0.944$). Component means were held fixed while mixing weights and a shared bandwidth parameter $\sigma$ were estimated via expectation-maximization (EM), using circular distance to handle wrap-around at the octave boundary. The model was fitted independently for each subject $\times$ condition $\times$ band, yielding per-subject allocation vectors $\bm{\pi} = (\pi_{\text{boundary}}, \pi_{\text{attractor}}, \pi_{n_1}, \pi_{\overline{n}_4}, \pi_{\overline{n}_6})$ where $\sum_k \pi_k = 1$. Paired Wilcoxon signed-rank tests were applied to within-subject weight differences for each component. Global Bonferroni correction was applied across all bands, contrasts, and components for 45 tests (3 bands $\times$ 3 contrasts $\times$ 5 components; $\alpha_{\text{corrected}} = 0.0011$). This correction is conservative because components filtered as unresolvable (both-condition median weight $< 0.01$) are included in the denominator but never tested, making the reported $p_{\text{Bonf}}$ values upper bounds.
+
+\subsection{Dissociation Index}
+\label{sec:dissociation}
+
+Following \textcite{lacy2026golden}, we computed a dissociation index (DI) to test whether noble enrichment and boundary depletion shift in opposite directions across conditions:
+\begin{equation}
+    \text{DI} = \Delta_{\text{noble}} - \Delta_{\text{boundary}} = (E_{\text{noble}}^A - E_{\text{noble}}^B) - (E_{\text{boundary}}^A - E_{\text{boundary}}^B)
+\end{equation}
+where $E$ denotes enrichment relative to uniform distribution. Significance was assessed by session-level permutation (5,000 iterations) with Benjamini-Hochberg FDR correction \parencite{benjamini1995fdr} at $q = 0.05$.
+
+\subsection{Spectral Resolution Constraints}
+\label{sec:resolution}
+
+The frequency resolution $\Delta f = 0.25$ Hz imposes constraints on distinguishable frequency positions. In the alpha band, noble$_1$ (10.23 Hz) and the attractor (9.67 Hz) differ by 0.56 Hz $> \Delta f$ and are resolvable. However, noble$_1$ (10.23 Hz) and ``round 10 Hz'' differ by only 0.23 Hz $\approx \Delta f$, at the limit of spectral resolution. Overlap analysis confirmed that 53.7\% of peaks within $\pm\Delta f$ of noble$_1$ also fall within $\pm\Delta f$ of 10.0 Hz, establishing that alpha noble$_1$ enrichment cannot be distinguished from generic IAF clustering \parencite{klimesch1999eeg, grandy2013iaf}.
+
+\subsection{Control Analyses}
+\label{sec:controls}
+
+To test whether the observed state-dependent allocation effects are specific to the $\phisym$-lattice parameters, we performed three control analyses on the gamma EC-vs-task contrast (our strongest finding):
+
+\textbf{Anchor frequency sweep.} We varied the anchor frequency $\fzero$ across $\{5, 6, 7, 7.6, 8, 9, 10, 11, 12\}$ Hz while keeping $\phisym$ as the base. At each $\fzero$, we recomputed lattice coordinates $u = [\log_\phisym(f/\fzero)] \bmod 1$, fit the five-component mixture model per subject, and ran paired Wilcoxon tests on boundary and attractor weights. If the effect peaks specifically at $\fzero = 7.6$ Hz, this would support the $\phisym$-lattice as capturing real spectral structure; if the effect is flat across anchors, the finding is real but not $\phisym$-specific.
+
+\textbf{Exponential base sweep.} We replaced $\phisym$ with alternative bases $\{1.4, 1.5, \phisym, 1.7, 1.8, 2.0, e\}$ while keeping $\fzero = 7.60$ Hz. For fair comparison, all bases used equispaced component positions $\{0, 0.2, 0.4, 0.6, 0.8\}$ (the $\phisym$ base was additionally tested with its native lattice positions). This tests whether the golden ratio specifically matters versus any exponential spacing.
+
+\textbf{Random position control.} We placed 5 mixture components at random positions drawn from $\text{Uniform}[0, 1)$ and ran 1,000 iterations, each time fitting the mixture and computing the maximum $|z|$-score across all components for the EC-vs-task contrast. This builds a null distribution against which the $\phisym$-position $z$-scores are compared. Components with both-condition median weight $< 0.01$ were excluded (same filter as the primary analysis).
+
+\subsection{Structural Specificity Test}
+\label{sec:structural}
+
+To test whether the \emph{static} lattice structure (boundary depletion, noble enrichment) is unique to the golden ratio, we performed two additional tests across nine exponential bases: $\{1.4, \sqrt{2}, 1.5, \phisym, 1.7, 1.8, 2, e, \pi\}$.
+
+\textbf{Fair enrichment comparison (Test A).} The existing scaling-factor comparison \parencite{lacy2026golden} used $\phisym$-derived position definitions for all bases---a methodological flaw that biases toward $\phisym$. We corrected this by giving each base $b$ its own natural positions: boundary $= 0.0$ (universal), attractor $= 0.5$ (universal), noble $= 1/b$ (base-specific), noble$_2 = (1/b)^2$, and their symmetric inverses, with positions within $0.02$ of each other or of $0/1$ suppressed. Enrichment at each position was computed as $(f_{\text{obs}} / f_{\text{exp}} - 1) \times 100\%$, where $f_{\text{obs}}$ is the fraction of peaks within $\pm 0.05$ of the position in lattice coordinate space and $f_{\text{exp}} = 0.10$ is the uniform expectation for a window of total width $0.10$. For each base, we computed lattice coordinates $u = [\log_b(f/\fzero)] \bmod 1$, measured enrichment at that base's positions, and derived a structural score $\text{SS} = -E_{\text{boundary}} + E_{\text{attractor}} + \bar{E}_{\text{nobles}}$. Note that while boundary ($u = 0.0$) and attractor ($u = 0.5$) positions are numerically identical across bases, the lattice coordinates $u = [\log_b(f/\fzero)] \bmod 1$ are base-specific: a peak at 10~Hz maps to $u = 0.528$ under $\phisym$ but $u = 0.415$ under base~2. All three components of the structural score are therefore base-dependent. Significance was assessed via 1,000 phase-rotation permutations (circular shift of lattice coordinates by uniform random $\theta$). As a control, we also computed a minimal structural score using only boundary and attractor positions ($\text{SS}_{\min} = -E_{\text{boundary}} + E_{\text{attractor}}$), which isolates the coarse-grained organization shared across all exponential lattices since both positions ($u = 0.0$ and $u = 0.5$) are base-independent in lattice coordinate space.
+
+\textbf{Absolute frequency clustering (Test B).} Integer-$n$ lattice nodes ($\fzero \times b^n$) correspond to boundary positions ($u = 0$) where peaks are predicted to be \emph{depleted}, not enriched. Accordingly, we tested clustering at each base's predicted \emph{peak} positions: $\fzero \times b^{n + \text{offset}}$ for each noble and attractor offset (e.g., for $\phisym$: $n + 0.382$, $n + 0.5$, $n + 0.618$). We counted peaks within $\pm 0.5$~Hz of each predicted position and compared against an empirical-density null: for each of 1,000 permutations, the same number of reference positions were drawn by bootstrap resampling from the observed peak frequencies. This null reflects the actual spectral density of the data---including the dominant alpha peak near 10~Hz---ensuring that enrichment measures whether a base's predicted positions capture peaks better than density-matched random positions, not merely better than uniform random positions in a highly non-uniform spectrum. We separately verified that boundary nodes ($\fzero \times b^n$) showed the expected depletion as a consistency check.
+
+\textbf{Bootstrap base comparison (Test C).} The phase-rotation null used in Test~A tests whether the specific anchor frequency $\fzero$ is critical, not whether the base $b$ is special---because circular shifts $(u + \theta) \bmod 1$ preserve the base's ratio structure while shifting the anchor. To directly compare bases, we resampled the 1.86M peaks with replacement (1,000 bootstrap iterations), computing each base's structural score on every bootstrap sample. This yields bootstrap CIs on each base's structural score and the phi-vs-best-other gap, enabling a direct significance test of whether $\phisym$ is the best base.
+
+\textbf{Anchor frequency sensitivity (Test D).} Tests A--C use the companion study's anchor frequency $\fzero = 7.60$~Hz, which was optimized for $\phisym$. To test whether $\phisym$'s structural advantage depends on this specific anchor, we conducted two complementary sweeps. A \emph{coarse sweep} tested $\fzero \in \{6.5, 7.0, 7.2, 7.4, 7.6, 7.8, 8.0, 8.5, 9.0, 10.0, 12.0\}$~Hz (200 permutations and 1,000 bootstrap resamples per $\fzero$) to establish where the phi-vs-best-other gap peaks and to assess whether ($\fzero$, $\phisym$) is the global optimum in the joint parameter space. A \emph{fine cliff sweep} tested $\fzero \in \{7.40, 7.42, 7.44, \ldots, 7.60\}$~Hz at 0.02~Hz resolution (200 permutations and 1,000 bootstrap resamples per $\fzero$) to characterize the sharp transition between rank~6 ($\fzero = 7.4$) and rank~1 ($\fzero = 7.6$) observed in the initial analysis. The fine sweep encompasses the lossy-cavity Schumann--ionosphere eigenfrequency prediction of $\fzero = 7.49$~Hz. To assess joint optimality, we report the winning base and its absolute structural score at each $\fzero$, enabling comparison of ($\fzero$, $\phisym$) against all ($\fzero$, base) combinations tested.
+
+\subsection{Irrational vs Rational Class Gap Test}
+\label{sec:class_gap}
+
+Tests A--D compare individual bases. To test whether irrationals \emph{as a class} outperform rationals, we defined the gap statistic $G(f_0) = \overline{\text{SS}}_{\text{irr}} - \overline{\text{SS}}_{\text{rat}}$, where the means are over the 4 irrational bases ($\phisym$, $\sqrt{2}$, $e$, $\pi$) and 5 rational bases (1.4, 3/2, 1.7, 1.8, 2). Peak-level bootstrap resampling (1,000 iterations of the full peak dataset) yielded bootstrap distributions of $G$ at each anchor frequency $f_0$ across 7.0--10.0~Hz (0.10~Hz steps), providing 95\% CIs. A complementary exact permutation test exhaustively evaluated all $\binom{9}{4} = 126$ assignments of 4 bases to the ``irrational'' group, computing the fraction of assignments achieving $G \geq G_{\text{observed}}$. The two tests answer different questions: the exact permutation tests whether the specific irrational/rational labeling is meaningful among all possible 4-vs-5 groupings (stricter), while the bootstrap tests whether the class-level gap is reliably positive (broader structural claim). We also report Cohen's $d = G / \text{SD}_{\text{pooled}}$, computed from the individual base structural scores, as a scale-independent measure of class separation.
+
+\subsection{Continuous Irrationality Regression}
+\label{sec:regression}
+
+To test whether structural score increases continuously with ``how irrational'' a base is, we assigned each base a Diophantine approximation quality score reflecting its resistance to rational approximation ($\phisym = 1.0$, rationals $= 0.0$, other irrationals intermediate). At each $f_0$, we computed the Spearman rank correlation between structural score and approximation quality across the 9 bases.
+
+\subsection{Non-Exponential Control: Linear Grids}
+\label{sec:linear_control}
+
+To validate that exponential scaling is the correct functional form, we tested nine linear harmonic grids with predicted positions at $f_0 + n \times k$ for step sizes $k \in \{3, 4, 5, 6, 7, 8, 9, 10, 12\}$~Hz. For each step size, the linear lattice coordinate $u = [(f - f_0)/k] \bmod 1$ was computed and the structural score calculated using boundary ($u = 0$) and attractor ($u = 0.5$) positions only---the same universal positions used for exponential bases, providing a fair comparison. Noble positions were excluded because their mode-locking interpretation does not extend to linear grids.
+
+\subsection{Cross-Resolution Robustness}
+\label{sec:cross_resolution}
+
+All structural specificity analyses (Tests A--D, class gap, linear control) were repeated at a second spectral resolution: nperseg~$= 256$ ($\Delta f = 0.625$~Hz, 1,420,997 peaks). This tests whether the structural findings depend on spectral resolution or reflect resolution-invariant properties of the peak distribution.
+
+\subsection{GED Spatial Coherence Analysis}
+\label{sec:ged_methods}
+
+To test whether the $\phisym$-lattice structure reflects genuine multi-channel network organization rather than single-channel spectral artifacts, we applied Generalized Eigendecomposition (GED; \parencite{cohen2017ged}) spatial filtering to three independent datasets with sufficient channel counts for stable eigendecomposition: PhySF ($N = 26$ subjects, 46 sessions; meditation and cognitive flow; Emotiv EPOC~X, 14 channels, 256~Hz), MPENG ($N = 36$ subjects, 900 sessions; gaming engagement; Emotiv EPOC~X), and EEGEmotions-27 ($N = 25$ subjects, 2,315 of 2,342 sessions; emotion induction; Emotiv EPOC~X; \parencite{huy2025eeg}; 27 sessions excluded due to insufficient data length for stable eigendecomposition). These non-motor datasets complement the EEGMMIDB motor paradigm.
+
+GED identifies spatial filters that maximize narrowband signal-to-noise ratio across channels by solving $\mathbf{S}\mathbf{w} = \lambda\mathbf{R}\mathbf{w}$, where $\mathbf{S}$ is the covariance matrix of narrowband-filtered data ($f \pm 0.5$~Hz, 4th-order Butterworth) and $\mathbf{R}$ is the broadband reference covariance (1--50~Hz), regularized as $\mathbf{R}_{\text{reg}} = (1-\alpha)\mathbf{R} + \alpha \cdot \text{tr}(\mathbf{R})/N \cdot \mathbf{I}$ with $\alpha = 0.01$. A continuous frequency sweep from 4.5--45.0~Hz in 0.1~Hz steps yielded eigenvalue profiles $\lambda(f)$, from which peaks were detected via prominence-based thresholding (minimum prominence $= 0.1 \times$ session maximum). While FOOOF asks ``where are spectral peaks in single channels?'', GED asks ``at what frequencies does the multi-channel signal show coherent spatial structure?''---a fundamentally different criterion.
+
+Lattice coordinates and enrichment were computed identically to the FOOOF analysis (Section~\ref{sec:lattice}), enabling direct comparison between the two methods.
+
+% =========================================================================
+\section{Results}
+\label{sec:results}
+
+\subsection{Dataset Overview}
+
+FOOOF spectral parameterization yielded $N = 1,863,167$ peaks across 1,526 sessions (109 subjects $\times$ 14 runs) and 64 channels. Peak counts by $\phisym$-octave band: theta 111,528; alpha 212,435; beta-low 294,314; beta-high 546,188; gamma 438,132 (subtotal: 1,602,597). The remaining 260,570 peaks fall below the theta band lower bound ($< 4.70$~Hz) and are excluded from band-specific analyses but included in all aggregate lattice analyses. The FOOOF-detected peak bandwidth distribution has median $0.59$~Hz (IQR: $0.36$--$1.13$~Hz), with 88.2\% of peaks narrower than 2~Hz, indicating that the majority of detected peaks reflect genuine oscillatory components rather than aperiodic slope artifacts.
+hyr
+The individual alpha frequency (IAF) distribution across 109 subjects was estimated from the rest-EO recordings (R01) using center-of-gravity spectral weighting in the 7.5--13.5~Hz range. The IAF was tightly clustered: mean $= 9.98 \pm 0.35$~Hz, with 87\% of subjects within $\pm 0.5$~Hz of 10.0~Hz and 99\% within $\pm 1.0$~Hz. This narrow IAF distribution means the base ranking in the structural specificity test (Section~\ref{sec:structural_results}) is heavily shaped by each base's lattice--IAF interaction: bases whose lattice coordinates map 10~Hz to an enrichment-compatible position benefit, while those mapping it to a boundary are penalized.
+
+\subsection{Overall Lattice Structure}
+
+Consistent with the companion study \parencite{lacy2026golden}, aggregate boundary positions were depleted ($0.41\times$ relative to uniform, i.e., 59\% fewer peaks than expected within $\pm 0.05$ of $u = 0$) and noble$_1$ positions were enriched ($1.10\times$) in cross-band analysis pooling peaks from all five $\phisym$-octave bands. This replicates the core $\phisym^n$ lattice finding in an independent dataset with a fundamentally different paradigm (motor task vs.\ meditation/cognition). These aggregate values should be interpreted in light of the band-stratified analysis in Section~\ref{sec:structural_results}, which reveals substantial heterogeneity across individual bands.
+
+\subsection{Aggregate Gamma Mode}
+\label{sec:gamma_aggregate}
+
+Across all gamma peaks ($N = 438,132$), the aggregate KDE mode was located at lattice coordinate $0.620$ using bounded optimization on the full dataset. However, grid-based evaluation of the same KDE revealed multiple peaks of comparable height near noble$_1$ ($0.618$), the attractor ($0.500$), and intermediate positions (see Section~\ref{sec:mode_shifts} for details). Noble$_1$ is consistently among the dominant peaks but is not always the tallest, depending on the evaluation method and subsample. The aggregate bootstrap CI $[0.596, 0.666]$ from the companion analysis \parencite{lacy2026golden} excluded the attractor while including noble$_1$, though this CI was obtained via local optimization and may underestimate uncertainty in the presence of multimodality.
+
+\subsection{Per-Condition Mode Analysis}
+\label{sec:mode_shifts}
+
+The three-condition decomposition revealed wide bootstrap confidence intervals reflecting genuine multimodality in the within-octave KDE (Table~\ref{tab:modes}).
+
+\begin{table}[H]
+\centering
+\caption{Per-condition KDE mode locations with 95\% bootstrap CIs. Mode identified as global maximum on a 200-point grid, with subsampling to $N = 5{,}000$ for KDE fitting. ``Excl.'' columns indicate whether the CI excludes the attractor (0.500) or noble$_1$ (0.618) positions. Wide CIs indicate multimodal within-octave distributions where the global maximum shifts between peaks across bootstrap resamples.}
+\label{tab:modes}
+\begin{threeparttable}
+\begin{tabular}{@{}llrrcccc@{}}
+\toprule
+Band & Condition & $N$ peaks & Mode & 95\% CI & Nearest & Excl.\ Att. & Excl.\ $n_1$ \\
+\midrule
+\textbf{Gamma} & Rest-EO & 29,841 & 0.665 & $[0.089, 0.675]$ & noble$_1$ & No & No \\
+               & Rest-EC & 24,250 & 0.601 & $[0.010, 0.601]$ & noble$_1$ & No & Yes\tnote{a} \\
+               & Task    & 384,041 & 0.458 & $[0.453, 0.670]$ & attractor & No & No \\
+\midrule
+\textbf{Alpha} & Rest-EO & 15,719 & 0.887 & $[0.596, 0.887]$ & inv\_noble$_4$ & Yes & No \\
+               & Rest-EC & 18,323 & 0.567 & $[0.488, 0.970]$ & noble$_1$ & No & No \\
+               & Task    & 178,393 & 0.586 & $[0.493, 0.931]$ & noble$_1$ & No & No \\
+\midrule
+\textbf{Beta-low} & Rest-EO & 21,777 & 0.857 & $[0.832, 0.990]$ & \textbf{inv\_noble$_4$} & Yes & Yes \\
+                   & Rest-EC & 26,598 & 0.970 & $[0.690, 0.990]$ & \textbf{inv\_noble$_6$} & Yes & Yes \\
+                   & Task    & 245,939 & 0.985 & $[0.827, 0.980]$ & \textbf{boundary} & Yes & Yes \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item[a] CI upper bound (0.601) falls below noble$_1$ (0.618), though the point estimate (0.601) is only 0.017 from noble$_1$.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\paragraph{Gamma: multimodal distribution with wide CIs.}
+The gamma within-octave KDE was multimodal across all three conditions, with multiple peaks of comparable height near noble$_1$, the attractor, and intermediate positions. The global maximum varied across conditions (rest-EO: 0.665, rest-EC: 0.601, task: 0.458), but the bootstrap CIs were very wide---rest-EO spanned $[0.089, 0.675]$, nearly the full unit interval---indicating that the mode point estimate is unreliable. Noble$_1$ fell within the CI for all three conditions except rest-EC, while the attractor fell within the CI for all three.
+
+The prior dissociation index analysis using enrichment percentages (which is more robust to multimodality than mode estimation) showed that gamma noble enrichment differed significantly between rest-EO and rest-EC (DI $= +32.9\%$, $p = 0.022$) but not between rest-EO and task (DI $= -4.7\%$, $p = 0.63$). This suggests a visual-input effect on gamma lattice structure that operates at the level of enrichment magnitudes rather than sharp mode shifts.
+
+\paragraph{Alpha: wide CIs preclude mode-level claims.}
+All alpha conditions showed modes in the range $0.57$--$0.89$ with CIs spanning most of the unit interval. The rest-EC CI $[0.488, 0.970]$ and task CI $[0.493, 0.931]$ included both the attractor and noble$_1$, precluding any mode-level distinction. As documented in Section~\ref{sec:resolution}, even precise alpha mode estimates cannot distinguish $\phisym$-specific organization from IAF clustering near 10 Hz.
+
+\paragraph{Beta-low: consistent upper-octave placement.}
+In contrast to gamma and alpha, beta-low showed a strikingly consistent pattern: across all three conditions, the mode fell in the range $0.857$--$0.985$, with all three 95\% CIs excluding both noble$_1$ and the attractor. This is the only band where the CI consistently distinguishes the mode from both major reference positions.
+
+The task mode ($0.985$) fell near the octave boundary, while rest-EC ($0.970$) was closest to inverse noble$_6$ ($0.944$). In physical frequency, inverse noble$_6$ maps to $\fzero \times \phisym^{1.944} = 19.4$ Hz, precisely in the post-movement beta rebound (PMBR) frequency range \parencite{pfurtscheller1999event, jurkiewicz2006pmbr}. The GED analysis of non-motor datasets (Section~\ref{sec:ged}) shows aggregate noble$_1$ enrichment of $+27.5\%$ across all bands (Table~\ref{tab:ged_enrichment}), while companion studies using non-motor paradigms report noble$_1$ as the dominant position in beta-low \parencite{lacy2026golden}, demonstrating that EEGMMIDB's upper-octave clustering is paradigm-specific.
+
+This finding serves as a positive control: the $\phisym$-lattice analysis correctly identifies a frequency regime consistent with known motor cortex physiology (PMBR at $\sim$19 Hz) in the upper region of the beta-low $\phisym$-octave, confirming that the framework detects real neurophysiology.
+
+\subsection{Permutation Tests and Multiple Comparisons}
+\label{sec:fdr}
+
+Within-subject paired permutation tests on mode differences yielded no significant results across 6 planned contrasts after Bonferroni correction (Table~\ref{tab:perms}). The most suggestive contrast was alpha rest-EO vs.\ rest-EC ($p = 0.219$, mode difference $= +0.315$), but this did not approach the Bonferroni threshold ($\alpha = 0.0083$). Despite the paired design removing between-subject variance, the null distributions remained wide (null SD $= 0.07$--$0.32$), reflecting the multimodality documented above: within-subject label flips produce large null mode differences because the KDE global maximum can shift between competing peaks even when only half the subjects' labels are exchanged.
+
+\begin{table}[H]
+\centering
+\caption{Within-subject paired permutation tests on KDE mode differences (5,000 permutations per contrast, Bonferroni correction for 6 tests). Observed modes computed on full (unsubsampled) data.}
+\label{tab:perms}
+\begin{tabular}{@{}llcccccl@{}}
+\toprule
+Contrast & Band & Type & Mode$_A$ & Mode$_B$ & $\Delta$ & $p$ & $p_{\text{Bonf}}$ \\
+\midrule
+rest-EO vs task    & gamma    & pooled & 0.537 & 0.596 & $-0.059$ & 0.563 & 1.000 \\
+rest-EO vs rest-EC & gamma    & paired & 0.537 & 0.601 & $-0.064$ & 0.655 & 1.000 \\
+rest-EO vs task    & alpha    & pooled & 0.882 & 0.650 & $+0.232$ & 0.314 & 1.000 \\
+rest-EO vs rest-EC & alpha    & paired & 0.882 & 0.567 & $+0.315$ & 0.219 & 1.000 \\
+rest-EO vs task    & beta-low & pooled & 0.862 & 0.916 & $-0.054$ & 0.526 & 1.000 \\
+rest-EC vs task    & beta-low & pooled & 0.887 & 0.916 & $-0.030$ & 0.698 & 1.000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Note that the observed mode values in Table~\ref{tab:perms} differ from those in Table~\ref{tab:modes} because Table~\ref{tab:perms} uses full (unsubsampled) data while Table~\ref{tab:modes} uses bootstrap resamples with subsampling to $N = 5{,}000$. The discrepancy (e.g., gamma rest-EO: $0.537$ vs.\ $0.665$) directly illustrates the mode instability on multimodal distributions: different subsamples land on different peaks of comparable height.
+
+The dissociation index analysis told the same story: 0/15 band $\times$ contrast combinations survived Benjamini-Hochberg FDR correction at $q = 0.05$ (best: Rest vs.\ Task gamma, $p_{\text{uncorrected}} = 0.0074$, $p_{\text{FDR}} = 0.111$). All 15 null distributions were well-behaved: 0/15 showed $|\text{skewness}| > 0.5$, and 14/15 passed the Shapiro-Wilk normality test ($p > 0.05$).
+
+\subsection{Targeted Binary Contrast}
+\label{sec:targeted_results}
+
+Per-subject paired Wilcoxon tests on the proportion of peaks above the threshold midpoint revealed significant condition effects in gamma and beta-low (Table~\ref{tab:targeted}).
+
+\begin{table}[H]
+\centering
+\caption{Targeted binary contrast: within-subject paired Wilcoxon signed-rank tests on proportion of peaks above threshold (Bonferroni correction for 9 tests, $\alpha = 0.0056$). Threshold = 0.559 for gamma/alpha (midpoint of attractor and noble$_1$); 0.899 for beta-low (midpoint of inv\_noble$_4$ and inv\_noble$_6$).}
+\label{tab:targeted}
+\begin{tabular}{@{}llcccccl@{}}
+\toprule
+Contrast & Band & Md$_A$ & Md$_B$ & Md$_\Delta$ & $p$ & $p_{\text{Bonf}}$ & $r$ \\
+\midrule
+EO vs EC & gamma & 0.226 & 0.185 & $+0.029$ & 0.0029 & \textbf{0.026} & $+0.33$ \\
+EC vs task & gamma & 0.185 & 0.238 & $-0.034$ & 0.0005 & \textbf{0.005} & $+0.38$ \\
+EO vs task & gamma & 0.226 & 0.238 & $-0.007$ & 0.673 & 1.000 & $+0.05$ \\
+\midrule
+EO vs EC & alpha & 0.467 & 0.508 & $-0.008$ & 0.356 & 1.000 & $+0.10$ \\
+EC vs task & alpha & 0.508 & 0.473 & $+0.003$ & 0.843 & 1.000 & $+0.02$ \\
+EO vs task & alpha & 0.467 & 0.476 & $+0.013$ & 0.657 & 1.000 & $+0.05$ \\
+\midrule
+EO vs EC & beta-low & 0.133 & 0.130 & $+0.012$ & 0.223 & 1.000 & $+0.13$ \\
+EC vs task & beta-low & 0.130 & 0.140 & $-0.017$ & 0.0054 & \textbf{0.049} & $+0.31$ \\
+EO vs task & beta-low & 0.133 & 0.140 & $-0.006$ & 0.284 & 1.000 & $+0.12$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three of nine contrasts survived Bonferroni correction: gamma EO vs.\ EC ($p_{\text{Bonf}} = 0.026$, $r = +0.33$), gamma EC vs.\ task ($p_{\text{Bonf}} = 0.005$, $r = +0.38$), and beta-low EC vs.\ task ($p_{\text{Bonf}} = 0.049$, $r = +0.31$), all with medium effect sizes. In gamma, eyes-open rest had a significantly higher proportion of peaks above the attractor/noble$_1$ midpoint than eyes-closed rest, and task had a higher proportion than eyes-closed rest. Beta-low task had a higher proportion of peaks in the upper octave (above the inv\_noble$_4$/inv\_noble$_6$ midpoint) compared to eyes-closed rest, consistent with the PMBR motor signature.
+
+Notably, gamma EO vs.\ task was non-significant ($p = 0.673$), confirming that both EO conditions (rest-EO and task) share a similar gamma allocation that differs from eyes-closed rest.
+
+\subsection{Phi-Position Mixture Model}
+\label{sec:mixture_results}
+
+The mixture model with fixed component means at the five canonical lattice positions converged reliably across all subjects and conditions (median $\sigma = 0.155$--$0.175$ across bands, reflecting the broad multimodal structure). Because $\sigma \approx 0.16$ exceeds the distance between some component pairs (e.g., attractor--noble$_1 = 0.118$; inv\_noble$_6$--boundary $= 0.056$ circular), nearby components are absorbed: noble$_1$, inv\_noble$_4$, and inv\_noble$_6$ received negligible weight ($< 0.01$) in gamma and were excluded from testing in that band. The model effectively resolves two well-separated components in gamma (boundary and attractor). This band-dependent resolution---two components in gamma, four or more in beta-low---reflects the underlying spectral organization of each frequency range (see Section~\ref{sec:discussion}). Per-subject mixing weights for resolvable components revealed significant condition-dependent reallocation, with 6 of 45 global tests surviving Bonferroni correction (Table~\ref{tab:mixture}).
+
+\begin{table}[H]
+\centering
+\caption{Phi-position mixture model: within-subject paired Wilcoxon tests on mixing weights. Global Bonferroni correction for 45 tests (3 bands $\times$ 3 contrasts $\times$ 5 components; $\alpha = 0.0011$). Components with median weight $< 0.01$ in both conditions were filtered as unresolvable (sigma $\approx 0.16$ exceeds inter-component distance). Only significant contrasts shown.}
+\label{tab:mixture}
+\begin{tabular}{@{}lllcccccl@{}}
+\toprule
+Band & Contrast & Component & Md$_A$ & Md$_B$ & Md$_\Delta$ & $p$ & $p_{\text{Bonf}}$ & $r$ \\
+\midrule
+gamma & EO vs EC & boundary & 0.269 & 0.334 & $-0.068$ & $1.0\!\times\!10^{-4}$ & \textbf{0.005} & $+0.43$ \\
+gamma & EO vs EC & attractor & 0.726 & 0.651 & $+0.070$ & $6.8\!\times\!10^{-5}$ & \textbf{0.003} & $+0.44$ \\
+\midrule
+gamma & EC vs task & boundary & 0.334 & 0.241 & $+0.052$ & $2.0\!\times\!10^{-5}$ & \textbf{0.001} & $+0.47$ \\
+gamma & EC vs task & attractor & 0.651 & 0.759 & $-0.083$ & $2.3\!\times\!10^{-6}$ & $\mathbf{< 10^{-3}}$ & $+0.52$ \\
+\midrule
+beta-low & EC vs task & inv\_noble$_4$ & 0.087 & 0.193 & $-0.070$ & $4.0\!\times\!10^{-5}$ & \textbf{0.002} & $+0.45$ \\
+beta-low & EC vs task & inv\_noble$_6$ & 0.046 & 0.074 & $-0.021$ & $4.5\!\times\!10^{-4}$ & \textbf{0.020} & $+0.39$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The gamma mixture model revealed a clear reallocation pattern between the two resolvable components:
+\begin{itemize}
+    \item \textbf{Eyes-open vs.\ eyes-closed}: Opening the eyes shifted gamma peak allocation from boundary positions toward the attractor (median $\Delta\pi_{\text{att}} = +0.070$, $p_{\text{Bonf}} = 0.003$, $r = +0.44$; median $\Delta\pi_{\text{bnd}} = -0.068$, $p_{\text{Bonf}} = 0.005$, $r = +0.43$). This represents an anticorrelated reallocation with medium effect sizes: visual input increases attractor occupancy while decreasing boundary occupancy.
+    \item \textbf{Eyes-closed vs.\ task}: Motor task conditions showed further boundary-to-attractor reallocation ($\Delta\pi_{\text{att}} = -0.083$, $p_{\text{Bonf}} < 10^{-3}$, $r = +0.52$; $\Delta\pi_{\text{bnd}} = +0.052$, $p_{\text{Bonf}} = 0.001$, $r = +0.47$), with the largest effect sizes among all mixture tests.
+\end{itemize}
+
+In beta-low, the mixture model detected increased task allocation at inv\_noble$_4$ (rest-EC vs.\ task: $p_{\text{Bonf}} = 0.002$, $r = +0.45$) and inv\_noble$_6$ ($p_{\text{Bonf}} = 0.020$, $r = +0.39$), consistent with the PMBR motor signature. In alpha, no mixture tests survived global Bonferroni correction (best: attractor EC vs.\ task, $p_{\text{raw}} = 0.003$, $p_{\text{Bonf}} = 0.12$).
+
+\subsection{Spectral Resolution Caveat}
+\label{sec:spectral_resolution}
+
+The PSD grid spacing ($\Delta f = 0.25$ Hz) permits resolution of noble$_1$ (10.23 Hz) from the attractor (9.67 Hz; $\Delta = 0.56$ Hz $> \Delta f$) but noble$_1$ and ``round 10 Hz'' differ by only 0.23 Hz $\approx \Delta f$, at the limit of spectral resolution. The nearest PSD grid point to noble$_1$ falls at 10.25 Hz (distance 0.02 Hz). The alpha KDE mode of 10.225 Hz in raw frequency space is consistent with both $\phisym$-specific organization and IAF clustering at the nearest grid point.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{mode_shift_analysis.png}
+\caption{State-dependent modulation of phi-lattice peak allocation across 109 subjects. \textbf{(A)}~Per-condition KDE modes with 95\% bootstrap CIs for gamma (circles) and alpha (squares). Reference lines mark noble$_1$ (0.618) and attractor (0.500). Wide CIs reflect multimodal KDEs. \textbf{(B)}~Targeted binary contrast: median within-subject difference in proportion of peaks above threshold (0.559 for gamma/alpha; 0.899 for beta-low). Significant contrasts shown in red (Bonferroni-corrected $p < 0.05$). \textbf{(C)}~Phi-position mixture model weights for gamma band. Boundary and attractor receive nearly all weight ($\sigma \approx 0.16$ absorbs nearby components). Stars indicate significant within-subject weight differences (Wilcoxon signed-rank, global Bonferroni for 45 tests). \textbf{(D)}~Beta-low motor signature: per-condition modes cluster in the upper octave near inv\_noble$_6$ (0.944), consistent with post-movement beta rebound at $\sim$19.4~Hz.}
+\label{fig:mode_shift}
+\end{figure}
+
+\subsection{Control Analyses: Parameter Specificity}
+\label{sec:control_results}
+
+\textbf{Anchor frequency sweep.} The gamma EC-vs-task boundary/attractor effect was significant ($p < 0.001$) at \emph{every} anchor frequency tested ($\fzero = 5$--$12$ Hz; Figure~\ref{fig:controls}A). Boundary effect sizes ranged from $r = 0.40$ ($\fzero = 5$) to $r = 0.62$ ($\fzero = 9$); attractor effect sizes ranged from $r = 0.38$ ($\fzero = 7$) to $r = 0.56$ ($\fzero = 12$). The effect did not peak specifically at $\fzero = 7.6$ Hz: the attractor effect was strongest at $\fzero = 12.0$ ($r = +0.56$) and the boundary effect at $\fzero = 9.0$ ($r = +0.62$). This demonstrates that the state-dependent gamma allocation effect is robust but not specific to the proposed anchor frequency of $7.60$ Hz.
+
+\textbf{Exponential base sweep.} With equispaced component positions, significant effects ($p < 0.001$) were found for all bases tested (1.4, 1.5, $\phisym$, 1.7, 1.8, 2.0) except $e = 2.718$ ($p = 0.598$; Figure~\ref{fig:controls}C). The strongest equispaced effect was at base $= 1.5$ ($r = +0.71$), followed by base $= 2.0$ ($r = +0.54$), with $\phisym$ equispaced at $r = +0.45$. When $\phisym$-derived positions were used instead of equispaced positions, the effect increased from $r = +0.45$ to $r = +0.52$, suggesting that position choice contributes modestly to effect strength but is not the primary driver.
+
+\textbf{Random position control.} The $\phisym$-position maximum $|z| = 4.72$ (attractor component) fell within the null distribution generated by 1,000 random 5-position sets (null mean $= 4.58$, $\text{SD} = 1.00$; Figure~\ref{fig:controls}B). The empirical $p = 0.44$ (437/1,000 random sets achieved $|z| \geq 4.72$), indicating that the $\phisym$-derived positions do not capture the state-dependent allocation significantly better than arbitrary positions.
+
+\textbf{Interpretation.} The three controls converge on a clear conclusion: the state-dependent gamma peak reallocation between conditions is a \emph{real} and robust phenomenon---it survives across all anchor frequencies, all exponential bases (except $e$), and most random position configurations. However, the \emph{dynamic} effect is not specific to the $\phisym$-lattice parameters ($\fzero = 7.60$, base $= \phisym$, or $\phisym$-derived component positions). The mixture model detects a genuine spectral redistribution effect, but the golden ratio framework does not uniquely capture it. These tests address only the dynamic (state-dependent) claim; the \emph{static} (enrichment) claim is tested below.
+
+\subsection{Structural Specificity: Is the Static Lattice Pattern Unique to Phi?}
+\label{sec:structural_results}
+
+\textbf{Test A: Fair enrichment comparison.} When each base used its own natural positions, $\phisym$ achieved the highest structural score ($\text{SS} = 28.7$) among all nine bases, followed by base~2 ($23.4$), $1.7$ ($23.0$), $e$ ($22.8$), and $\pi$ ($22.5$). No base was individually significant against the phase-rotation null (best: $e$, $p = 0.27$). However, the phase-rotation null tests anchor specificity (whether $\fzero = 7.6$~Hz is critical) rather than base specificity (whether $b = \phisym$ is special), so the individual $p$-values should not be interpreted as evidence against base preference.
+
+Phi's enrichment profile was distinctive in showing the strongest boundary depletion ($-17.9\%$; this differs in magnitude from the $0.41\times$ ($-59\%$) reported in Section~\ref{sec:results} because the structural score averages enrichment across all base-specific positions rather than measuring single-position depletion at $u = 0$) and noble enrichment ($+14.0\%$ at $1/\phisym = 0.618$)---the predicted $\phisym$-lattice signature. Other bases showed weaker or reversed patterns: base~$\sqrt{2}$ had boundary \emph{enrichment} ($+5.3\%$) rather than depletion, and base~1.8 had strong boundary enrichment ($+18.1\%$), placing them at the bottom of the ranking.
+
+Test~B is retained for methodological completeness; as described below, its empirical-density null proves too conservative for base discrimination. Readers focused on the base specificity question may proceed to Test~C.
+
+\textbf{Test B: Absolute frequency clustering at predicted peak positions.} For each base, we predicted absolute peak frequencies (nobles and attractors between boundary nodes) and counted how many of the 1.86 million peaks fell within $\pm 0.5$~Hz of these positions. The null distribution was constructed by bootstrap resampling from the observed peak frequencies (empirical-density null), ensuring reference positions match the actual spectral density rather than a uniform frequency distribution. The empirical-density null proved too conservative for base discrimination: because null reference positions are drawn from the observed peak distribution---which concentrates heavily around the IAF ($\sim$10~Hz)---they capture more peaks than any log-spaced lattice can. All nine bases showed negative enrichment, with no base's predicted positions capturing significantly more peaks than density-matched random draws ($\pi$: $-8.8\%$, $z = -1.18$; $\phisym$: $-18.2\%$, $z = -2.56$; $3/2$: $-32.1\%$). The ranking correlates with the number of predicted positions per base rather than structural fit: bases with wider octaves (fewer positions in [1, 45]~Hz: $\pi$ has 17, $\phisym$ has 24, $3/2$ has 46) show less depletion because each position has a higher chance of landing in a peak-dense region. Test~B is therefore uninformative for base discrimination and is retained only as a consistency check.
+
+As a consistency check, $\phisym$'s boundary nodes ($\fzero \times \phisym^n$) showed the strongest boundary depletion trend among all bases ($-10.7\%$, $z = -1.23$, $p = 0.112$), while $\pi$'s boundaries showed \emph{enrichment} ($+12.5\%$, $z = +1.12$). This qualitative pattern---peaks avoiding boundaries under $\phisym$ but not under alternative bases---is consistent with the lattice framework prediction, although no individual boundary test reached significance.
+
+\textbf{Test C: Bootstrap base comparison.} Direct resampling comparison resolved the base-specificity question that the phase-rotation null could not. Across 1,000 bootstrap iterations, $\phisym$ ranked first in structural score 100\% of the time. The bootstrap 95\% CI for $\phisym$ ($[28.0, 29.3]$) did not overlap with any other base: the next-best base~2 had CI $[22.7, 24.1]$, yielding a phi-vs-best-other gap of $+5.2$ ($95\%$ CI: $[4.4, 6.0]$). The gap CI excludes zero, indicating that $\phisym$'s structural advantage is statistically significant.
+
+\textbf{Band-stratified analysis.} Phi was not the top-ranked base in any individual frequency band. In gamma---the cleanest band free of IAF confound---$\pi$ ranked first ($\text{SS} = 364.7$, $p = 0.006$), followed by $e$ ($244.2$), base~2 ($231.1$, $p < 0.001$), and $\phisym$ fourth ($146.2$, $p = 0.30$). In alpha, bases 1.8 and 1.7 scored highest ($\text{SS} = 115.8$, $84.8$), with $\phisym$ fourth ($12.7$). In beta-low, $\sqrt{2}$ and $\pi$ dominated while $\phisym$ ranked seventh. This pattern is consistent with phi's overall advantage arising from consistent moderate performance across all bands rather than dominance in any single band. The aggregate structural score is not a sum of per-band scores: the lattice coordinate transformation $u = [\log_b(f/\fzero)] \bmod 1$ maps peaks from different absolute frequencies onto the same unit interval, so a gamma peak at 35~Hz and a theta peak at 6~Hz can both contribute to enrichment at the same $u$ value. Different bases produce different cross-band interleaving of these mappings. Phi's aggregate advantage arises because its interleaving produces the most consistent enrichment pattern when peaks from all bands are superimposed. This divergence between per-band and aggregate rankings indicates that the aggregate structural score and the aggregate enrichment values reported in Section~\ref{sec:results} (boundary $0.41\times$, noble $1.10\times$) reflect weighted contributions from bands with different enrichment profiles rather than a uniform within-band pattern. Per-band enrichment analysis with band-appropriate density normalization represents a priority for future validation (see Section~\ref{sec:future}).
+
+\textbf{Test D: Anchor frequency sensitivity.} We swept the anchor frequency $\fzero$ across 11 values from 6.5 to 12.0~Hz (Figure~\ref{fig:f0sensitivity}). The structural advantage of $\phisym$ is confined to a 1~Hz window: $\phisym$ ranked first in 100\% of bootstrap resamples at $\fzero \in \{7.6, 7.8, 8.0, 8.5\}$~Hz, with the phi-vs-best-other gap growing from $+5.2$ ($\fzero = 7.6$) to $+12.0$ ($\fzero = 8.5$). At $\fzero = 9.0$~Hz, the advantage collapses: $\phisym$ drops to rank~3 ($\text{SS} = 23.3$), behind base~1.8 ($\text{SS} = 30.0$), and the gap reverses to $-6.7$. At $\fzero = 10.0$~Hz---the individual alpha frequency (IAF)---$\phisym$ collapses to rank~8 ($\text{SS} = -40.1$) while base~1.8 dominates ($\text{SS} = 41.6$), consistent with IAF-driven lattice alignment under a base whose octave width places boundaries near $\sim$10~Hz. At $\fzero = 12.0$~Hz, $\phisym$ partially recovers to rank~2 ($\text{SS} = 18.6$), behind base~1.7 ($\text{SS} = 35.8$). Below $\fzero = 7.6$~Hz, $\phisym$ drops sharply: rank~6 at $\fzero = 7.4$, rank~8 at $\fzero = 7.0$--$7.2$ (where base~2 dominates), and rank~9 at $\fzero = 6.5$ (where $\pi$ dominates with $\text{SS} = 33.2$, driven by IAF alignment within $\pi$'s first octave).
+
+\textbf{Joint ($\fzero$, base) optimization.} A fine-resolution sweep tested all 9 bases at 61 anchor frequencies from 7.0 to 10.0~Hz in 0.05~Hz steps ($61 \times 9 = 549$ candidate lattices). Across all 549 lattices, the global optimum is $(\fzero = 8.5, b = \phisym)$ with $\text{SS} = 45.6$. Table~\ref{tab:joint_grid} reports a representative subset of the joint grid. The fact that $\phisym$ achieves the global maximum---not merely the best base at a pre-selected anchor---strengthens the structural claim: the data jointly select both the scaling ratio and the anchor. The closest competitor across the entire grid is base~1.8 at $\fzero = 10.0$ ($\text{SS} = 41.6$), but this reflects IAF alignment rather than structural organization. The companion study's independent optimization of $\fzero$ while holding base $= \phisym$ converged on the same 7.6--8.5~Hz range \parencite{lacy2026golden}, providing cross-study validation.
+
+\begin{table}[H]
+\centering
+\caption{Joint ($\fzero$, base) grid --- representative subset. Eleven $\fzero$ values from the full 61-point sweep (7.0--10.0~Hz, 0.05~Hz steps) are shown, along with $\fzero = 6.5$ and $12.0$~Hz from the wider coarse sweep. For each, the winning base and its structural score are shown alongside $\phisym$'s score and rank. The global optimum across all 549 candidate lattices ($61 \times 9$) is $(\fzero = 8.5, b = \phisym, \text{SS} = 45.6)$.}
+\label{tab:joint_grid}
+\small
+\begin{tabular}{rllrrl}
+\toprule
+$\fzero$ & Winner & Win SS & $\phisym$ SS & $\phisym$ rank & Gap CI \\
+\midrule
+6.5  & $\pi$  & 33.2  & $-40.2$ & 9 & $[-74.3, -72.6]$ \\
+7.0  & 2      & 37.6  & $-30.3$ & 8 & $[-68.9, -66.9]$ \\
+7.2  & 2      & 40.2  & $-14.4$ & 8 & $[-55.6, -53.7]$ \\
+7.4  & 2      & 31.6  & 15.3    & 6 & $[-17.2, -15.4]$ \\
+7.6  & $\phisym$ & 28.7 & 28.7  & 1 & $[+4.4, +6.0]$\textsuperscript{*} \\
+7.8  & $\phisym$ & 31.4 & 31.4  & 1 & $[+6.9, +8.8]$\textsuperscript{*} \\
+8.0  & $\phisym$ & 38.1 & 38.1  & 1 & $[+10.6, +12.5]$\textsuperscript{*} \\
+8.5  & $\phisym$ & \textbf{45.6} & \textbf{45.6} & 1 & $[+11.1, +13.0]$\textsuperscript{*} \\
+9.0  & 1.8    & 30.0  & 23.3    & 3 & $[-7.9, -5.6]$ \\
+10.0 & 1.8    & 41.6  & $-40.1$ & 8 & $[-82.7, -80.7]$ \\
+12.0 & 1.7    & 35.8  & 18.6    & 2 & $[-18.1, -16.3]$ \\
+\bottomrule
+\multicolumn{6}{l}{\textsuperscript{*}Gap CI excludes zero ($\phisym$ significantly best).}
+\end{tabular}
+\end{table}
+
+\textbf{Fine cliff sweep (7.40--7.60~Hz).} The coarse sweep revealed an abrupt transition from rank~6 ($\fzero = 7.4$) to rank~1 ($\fzero = 7.6$). A fine-resolution sweep at 0.02~Hz steps with 1,000 bootstrap resamples (Figure~\ref{fig:f0sensitivity}C) reveals a sigmoid transition spanning $\sim$0.16~Hz. $\phisym$ holds rank~6 from $\fzero = 7.40$--$7.46$ (gap narrowing from $-16.3$ to $-6.8$), jumps to rank~4 at $\fzero = 7.48$ (gap $= -4.6$), remains at rank~4 through $\fzero = 7.52$ (gap $= -2.0$), reaches rank~3 at $\fzero = 7.54$ (gap $= -1.6$), and attains rank~1 at $\fzero = 7.56$ (gap $= +0.7$, $\text{CI} = [-0.3, +1.6]$, not yet significant). The gap becomes significantly positive at $\fzero = 7.58$ ($+2.1$, $\text{CI} = [+1.2, +2.9]$). The zero-crossing interpolates to $\fzero \approx 7.554$~Hz. Within the cliff region, the winning base rotates: base~2 dominates at $\fzero = 7.40$--$7.48$, base~1.7 at $\fzero = 7.50$--$7.54$, and $\phisym$ from $\fzero = 7.56$ onward. The Schumann--ionosphere eigenfrequency (SIE) lossy-cavity prediction of $\fzero = 7.49$~Hz falls within the transition region but below the point where $\phisym$ achieves rank~1 ($\fzero \approx 7.56$~Hz) or statistical significance ($\fzero \approx 7.58$~Hz). The $\sim$0.07~Hz offset between the theoretical prediction and the empirical zero-crossing ($\fzero \approx 7.55$~Hz) is consistent with the cavity equation identifying the approximate frequency neighborhood in which $\phisym$-lattice structure becomes detectable, while the precise optimum depends on empirical factors including SR variability, spectral resolution, and dataset characteristics.
+
+\textbf{$\pi$ dominance at $\fzero = 6.5$: IAF alignment.} Per-band diagnostics at $\fzero = 6.5$~Hz reveal that $\pi$'s high structural score is driven by the alpha band ($\text{SS} = 223.5$), where $e$ also excels ($\text{SS} = 229.6$). The IAF ($\sim$10~Hz) maps to noble positions in both $\pi$ (lattice coordinate $u = 0.376$, distance 0.058 from noble) and $e$ ($u = 0.431$, distance 0.063 from noble), but maps near $\phisym$'s boundary ($u = 0.895$, distance 0.105 from boundary, $\text{SS} = -43.8$). At $\fzero = 6.5$, the $\phisym$-lattice treats the dominant alpha peak as a boundary---a structurally depleting position---while $\pi$ and $e$ treat it as a noble attractor. This confirms that the base competition at low $\fzero$ reflects IAF-lattice alignment rather than a failure of $\phisym$'s structural properties.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{structural_specificity_f0_sensitivity.png}
+\caption{Anchor frequency sensitivity (Test D). \textbf{(A)}~Structural score as a function of $\fzero$ for each base across 11 anchor values (6.5--12.0~Hz). $\phisym$ (red) ranks first at $\fzero \in \{7.6, 7.8, 8.0, 8.5\}$~Hz but collapses at $\fzero = 9.0$ (rank 3) and $10.0$ (rank 8); base~1.8 dominates at $\fzero = 9$--$10$~Hz (IAF alignment); vertical dashed line marks the SIE lossy-cavity prediction ($\fzero = 7.49$~Hz). Global optimum $(\fzero = 8.5, \phisym)$ annotated. \textbf{(B)}~Phi-vs-best-other gap with 95\% bootstrap CIs. Gap is significantly positive at $\fzero = 7.6$--$8.5$~Hz (peak: $+12.0$ at $8.5$), then reverses at $\fzero = 9.0$. \textbf{(C)}~Cliff zoom (7.40--7.60~Hz, 0.02~Hz steps, 1000 bootstraps): characterizes the sharp transition in $\phisym$ rank from~6 to~1 across a 0.2~Hz interval.}
+\label{fig:f0sensitivity}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{mode_shift_controls.png}
+\caption{Control analyses testing specificity of $\phisym$-lattice parameters. \textbf{(A)}~Anchor frequency sweep: $-\log_{10}(p)$ for boundary and attractor components as a function of anchor frequency $\fzero$. The effect is significant at every $\fzero$ tested and does not peak at $\fzero = 7.6$~Hz. \textbf{(B)}~Random position control: null distribution of maximum $|z|$ from 1,000 random 5-position sets. The $\phisym$-position $z = 4.72$ falls within the null distribution (empirical $p = 0.44$). \textbf{(C)}~Exponential base sweep: best effect size $|r|$ across bases with equispaced positions. All bases produce significant effects except $e = 2.718$. The $\phisym$-derived positions (red diamond) modestly outperform equispaced positions at the same base.}
+\label{fig:controls}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{structural_specificity_figure.png}
+\caption{Structural specificity test across nine exponential bases. \textbf{(A)}~Fair enrichment comparison: each base uses its own natural positions derived from $1/\text{base}$. Phi ranks first (SS~$= 28.7$); red bar = $\phisym$. \textbf{(B)}~Bootstrap base comparison: structural score with 95\% CIs from 1,000 resamples. Phi's CI ($[28.0, 29.3]$) does not overlap with any other base; phi is \#1 in 100\% of 1,000 bootstraps. \textbf{(C)}~Absolute frequency clustering at predicted peak positions (nobles, attractors) against an empirical-density null: all bases show negative enrichment; ranking correlates with number of predicted positions (lattice-density confound) rather than base identity. \textbf{(D)}~Band-stratified structural scores: heatmap by base and frequency band. Phi achieves the best overall score but is not consistently top in any single band.}
+\label{fig:structural}
+\end{figure}
+
+\subsection{Irrational vs Rational Class Gap}
+\label{sec:class_gap_results}
+
+Tests A--D compare individual bases; we next tested whether irrationals as a class outperform rationals. At the peak anchor frequency ($\fzero = 8.50$~Hz, nperseg~$= 640$), the gap statistic was $G = +28.9$ (95\% CI: $[+28.5, +29.4]$, bootstrap $p < 0.001$, Cohen's $d = 1.22$). The four irrational bases had individual scores of $\phisym = 45.6$, $\pi = 24.5$, $e = 17.5$, and $\sqrt{2} = -7.7$ (mean $= +20.0$), while the five rational bases scored $2 = 33.6$, $1.4 = -16.1$, $3/2 = -24.8$, $1.7 = -27.9$, and $1.8 = -9.4$ (mean $= -8.9$). Rational bases thus showed systematically negative structural scores---peaks are anti-correlated with the positions predicted by rational exponential scaling, consistent with the mode-locking avoidance predicted by Pletzer et al.\ \parencite{pletzer2010golden}.
+
+The exact permutation test yielded $p = 0.063$ at this $\fzero$ ($3/126$ partitions achieved $G \geq 28.9$), not reaching significance at $\alpha = 0.05$. Equivalently, 123 of 126 partitions (97.6\%) produced a smaller class gap than the mathematically-defined irrational/rational partition, and only the 3 partitions containing $\{\phisym, \pi, e\}$ together achieved a comparable gap. The discrepancy with the highly significant bootstrap result reflects the different questions: the exact permutation tests whether the specific mathematical labeling of 4 bases as ``irrational'' is meaningful among all possible 4-vs-5 groupings (a stricter question with coarser resolution---finest $p \approx 1/126 = 0.008$), while the bootstrap tests whether the class-level gap is reliably positive.
+
+\textbf{Irrational advantage window.} The 95\% bootstrap CI on $G$ excluded zero across $\fzero = 7.4$--$9.4$~Hz, defining an ``irrational advantage window'' within which irrational bases collectively and robustly outperform rational bases. The Schumann Resonance fundamental variation range (7.0--8.5~Hz) falls entirely within this window.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{bootstrap_gap_analysis.png}
+\caption{\textbf{Irrational vs.\ rational class gap.} \textit{Top:} Gap statistic $G(\fzero) = \text{mean}(\text{SS}_{\text{irr}}) - \text{mean}(\text{SS}_{\text{rat}})$ across anchor frequencies (blue), with 95\% bootstrap CI (shaded). The green region marks the ``irrational advantage window'' where the CI excludes zero ($\fzero = 7.4$--$9.4$~Hz). Exact permutation $p$-values (red, right axis) show the probability under random 4-vs-5 assignment. \textit{Bottom:} Bootstrap $p$-value for $G > 0$, significant across the advantage window ($p < 0.001$). Peak gap $G = +28.9$ at $\fzero = 8.50$~Hz (Cohen's $d = 1.22$).}
+\label{fig:bootstrap_gap}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{ss_trajectories_by_class.png}
+\caption{\textbf{Structural score trajectories by base class.} Individual SS trajectories across $\fzero$ for irrational bases (blue solid lines) and rational bases (red dashed lines), with class means shown as diamond markers. Irrational bases cluster above zero across $\fzero = 7.4$--$9.4$~Hz while rational bases cluster below, demonstrating that the class gap is not driven by $\phisym$ alone. Base~2 (rational, uppermost red line near $\fzero = 8.5$) is the only rational base that approaches irrational performance, consistent with octave scaling as the best rational approximation.}
+\label{fig:ss_trajectories}
+\end{figure}
+
+\subsection{Continuous Irrationality Regression}
+
+The Spearman rank correlation between structural score and Diophantine approximation quality peaked at $\fzero = 8.5$~Hz ($\rho = 0.621$, $p = 0.074$). With only 9 data points, this cannot reach conventional significance and should not be interpreted as independent evidence. It is, however, consistent with the class-level gap finding: structural score tends to increase with the degree of irrationality, though the relationship is better characterized by the discrete irrational/rational gap (Cohen's $d = 1.22$) than by a continuous regression on 9 points.
+
+\subsection{Non-Exponential Control: Linear Grid Baseline}
+\label{sec:linear_results}
+
+Linear harmonic grids ($f_0 + n \times k$) failed to detect any systematic structure. At nperseg~$= 640$, the nine step sizes ($k = 3$--$12$~Hz) produced structural scores centered on zero (mean SS $= 0.0$, range $[-9.8, +12.9]$), categorically below $\phisym$'s score of $+45.6$ at the same anchor frequency. The maximum linear score ($+12.9$, $k = 9$~Hz) was less than 30\% of $\phisym$'s score. An $\fzero$ sweep confirmed that linear SS remained within $[-10, +13]$ across $\fzero = 7.0$--$10.0$~Hz, while $\phisym$ peaked at $+45.6$. This validates exponential scaling as the correct functional form: the mode-locking pattern (boundary depletion, attractor enrichment) appears in exponential lattice coordinates---particularly for irrational bases---but not in linear coordinates. The structural organization of EEG spectral peaks is genuinely exponential, not a generic artifact of any harmonic grid.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{linear_grid_control.png}
+\caption{\textbf{Non-exponential control: linear vs.\ exponential grids.} \textit{Top:} Structural scores for linear grids ($k = 3$--$12$~Hz, gray bars) compared to exponential bases (colored bars) at $\fzero = 8.5$~Hz. Linear grids cluster near zero (mean SS $= 0.0$), while $\phisym$ achieves SS $= 45.6$---a categorical difference. Pink bars show minimal (boundary + attractor only) exponential scores for fair comparison. \textit{Bottom:} Linear grid SS across the $\fzero$ sweep (gray envelope: range across step sizes; black line: mean). Linear grids remain within $[-10, +13]$ across all anchor frequencies, confirming that the structural pattern is specific to exponential scaling.}
+\label{fig:linear_grid}
+\end{figure}
+
+\subsection{Cross-Resolution Replication}
+\label{sec:cross_resolution_results}
+
+All structural findings replicated at nperseg~$= 256$ ($\Delta f = 0.625$~Hz, 1,420,997 peaks). $\phisym$ remained the global optimum (SS $= 40.6$ at $\fzero = 8.30$~Hz). The class-level gap was \emph{larger} at coarser resolution ($G = +37.3$, 95\% CI: $[+36.8, +37.8]$, bootstrap $p < 0.001$, Cohen's $d = 1.60$), reflecting the fact that spectral smoothing degrades rational bases more than irrational bases. The irrational advantage window was slightly wider ($\fzero = 7.1$--$9.4$~Hz vs.\ $7.4$--$9.4$~Hz at nperseg~$= 640$). Linear grids again scored near zero (mean SS $= -1.6$, max $= +9.8$).
+
+\textbf{Exact permutation inversion.} The exact permutation was significant at nperseg~$= 256$ ($p = 0.024$) but not at nperseg~$= 640$ ($p = 0.063$). This counterintuitive result---higher spectral resolution yielding weaker permutation significance---has a clear explanation. At nperseg~$= 640$, base~2 (rational) ranks 2nd (SS $= 33.6$), close to $\phisym$; including base~2 in a random ``irrational-like'' group boosts that group's mean, so many random 4-vs-5 partitions can match the observed gap. At nperseg~$= 256$, the top 3 bases are all irrational ($\phisym = 40.6$, $e = 35.5$, $\pi = 32.5$) and base~2 drops to rank~4 (SS $= 21.1$), well below the irrational cluster. Fewer random partitions can match this clear class separation ($p = 0.024$). This inversion supports the class-level interpretation: at higher resolution, base~2 is competitive enough to blur the irrational/rational boundary in the permutation distribution; at coarser resolution, the three leading irrationals clearly separate. The structural advantage is about irrationality as a mathematical property, not exclusively about $\phisym$ as a number.
+
+\subsection{GED Spatial Coherence Triangulation}
+\label{sec:ged}
+
+The GED analysis (Section~\ref{sec:ged_methods}) yielded \textbf{1,584,561 peaks} across 3,261 sessions---frequencies at which the multi-channel signal showed coherent spatial structure. The aggregate position-type enrichment reproduced the same qualitative hierarchy as the FOOOF analysis (Table~\ref{tab:ged_enrichment}), with Kendall's $\tau = 1.0$ across the six-position ordering.
+
+\begin{table}[H]
+\centering
+\caption{GED Position-Type Enrichment ($N = 1{,}584{,}561$ peaks, 3,261 sessions, $\fzero = 7.60$~Hz). Values are aggregate cross-band figures.}
+\label{tab:ged_enrichment}
+\small
+\begin{tabular}{@{}lrrl@{}}
+\toprule
+Position Type & Enrichment & 95\% CI & $N$ Peaks \\
+\midrule
+1\degree\ Noble ($u = 0.618$) & $+27.5\%$ & $[+27.0, +28.0]$ & 202,056 \\
+Attractor ($u = 0.500$) & $+14.8\%$ & $[+14.3, +15.3]$ & 181,897 \\
+2\degree\ Noble ($u = 0.382$) & $+4.6\%$ & $[+4.1, +5.1]$ & 165,741 \\
+3\degree\ Noble ($u = 0.236$) & $+2.6\%$ & $[+2.1, +3.0]$ & 162,533 \\
+Boundary ($u = 0.000$) & $-9.2\%$ & $[-9.7, -8.8]$ & 143,848 \\
+3\degree\ Inverse ($u = 0.764$) & $-26.2\%$ & $[-26.6, -25.8]$ & 116,994 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Across all 3,261 sessions, 77.8\% showed attractor enrichment exceeding boundary enrichment (Cohen's $d = 0.24$). The full four-position theoretical ordering (1\degree\ Noble $>$ Attractor $>$ 2\degree\ Noble $>$ Boundary) was preserved in 21.7\% of individual sessions, substantially exceeding the 4.2\% expected by chance (binomial $p < 0.0001$).
+
+\begin{table}[H]
+\centering
+\caption{Comparison of FOOOF single-channel and GED multi-channel analyses. FOOOF Primary = companion study \parencite{lacy2026golden}; FOOOF Emotions = EEGEmotions-27 replication; GED Combined = PhySF + MPENG + EEGEmotions-27. All values are aggregate cross-band figures.}
+\label{tab:fooof_vs_ged}
+\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Metric & FOOOF Primary & FOOOF Emotions & GED Combined \\
+\midrule
+$N$ Peaks & 244,955 & 612,990 & 1,584,561 \\
+$N$ Sessions & 968 & 2,342 & 3,261 \\
+1\degree\ Noble Enrichment & $+39.0\%$ & $+26.3\%$ & $+27.5\%$ \\
+Boundary Depletion & $-18.0\%$ & $-20.5\%$ & $-9.2\%$ \\
+Kendall's $\tau$ & 1.0 & 1.0 & 1.0 \\
+Session Consistency & 87.4\% & 83.7\% & 77.8\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The attenuated effect magnitudes in GED relative to FOOOF likely reflect: (1) dataset composition (EEGEmotions-27 comprises 71\% of GED sessions), (2) spatial averaging reducing single-channel peak amplitudes, and (3) the more stringent criterion of multi-channel spatial coherence versus single-channel spectral prominence. The convergence of the qualitative hierarchy---Kendall's $\tau = 1.0$ across fundamentally different analytical criteria---confirms that $\phisym^n$ organization reflects network-level architecture rather than artifacts of spectral parameterization.
+
+\subsection{Summary of Claims}
+
+Table~\ref{tab:scorecard} summarizes the status of each claim tested in this study.
+
+\begin{table}[H]
+\centering
+\caption{Scorecard of claims tested. ``Conditional'' indicates the claim holds within a bounded parameter range.}
+\label{tab:scorecard}
+\small
+\begin{tabular}{@{}p{4.2cm}lp{5.5cm}@{}}
+\toprule
+Claim & Verdict & Key Statistic \\
+\midrule
+Aggregate lattice replicates & Yes & Boundary $0.41\times$, noble $1.10\times$ \\
+$\phisym$ is best base (joint optimum) & Conditional & SS $= 45.6$, rank 1 in 100\% bootstraps \\
+Advantage is anchor-dependent & Yes & $\fzero = 7.6$--$8.5$~Hz only \\
+Dynamic effects are $\phisym$-specific & No & $p_{\text{emp}} = 0.44$ vs.\ random \\
+Irrationals $>$ rationals & Yes & Cohen's $d = 1.22$--$1.60$ \\
+Exponential $>$ linear & Yes & SS $\approx 45$ vs.\ $\approx 0$ \\
+GED confirms FOOOF hierarchy & Yes & Kendall's $\tau = 1.0$, 1.58M peaks \\
+Per-band $\phisym$ dominance & No & $\phisym$ ranks 4th--7th in individual bands \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% =========================================================================
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Lattice Replication Across Paradigms}
+
+The central finding of this study is that the $\phisym^n$ spectral lattice---specifically, aggregate boundary depletion and noble enrichment---replicates in an entirely different paradigm (motor task vs.\ meditation/cognition/emotion), demographic (large public dataset vs.\ smaller lab recordings), and hardware (BCI2000 at 160 Hz vs.\ Emotiv/Muse at 128 Hz). The convergence across these methodological differences strengthens the case that aggregate boundary depletion ($0.41\times$) and noble enrichment ($1.10\times$) reflect a general property of the cross-band peak distribution rather than a dataset-specific artifact. As the band-stratified analysis demonstrates (Section~\ref{sec:structural_results}), the aggregate pattern reflects primarily alpha-band contributions, with individual bands potentially exhibiting distinct enrichment profiles that the cross-band analysis conflates. The GED analysis (Section~\ref{sec:ged}) extends this replication to a fundamentally different analytical criterion---multi-channel spatial coherence rather than single-channel spectral prominence---with the identical position-type hierarchy (Kendall's $\tau = 1.0$) across 1,584,561 peaks confirming that $\phisym$-lattice organization reflects network-level architecture.
+
+\subsection{From Mode Identification to Position-Specific Allocation}
+
+The per-condition analysis reveals a fundamental methodological insight: at bandwidth $= 0.02$, the within-octave KDE is multimodal in gamma and alpha bands, and mode-based tests fail uniformly (0/6 paired permutation tests significant). However, when the same data are analyzed with position-specific statistics---the targeted binary contrast and the phi-position mixture model---significant within-subject effects with medium effect sizes emerge in gamma and beta-low bands.
+
+This dissociation between mode-based and position-specific tests is \emph{methodological}, not biological. The mixture model and targeted contrast succeed because they decompose the within-octave distribution into sub-band components, providing finer granularity than a single mode estimate. As Section~\ref{sec:control_results} demonstrates, this decomposition works equally well with non-$\phisym$ positions ($p_{\text{emp}} = 0.44$): the brain redistributes spectral energy between sub-bands, and the mixture model detects this regardless of how the sub-bands are defined. The $\phisym$-lattice positions provide a convenient and theoretically motivated coordinate system, but the reallocation phenomenon does not require them. The mode is blind to the sub-band structure because it compresses the entire distribution into a single unstable number; the position-specific approaches succeed because they ask finer-grained questions about where in the octave peaks are redistributed.
+
+The number of resolvable components varies across frequency bands, and this variation is itself informative. In gamma, the estimated shared bandwidth ($\sigma \approx 0.16$) exceeds the attractor--noble$_1$ distance (0.118), collapsing the five-component model to an effective two-component test: center-of-octave vs.\ edge-of-octave. This is equivalent to asking whether gamma peaks redistribute between the middle and boundary regions of the $\phisym$-octave during state changes---a coarser claim than five-position redistribution, but one confirmed with medium effect sizes ($r = 0.43$--$0.52$). In beta-low, by contrast, four components retain resolvable weight: both inv\_noble$_4$ ($p_{\text{Bonf}} = 0.002$, $r = +0.45$) and inv\_noble$_6$ ($p_{\text{Bonf}} = 0.020$, $r = +0.39$) show task-specific enhancement, demonstrating that the model resolves finer positional structure where the data support it. The band-dependent resolution reflects genuine differences in spectral organization: gamma oscillations distribute broadly across two attractors (consistent with the diffuse spectral profile of broadband gamma activity \parencite{fries2009neuronal}), while beta-low oscillations concentrate in narrower sub-bands (consistent with the sharper spectral profile of sensorimotor $\mu$/beta rhythms \parencite{pfurtscheller1999event}). The mixture model adapts to this structure rather than imposing a fixed resolution.
+
+\subsection{Gamma: Visual Input Modulates Lattice Allocation}
+
+The mixture model reveals a coherent story of gamma peak reallocation driven by visual input. Eyes-open rest reallocates peaks from boundary toward the attractor ($\Delta\pi_{\text{att}} = +0.070$, $p_{\text{Bonf}} = 0.003$, $r = +0.44$), while motor task further shifts the balance from boundary toward attractor ($p_{\text{Bonf}} < 10^{-3}$, $r = +0.52$). Because the gamma mixture effectively resolves only two components (Section~\ref{sec:mixture_results}), this finding is more precisely described as a center-vs-edge redistribution within the $\phisym$-octave; any model with a mid-octave and an edge component would detect the same effect. The targeted binary contrast confirms this pattern: gamma EO vs.\ EC ($r = +0.33$) and EC vs.\ task ($r = +0.38$) both show medium effect sizes. The convergence of the two independent analysis approaches on the same gamma EO/EC contrast---both with Bonferroni-surviving significance---provides cross-validation of the result.
+
+Critically, gamma EO vs.\ task is non-significant in both tests ($p = 0.673$ binary; $p > 0.3$ for boundary/attractor weights), indicating that both eyes-open conditions share a common gamma allocation that differs from the eyes-closed state. This is consistent with the known role of gamma oscillations in visual processing \parencite{fries2009neuronal, tallonbaudry1999oscillatory} and suggests that visual input is the primary driver of gamma lattice modulation, with motor activity adding further position-specific changes.
+
+The per-condition mode estimates remain unreliable (wide CIs spanning most of the unit interval), confirming that the mode is the wrong statistic for characterizing these distributions. The enrichment-based DI between rest-EO and rest-EC ($+32.9\%$, $p = 0.022$ uncorrected; \parencite{lacy2026golden}) aligns with the targeted and mixture results.
+
+\subsection{Motor Beta-Low as Positive Control}
+
+The beta-low result is the clearest per-condition finding. In contrast to gamma and alpha, the beta-low mode consistently falls in the upper octave ($0.86$--$0.99$) across all three conditions, with CIs that exclude both noble$_1$ and the attractor. The correspondence of this frequency range to the PMBR ($\sim$15--25 Hz; \parencite{pfurtscheller1999event, jurkiewicz2006pmbr}) in a motor-task dataset validates that the lattice framework detects real neurophysiology. Companion studies using non-motor paradigms show noble$_1$ dominance in beta-low, confirming that the upper-octave clustering is paradigm-specific. Note that the KDE mode captures the dominant clustering but does not characterize the full within-octave distribution; the band-stratified analysis (Section~\ref{sec:structural_results}) indicates that beta-low's contribution to the aggregate structural score differs qualitatively from alpha's, consistent with band-specific enrichment profiles that aggregate cross-band analysis may obscure.
+
+\subsection{Dynamic Effects Are Not Phi-Specific; Static Structure Is Most Consistent with Phi}
+
+The control analyses test both the dynamic (state-dependent) and static (enrichment) claims for $\phisym$-specificity, yielding an asymmetric result.
+
+\textbf{Dynamic non-specificity.} The anchor sweep, base sweep, and random position controls demonstrate that the gamma reallocation effect persists across all anchor frequencies (5--12 Hz), all exponential bases except $e$, and $\phisym$-derived positions are not significantly better than random ($p_{\text{emp}} = 0.44$). The mixture model succeeds not because it captures $\phisym$-specific structure, but because it detects a genuine broadband spectral redistribution that any reasonable sub-band parcellation would find. This non-specificity is itself informative: the mechanism by which cognitive state modulates spectral peak allocation operates without reference to the geometric structure of the lattice. The brain redistributes energy across available oscillatory modes, but the redistribution does not depend on the specific spacing between them.
+
+\textbf{Static structure favors phi---conditionally.} The fair enrichment comparison (Test~A) finds phi ranked first by aggregate structural score ($\text{SS} = 28.7$) with a $\Delta\text{SS} \approx 5$--$6$ gap over the next cluster of bases ($23$--$24$). While no base achieves significance against the phase-rotation null ($\phisym$: $p = 0.29$), this null tests anchor specificity---whether $\fzero = 7.6$~Hz matters---not base specificity. The critical test is the direct bootstrap comparison (Test~C), which resamples the full peak distribution and computes structural scores for all bases simultaneously. Across 1,000 bootstraps, $\phisym$ ranks first 100\% of the time, with a phi-vs-best-other gap whose 95\% CI ($[4.4, 6.0]$) excludes zero. The bootstrap CIs for $\phisym$ ($[28.0, 29.3]$) do not overlap with those of any alternative base.
+
+The GED analysis (Section~\ref{sec:ged}) provides independent methodological confirmation: the same qualitative ordering (Kendall's $\tau = 1.0$) emerges from spatial coherence analysis using a completely different peak detection criterion, though the aggregate enrichment magnitudes are attenuated (Noble$_1$: $+27.5\%$ GED vs.\ $+39.0\%$ FOOOF primary; Table~\ref{tab:fooof_vs_ged}).
+
+The bootstrap comparison preserves the empirical peak distribution, including the dominant IAF concentration near 10~Hz. Consequently, the base ranking partially reflects each base's lattice--IAF interaction: bases whose lattice coordinates map the IAF to an enrichment-compatible position (noble or attractor) benefit, while those mapping it to a boundary are penalized. This is not a flaw---it is the point of the test---but it means the structural advantage is inseparable from the specific spectral characteristics of the dataset, including the IAF. Replication on datasets with different IAF distributions would determine whether $\phisym$'s advantage generalizes.
+
+However, this advantage is conditioned on the anchor frequency. Test~D reveals that $\phisym$ ranks first only at $\fzero \in \{7.6, 7.8, 8.0, 8.5\}$~Hz---a 1~Hz window within the 6.5--12.0~Hz range tested; at $\fzero = 7.4$~Hz it drops to rank~6, and at $\fzero = 9.0$~Hz it drops to rank~3 as base~1.8 takes over. The fine cliff sweep (0.02~Hz steps) reveals that the lower boundary of $\phisym$'s advantage is a smooth sigmoid: the gap zero-crossing interpolates to $\fzero \approx 7.55$~Hz, with significance at $\fzero = 7.58$~Hz. The SIE lossy-cavity prediction ($\fzero = 7.49$~Hz) falls within the transition region but $\sim$0.06~Hz below the empirical zero-crossing, consistent with the cavity equation identifying the approximate frequency range rather than the precise empirical optimum. The collapse at $\fzero = 10.0$~Hz ($\phisym$ rank~8, $\text{SS} = -40.1$) reflects IAF-driven alignment under bases whose octave width places boundaries near 10~Hz. Crucially, the joint ($\fzero$, base) grid search across all 549 candidate lattices finds the \emph{global optimum} at $(\fzero = 8.5, b = \phisym, \text{SS} = 45.6)$---the data jointly select both the scaling ratio and the anchor, not merely the best base at a pre-selected $\fzero$. This strengthens the architectural claim: $\phisym$ at its optimal anchor outperforms every other ($\fzero$, base) combination, including base~2 at $\fzero = 7.2$ ($\text{SS} = 40.2$) and base~1.8 at $\fzero = 10.0$ ($\text{SS} = 41.6$). The companion study's independent optimization of $\fzero$ while holding base $= \phisym$ converged on the same range, providing cross-study convergence. This is not circular---the current study varies base while holding $\fzero$ fixed, and the companion varies $\fzero$ while holding base fixed---but it does mean the architectural claim cannot be separated from the specific anchor.
+
+\textbf{Interpretation.} Neural oscillations follow logarithmic frequency organization with a scaling ratio most consistent with, but not uniquely identified as, the golden ratio. The $\phisym$-lattice provides the best structural fit among tested alternatives: the joint ($\fzero$, base) grid search identifies $(\fzero = 8.5, b = \phisym)$ as the global optimum ($\text{SS} = 45.6$), with the qualitatively correct aggregate enrichment profile (boundary depletion $-17.9\%$, noble enrichment $+14.0\%$ at $\fzero = 7.6$) and a statistically significant bootstrap advantage across $\fzero = 7.6$--$8.5$~Hz. The advantage window is bounded: the gap peaks at $\fzero = 8.5$ ($+12.0$) and reverses at $\fzero = 9.0$ ($-6.7$), demonstrating that the $\phisym$-lattice is optimal within a specific anchor range rather than universally. The band-stratified analysis shows phi is not consistently dominant in any single frequency band, and the anchor sensitivity reveals that the IAF at $\sim$10~Hz acts as a competing attractor that disrupts $\phisym$-lattice alignment when $\fzero$ approaches 10~Hz. The closest competitors across the full ($\fzero$, base) grid---base~1.8 at $\fzero = 10.0$ ($\text{SS} = 41.6$) and base~2 at $\fzero = 7.2$ ($\text{SS} = 40.2$)---are both driven by IAF alignment effects, suggesting the $\phisym$-lattice advantage at its optimal anchor reflects genuine structural organization rather than coincidental IAF placement.
+Test~B (absolute frequency clustering) is uninformative for base discrimination. The empirical-density null---which draws reference positions from the observed peak distribution rather than uniformly---is so conservative that no base can achieve positive enrichment: peaks cluster around the IAF, while lattice positions are log-spaced, guaranteeing that density-matched random draws outperform any structured lattice. The ranking across bases ($\pi > 2 > e > \ldots > 3/2$) reflects lattice density (number of predicted positions) rather than structural fit. Nevertheless, $\phisym$'s boundary nodes show the strongest depletion trend ($-10.7\%$, $p = 0.112$) while $\pi$'s boundaries show enrichment ($+12.5\%$), qualitatively consistent with the prediction that peaks avoid boundaries under the correct base.
+
+\textbf{Class-level gap: irrationals collectively outperform rationals.} The class gap analysis (Section~\ref{sec:class_gap_results}) extends Test~C's individual-base comparison to show that the irrational/rational distinction is meaningful as a structural property, not merely an artifact of $\phisym$'s individual dominance. At the peak $\fzero$, the mean SS for all four irrational bases ($\phisym$, $\sqrt{2}$, $e$, $\pi$) exceeds the mean for all five rational bases (1.4, 3/2, 1.7, 1.8, 2) by $G = +28.9$ (Cohen's $d = 1.22$). This is predicted by Pletzer's mode-locking theory \parencite{pletzer2010golden}: irrational bases resist rational approximation at all scales, producing anti-mode-locking that prevents destructive interference between oscillatory modes. The negative structural scores for rational bases indicate that peaks are anti-correlated with rationally-predicted lattice positions---the observed peak distribution is systematically displaced from where rational scaling would place boundaries and attractors.
+
+\textbf{Base 2 and the octave scaling connection.} Among the rational bases, base~2 is uniquely competitive: it ranks second overall at $\fzero = 8.5$~Hz ($\text{SS} = 33.6$), closer to $\phisym$ ($\text{SS} = 45.6$) than to the next-best base ($\pi$, $\text{SS} = 24.5$). This is consistent with the prominent role of octave-based frequency scaling in neural oscillations \parencite{buzsaki2004neuronal}. The canonical EEG bands---delta (1--4~Hz), theta (4--8~Hz), alpha (8--16~Hz), beta (16--32~Hz)---approximate successive doublings, and octave relationships appear in cross-frequency coupling (e.g., 1:2 harmonic locking). Base~2 thus represents the best that rational scaling can achieve: a lattice whose boundaries coincide with the natural band edges that neural circuits have adapted to. However, base~2's competitiveness is resolution-dependent: at nperseg = 256 ($\Delta f = 0.625$~Hz), it drops from rank~2 ($\text{SS} = 33.6$) to rank~4 ($\text{SS} = 21.1$), well below the three leading irrationals ($\phisym = 40.6$, $e = 35.5$, $\pi = 32.5$). Coarser spectral resolution hurts all bases, but it hurts rationals disproportionately---their lattice positions coincide with rational frequency ratios that act as mode-locking attractors, and reduced resolution broadens peaks into these interference zones. The irrational bases, whose lattice positions are maximally displaced from rational ratios, are more robust to this broadening.\footnote{The classification of $\sqrt{2}$ as irrational follows its mathematical definition, but its structural behavior ($\text{SS} = -7.7$ at $\fzero = 8.5$) resembles the rational bases. This is consistent with the mode-locking interpretation: $\sqrt{2}$'s continued fraction expansion ($[1; 2, 2, 2, \ldots]$) consists entirely of 2s, giving it the best rational approximants among quadratic irrationals (convergents $1/1, 3/2, 7/5, 17/12, \ldots$). In Pletzer's framework, $\sqrt{2}$'s relatively good rational approximability means its lattice positions are not maximally displaced from mode-locking ratios, unlike $\phisym$ whose continued fraction ($[1; 1, 1, 1, \ldots]$) consists entirely of 1s---the slowest-converging case. Excluding $\sqrt{2}$ from the irrational class would increase the class gap $G$, further supporting the interpretation that Diophantine approximation quality, not the irrational/rational label per se, determines structural performance.}
+
+\textbf{Two levels of spectral organization.} Boundary ($u = 0$) and attractor ($u = 0.5$) positions are base-independent---they occupy the same lattice coordinates for all exponential bases. The minimal structural score $\text{SS}_{\min} = -E_{\text{boundary}} + E_{\text{attractor}}$, which uses only these positions, isolates the coarse-grained organization shared across all exponential lattices. Under this scoring, base~2 ranks first ($\text{SS}_{\min} = 33.6$), consistent with the well-established octave organization of neural frequency bands \parencite{buzsaki2004neuronal}. $\phisym$'s aggregate advantage (full $\text{SS} = 45.6$ vs.\ base~2's $33.6$) arises from noble positions in the cross-band analysis---the continued-fraction convergents that are unique to each base's number-theoretic structure. This dissociates two levels of spectral organization: octave-scale boundary avoidance (where base~2 suffices) and sub-octave noble clustering (where $\phisym$ is uniquely predictive). Notably, $\phisym$'s self-similarity ($1 - 1/\phisym = 1/\phisym^2$) causes two of its four noble candidates to collapse onto existing positions, leaving just two surviving nobles (at $1/\phisym \approx 0.618$ and $1/\phisym^2 \approx 0.382$), while bases 1.5, 1.7, 1.8, $e$, and $\pi$ each retain all four. The ranking is invariant to whether noble enrichments are averaged or summed (Spearman $\rho = 1.0$ between rankings): under sum scoring, $\phisym$'s gap over the second-ranked base increases from $+12.0$ to $+28.2$, confirming that $\phisym$'s advantage reflects the predictive quality of its noble positions rather than an averaging artifact from having fewer contributing positions. The brain's frequency architecture has structure at both levels, and the structural score formula captures both: the equal weighting of boundary depletion, attractor enrichment, and noble enrichment reflects the theoretical prediction that all three position types carry mode-locking significance \parencite{pletzer2010golden}. The companion study resolves the position-count asymmetry for distance-based metrics by extending to degree-3 nobles ($(1/b)^3$ and $1 - (1/b)^3$), which gives $\phisym$ genuinely new positions at $u = 0.236$ and $u = 0.764$; under coverage normalization, $\phisym$ ranks first among all nine bases in both LEMON and EEGMMIDB dominant-peak alignment.
+
+\textbf{Separating architecture from dynamics.} These results resolve an ambiguity that has pervaded the $\phisym$-lattice literature. Prior work has treated phi-specificity as a unitary claim: that the golden ratio organizes neural oscillations. But this conflates two distinct questions---\emph{where} oscillatory modes exist (an architectural claim about the frequency spectrum's fixed structure) and \emph{how} cognitive state modulates energy allocation across those modes (a dynamical claim about computation). Our results show these questions have different answers. The architectural claim is supported: the joint ($\fzero$, base) grid search identifies $\phisym$ at $\fzero = 8.5$~Hz as the global optimum across 549 candidate lattices, with non-overlapping bootstrap CIs against all alternatives at $\fzero = 7.6$--$8.5$~Hz. The dynamical claim---that state-dependent modulation operates specifically within $\phisym$-lattice coordinates---is not supported; any reasonable exponential parcellation detects the same gamma reallocation. The $\phisym$-lattice thus describes the fixed scaffolding of available oscillatory modes, while cognitive state modulates energy allocation across modes through a mechanism that is indifferent to the specific spacing between them.
+
+This cross-band consistency aligns with theoretical predictions that $\phisym$-spacing minimizes cross-frequency interference \parencite{pletzer2010golden, kramer2022golden}. If the mechanism operates identically at every frequency scale---peaks avoiding boundary positions where interference is maximal and clustering at noble positions where it is minimal---the structural advantage would emerge from the aggregate rather than any single band. Bases whose noble positions ($1/b$) fall near simple rational fractions of the octave would create band-specific resonance artifacts, consistent with the variable per-band performance observed for bases like $\sqrt{2}$ ($1/b \approx 0.707$) and $3/2$ ($1/b = 0.667$). However, the anchor-dependence of $\phisym$'s advantage is difficult to reconcile with the anti-synchronization interpretation. If $\phisym$-spacing prevents cross-frequency interference through a number-theoretic mechanism \parencite{pletzer2010golden}, this property should hold regardless of the anchor frequency---the anti-synchronization property of $\phisym$ is a mathematical fact about irrational number approximation that does not depend on the starting frequency. The empirical restriction to $\fzero \approx 7.6$--$8.5$~Hz suggests that if the advantage is real, it likely has a different origin than the theoretical mechanism: a more contingent alignment between $\phisym$-octave boundaries and the empirical peak distribution---particularly the dominant IAF---rather than universal number-theoretic properties.
+
+An alternative interpretation of $\phisym$'s aggregate advantage is that its octave width (factor 1.618) avoids placing lattice boundaries near the dominant IAF ($\sim$10~Hz) across the widest range of anchor frequencies, while narrower bases (1.4, $\sqrt{2}$) and wider bases (2, $e$, $\pi$) create boundary--IAF collisions at different $\fzero$ values. Under this interpretation, $\phisym$'s structural advantage reflects the specific relationship between its octave width and the human IAF, not a universal number-theoretic property. However, the lattice most optimally aligned with the IAF---base~1.8 at $\fzero = 10.0$~Hz, which places its attractor directly on the $\sim$10~Hz peak---achieves $\text{SS} = 41.6$. This is the best possible IAF-exploiting configuration, yet it still falls below $\phisym$ at its optimal anchor ($\text{SS} = 45.6$). Similarly, base~2 at $\fzero = 7.2$~Hz ($\text{SS} = 40.2$) avoids IAF-boundary collision by placing octave boundaries at 14.4 and 28.8~Hz. That $\phisym$ exceeds both IAF-optimized competitors supports genuine structural organization beyond coincidental IAF placement. The definitive test---replication on datasets with different IAF distributions (e.g., clinical populations, cross-species data)---remains a future direction.
+
+\subsection{The Anchor Window and Schumann Resonance Variability}
+
+The companion study's anchor frequency was informed by Tomsk Schumann Resonance (SR) monitoring data, so any overlap between the advantage window and the SR1 range is partially expected rather than independently discovered. With that caveat, the correspondence is worth noting factually. The idealized Schumann--ionosphere eigenfrequency is $f_1 \approx c/(2\pi r) = 7.49$~Hz; long-term monitoring reports the empirical SR1 at $7.6 \pm 0.2$~Hz with excursions of $\pm 0.3$~Hz \parencite{nickolaenko2014schumann, lacy2026golden}, giving a typical range of 7.0--8.2~Hz. The fine cliff sweep places the onset of $\phisym$'s rank improvement at $\fzero = 7.48$~Hz---within one sweep step (0.02~Hz) of the cavity equation prediction---while the gap zero-crossing ($\fzero \approx 7.55$~Hz) and statistical significance ($\fzero = 7.58$~Hz) fall within the empirical SR1 range. The precise optimum within the advantage window differs between datasets---$\fzero = 7.60$~Hz in the GED analysis (optimized on peaks from PhySF/MPENG/Emotions; Section~\ref{sec:ged}) and $\fzero = 8.5$~Hz here (optimized on FOOOF peaks from EEGMMIDB)---likely reflecting differences in peak detection method (GED vs.\ FOOOF), spectral resolution, and paradigm-specific alpha distributions. The robust finding is the bounded window (7.6--8.5~Hz) itself, not the precise optimum within it. The monotonic increase in structural score from $\fzero = 7.6$ ($\text{SS} = 28.7$) to $\fzero = 8.5$ ($\text{SS} = 45.6$) suggests that EEGMMIDB's FOOOF-detected peak distribution genuinely favors a higher anchor, rather than this being a resolution artifact; whether GED-based peaks would yield a different optimum on the same dataset remains untested. Independent confirmation would require optimizing $\fzero$ on datasets collected and analyzed without reference to Schumann frequencies.
+
+The class gap analysis introduces an ``irrational advantage window''---the $\fzero$ range where the bootstrap 95\% CI on $G$ excludes zero---spanning $\fzero = 7.4$--$9.4$~Hz (nperseg = 640) and $\fzero = 7.1$--$9.4$~Hz (nperseg = 256). The SR variation range (7.0--8.5~Hz) falls entirely within this window at both spectral resolutions. The $\fzero$ sweep range (7.0--10.0~Hz) was chosen to span the theta-alpha transition broadly; the SR overlap is an empirical finding, not a design artifact. If neural oscillatory architecture is evolutionarily tuned to an environmental reference, the SR range should lie where irrational organization provides the greatest structural advantage---precisely what the irrational advantage window demonstrates. However, the same caveat applies as to the individual-base $\fzero$ sensitivity: the companion study's anchor was informed by SR data, so the overlap is suggestive rather than independent evidence.
+
+Two methodological points warrant discussion. First, the failure of base $= e$ in the dynamic test reflects octave width: an $e$-octave spans a factor of $e \approx 2.718$ in frequency (e.g., 7.6--20.7~Hz), far wider than a $\phisym$-octave (factor 1.618, e.g., 7.6--12.3~Hz). With only two $e$-octaves spanning 1--45~Hz, the mixture model's equispaced components map to poorly resolved frequency segments. Yet $e$ performed well in the structural test ($\text{SS} = 22.8$, ranked 4th), suggesting the two tests probe different aspects. Second, the strong gamma result for $\pi$ in the band-stratified analysis ($p = 0.006$) is notable but should be interpreted cautiously given the multiple comparisons across 9 bases $\times$ 5 bands.
+
+\subsection{Non-Exponential Functional Form}
+
+The structural specificity framework assumes exponential scaling ($\fzero \cdot b^n$), but this functional form requires validation. The linear grid control (Section~\ref{sec:linear_results}) tests whether equally-spaced harmonic grids ($\fzero + n \cdot k$) produce comparable structural patterns. They do not: across nine step sizes ($k = 3$--$12$~Hz), linear grids fail to detect any systematic structure (mean $\text{SS} = 0.0$ at nperseg = 640; $-1.6$ at nperseg = 256), and the maximum linear SS ($12.9$, at $k = 9$~Hz) is less than 30\% of $\phisym$'s score ($45.6$). This is a categorical difference, not a marginal one. The boundary-depletion and attractor-enrichment pattern that characterizes the exponential lattice---peaks systematically avoiding octave boundaries and clustering at noble/attractor positions---is entirely absent in linear lattice coordinates. This preempts a natural objection: perhaps any harmonic grid would produce similar structural patterns, and the exponential form is merely one of many equivalent parameterizations. The linear grid results demonstrate otherwise: the structural pattern is specific to exponential (logarithmic) frequency scaling, consistent with the well-established log-frequency organization of neural oscillations \parencite{buzsaki2004neuronal}.
+
+\subsection{Alpha Confound}
+
+We cannot distinguish alpha-band organization from IAF clustering at 10 Hz. The spectral resolution ($\Delta f = 0.25$ Hz) places noble$_1$ (10.23 Hz) within one frequency bin of 10.0 Hz, the 53.7\% overlap between peaks near noble$_1$ and peaks near 10.0 Hz precludes a definitive test, and the wide bootstrap CIs make mode identification unreliable. Higher spectral resolution or datasets with known IAF variation across subjects would be needed to resolve this.
+
+\subsection{Limitations}
+\label{sec:limitations}
+
+Several limitations must be acknowledged:
+
+\begin{enumerate}
+    \item \textbf{Mode-based tests fail}: No mode-based permutation test (0/6) or DI test (0/15) survived correction for multiple comparisons. The mode is too unstable on multimodal KDEs to serve as a sensitive test statistic. The targeted binary contrast and mixture model resolve this, yielding 3/9 and 6/45 significant tests respectively after global Bonferroni correction and filtering of unresolvable components, but these position-specific approaches require prior knowledge of the lattice positions being tested.
+
+    \item \textbf{Multimodal KDE}: The within-octave density at bandwidth $= 0.02$ has multiple peaks of comparable height in gamma, alpha, and some beta conditions. Mode identification is correspondingly fragile, and bootstrap CIs are wide. Full-data and subsampled modes can differ by $> 0.1$ in lattice coordinate units (e.g., gamma rest-EO: $0.537$ full-data vs.\ $0.665$ subsampled).
+
+    \item \textbf{Band-dependent component resolution}: The estimated shared $\sigma \approx 0.16$ for the mixture model exceeds several inter-component distances, causing the five-component model to collapse to effectively two resolvable components in gamma (boundary and attractor) while retaining four or more in beta-low. The gamma result is therefore a center-vs-edge redistribution test rather than a five-position lattice test. As discussed in Section~\ref{sec:discussion}, this band-dependent resolution reflects genuine differences in spectral organization across frequency ranges, but it means the gamma finding does not uniquely require the $\phisym$-lattice framework to explain.
+
+    \item \textbf{EO/EC confound}: EEGMMIDB task conditions are all eyes-open, making it impossible to fully separate motor effects from visual input effects within this dataset alone.
+
+    \item \textbf{Spectral resolution}: The 0.25 Hz frequency grid ($\Delta f = 160/640$) constrains the PSD resolution, though FOOOF fits continuous Gaussians that yield sub-grid-point peak frequencies. The phase-rotation null preserves the empirical lattice coordinate distribution, providing some protection against grid-induced artifacts. The peak-bandwidth robustness analysis below and the cross-resolution replication (Section~\ref{sec:cross_resolution_results}) confirm that the structural advantage is stable across bandwidth strata and resolution variants, though broader replication at finer resolutions ($\Delta f < 0.1$ Hz) remains desirable. The grid resolution also prevents disambiguation of noble$_1$ from IAF in the alpha band.
+
+    \item \textbf{Single-channel FOOOF}: The EEGMMIDB structural specificity analysis used single-channel FOOOF peaks. The GED analysis (Section~\ref{sec:ged}) confirms the lattice hierarchy using multi-channel spatial coherence on independent datasets, but was conducted with consumer-grade EEG (14 channels). High-density GED on the EEGMMIDB dataset (64 channels) might yield sharper position-specific allocation estimates.
+
+    \item \textbf{Motor paradigm specificity}: The beta-low upper-octave finding is specific to motor task paradigms and should not be generalized to other cognitive contexts without replication.
+
+    \item \textbf{Dynamic effects are not $\phisym$-specific}: The dynamic gamma reallocation persists across all anchor frequencies, all bases except $e$, and random positions ($p_{\text{emp}} = 0.44$). The $\phisym$-lattice provides a useful coordinate system for describing the dynamic effect but is not uniquely required. Static structural enrichment \emph{is} significantly best under $\phisym$ by bootstrap comparison (gap CI excludes zero), but the advantage is modest ($\Delta\text{SS} \approx 5$--$6$ over the next cluster of bases) and may not generalize to all datasets or spectral resolutions.
+
+    \item \textbf{Rational/irrational classification}: The class gap analysis partitions 9 bases into 4 irrational and 5 rational by mathematical definition. This is a fixed partition, not a sample from a population, so the exact permutation test exhaustively evaluates all $\binom{9}{4} = 126$ possible groupings rather than drawing from an infinite reference distribution. The finest achievable $p$-value ($1/126 \approx 0.008$) limits statistical power for this specific test; the bootstrap gap test, which resamples the underlying peak distribution, provides a complementary assessment of class-level reliability.
+
+    \item \textbf{Structural score interpretation}: Negative SS for rational bases indicates anti-correlation with predicted lattice positions---peaks are systematically displaced from where rational scaling would place boundaries and attractors. This should not be interpreted as ``active rejection'' of rational coordinates; the brain does not compute lattice positions. The anti-correlation may reflect that rational lattice positions coincide with mode-locking ratios where cross-frequency interference suppresses oscillatory peaks. More broadly, the structural score aggregates enrichment across all $\phisym$-octave bands. The band-stratified analysis (Section~\ref{sec:structural_results}) reveals that $\phisym$ ranks outside the top three in most individual bands, indicating that the aggregate $\text{SS} = 45.6$ represents a weighted average across bands with different enrichment profiles. Whether per-band enrichment analysis with band-appropriate density normalization preserves the structural advantage observed in the aggregate remains an important open question.
+
+    \item \textbf{Cross-resolution SS magnitude}: The structural score for $\phisym$ is lower at nperseg = 256 ($\text{SS} = 40.6$) than at nperseg = 640 ($\text{SS} = 45.6$), indicating that spectral resolution affects magnitude. However, the class gap $G$ is \emph{larger} at coarser resolution ($37.3$ vs.\ $28.9$, Cohen's $d = 1.60$ vs.\ $1.22$), suggesting that resolution affects irrational and rational bases differentially. Replication at finer resolutions ($\Delta f < 0.1$~Hz) would determine the asymptotic structural score and whether the class gap continues to increase.
+
+    \item \textbf{Bootstrap CI interpretation}: The bootstrap CI on the class gap ($G = +28.9$, 95\% CI: $[+28.5, +29.4]$, width $= 0.9$) reflects the stability of SS to peak-level resampling across 1.86 million peaks. The effective sample size for $G$ is closer to 9 (one SS per base) than to 1.86 million: the large peak count stabilizes each individual base's SS, producing narrow CIs on the gap between class means. This tests internal consistency---whether the class gap is robust to subsampling---but not generalizability across subjects or datasets. A subject-level bootstrap (resampling 109 subjects with replacement) would provide a complementary estimate of between-subject variability; the raw peak data preserve per-subject metadata, enabling this analysis in future work.
+
+    \item \textbf{Aggregate enrichment methodology}: The enrichment values reported throughout this paper (boundary $0.41\times$, noble $1.10\times$, structural scores) pool peaks from all five $\phisym$-octave bands into a single analysis. Because these bands span different frequency ranges with different peak densities and spectral characteristics, the aggregate enrichment may conflate band-specific patterns. The band-stratified analysis in Section~\ref{sec:structural_results} already demonstrates substantial per-band heterogeneity in structural scores; per-band enrichment analysis with band-appropriate spectral resolution and density normalization would determine whether the aggregate boundary depletion and noble enrichment reflect a uniform within-band pattern or are driven by specific band contributions (see Section~\ref{sec:future}).
+\end{enumerate}
+
+\paragraph{Peak-bandwidth robustness.} To assess whether $\phisym$'s structural advantage depends on broad, potentially artifactual FOOOF peaks, we repeated the structural specificity analysis (Tests~A and C) after filtering peaks by FOOOF-estimated bandwidth. Restricting to narrow peaks (bandwidth $< 2$~Hz; 88.2\% of peaks retained) yields $\text{SS}_\phisym = 31.0$ with $\phisym$ ranked first in 100\% of 200 bootstrap resamples (gap CI: $[+1.9, +3.6]$, excludes zero). Retaining peaks up to 4~Hz bandwidth (96.2\% retained) yields $\text{SS}_\phisym = 29.9$, again ranked first in 100\% of bootstraps (gap CI: $[+4.9, +6.8]$). The structural advantage is thus stable across bandwidth strata and is not driven by poorly resolved FOOOF components.
+
+\subsection{Future Directions}
+\label{sec:future}
+
+Eight extensions would strengthen these findings. First, the mixture model's estimated bandwidth ($\sigma \approx 0.16$) indicates substantial component overlap; constrained mixture models with narrower, position-specific bandwidths or non-Gaussian components could yield sharper allocation estimates. Second, applying GED-based peak detection directly to EEGMMIDB's 64-channel recordings would test whether higher spatial dimensionality yields sharper position-specific allocation than the 14-channel GED analysis reported in Section~\ref{sec:ged}. Third, high-resolution spectral estimation ($\Delta f < 0.1$ Hz) would resolve the alpha IAF confound and enable sharper discrimination between $\phisym = 1.618$ and nearby alternatives ($1.5$--$1.7$). Fourth, datasets combining eyes-open rest, eyes-closed rest, and eyes-closed task conditions would enable a full $2 \times 2$ factorial decomposition of visual and motor effects on lattice allocation. Fifth, replication across the companion study's datasets (PhySF, MPENG, Emotions, Brain Invaders) using the structural specificity framework would determine whether $\phisym$'s bootstrap advantage and the irrational class gap generalize beyond EEGMMIDB. The cross-resolution analysis (nperseg = 256) partially addresses the resolution robustness question, but replication at finer resolutions ($\Delta f < 0.1$~Hz) and on independent datasets with different IAF distributions remains desirable. Sixth, subject-level and channel-stratified analyses would test whether $\phisym$'s structural advantage is uniform across the 109 subjects and 64 channels, or driven by a subset of high-peak-count individuals or specific scalp regions. The raw peak data preserve per-subject and per-channel metadata (session column encodes subject $\times$ run $\times$ channel), enabling per-subject structural score distributions and spatial specificity analysis. A subject-level bootstrap (resampling subjects rather than peaks) would provide between-subject confidence intervals complementary to the peak-level CIs reported here. Seventh, temporal stability analysis across the 14 runs per subject would test whether the structural score is architecturally stable within a session or varies with cognitive state, providing a within-subject test of the architecture/dynamics dissociation. Eighth, per-band enrichment normalization would determine whether the aggregate structural advantage of $\phisym$ reflects consistent enrichment across all bands or is driven by specific band contributions. The current analysis computes enrichment from peaks pooled across all $\phisym$-octave bands; per-band analysis with band-appropriate spectral resolution and density normalization would extend the band-stratified structural score comparison in Section~\ref{sec:structural_results} to enrichment-based evaluation, and would clarify whether the aggregate boundary depletion ($0.41\times$) and noble enrichment ($1.10\times$) represent within-band properties or cross-band averaging effects.
+
+% =========================================================================
+\section{Conclusions}
+\label{sec:conclusions}
+
+This study provides seven contributions to the understanding of spectral peak organization in human EEG:
+
+\begin{enumerate}
+    \item \textbf{The $\phisym$-lattice replicates across paradigms}. Aggregate boundary depletion ($0.41\times$) and noble enrichment ($1.10\times$) are confirmed in a motor-task dataset independent of the original discovery datasets, using different hardware, demographics, and cognitive paradigms. The band-stratified analysis indicates that per-band contributions to these aggregate values differ substantially (Section~\ref{sec:structural_results}).
+
+    \item \textbf{Cognitive state modulates within-octave peak allocation}. Mode-based tests fail uniformly (0/6 significant) because the within-octave KDE is multimodal. However, position-specific tests reveal significant within-subject effects with medium effect sizes: the targeted binary contrast (3/9 Bonferroni-surviving, $r = 0.31$--$0.38$) and phi-position mixture model (6/45 global Bonferroni-surviving, $r = 0.39$--$0.52$) demonstrate that the brain selectively reallocates spectral peaks between frequency sub-bands during different cognitive states. This reallocation is detectable using $\phisym$-lattice coordinates but is not specific to them (see point 4).
+
+    \item \textbf{Gamma allocation is driven by visual input}. Opening the eyes shifts gamma peaks from boundary toward attractor positions ($\Delta\pi_{\text{att}} = +0.070$, $p_{\text{Bonf}} = 0.003$, $r = +0.44$), while motor task further enhances attractor occupancy ($p_{\text{Bonf}} < 10^{-3}$, $r = +0.52$). The two eyes-open conditions (rest-EO and task) share a common gamma allocation distinct from eyes-closed rest.
+
+    \item \textbf{Dynamic effects are not $\phisym$-specific; static structure favors $\phisym$ at the global optimum}. The gamma reallocation persists across all anchor frequencies, all bases except $e$, and random positions ($p_{\text{emp}} = 0.44$). A joint ($\fzero$, base) grid search across 549 candidate lattices identifies $(\fzero = 8.5, b = \phisym, \text{SS} = 45.6)$ as the global optimum, with $\phisym$ significantly best across $\fzero = 7.6$--$8.5$~Hz (bootstrap gap CI excludes zero). The advantage collapses at $\fzero = 9.0$ and reverses at $\fzero = 10.0$ (IAF alignment). The structural claim is a joint claim about the ($\fzero$, base) pair, not base alone.
+
+    \item \textbf{Beta-low motor signature validates the mixture approach}. Beta-low peaks consistently cluster in the upper octave ($0.86$--$0.99$) with task-specific enhancement of inv\_noble$_4$ and inv\_noble$_6$ ($p_{\text{Bonf}} = 0.002$, $0.020$; $r = +0.45$, $+0.39$), in a frequency range consistent with post-movement beta rebound physiology ($\sim$19 Hz). This serves as a positive control demonstrating that the mixture model detects real neurophysiology at the correct frequency positions.
+
+    \item \textbf{Irrational bases collectively outperform rational bases with large effect sizes}. The bootstrap class gap $G = \text{mean}(\text{SS}_{\text{irr}}) - \text{mean}(\text{SS}_{\text{rat}})$ is positive across $\fzero = 7.4$--$9.4$~Hz ($p < 0.001$), with Cohen's $d = 1.22$ (nperseg = 640) and $d = 1.60$ (nperseg = 256). The SR variation range (7.0--8.5~Hz) falls entirely within this ``irrational advantage window.'' The exact permutation significance inversion across resolutions ($p = 0.024$ at nperseg = 256 vs.\ $p = 0.063$ at nperseg = 640) reflects base~2's resolution-dependent competitiveness: at higher resolution it ranks second, blurring the irrational/rational boundary; at coarser resolution all three leading bases are irrational, sharpening the class separation. This supports the interpretation that the structural advantage is about irrationality as a mathematical property---resistance to rational approximation and mode-locking---not exclusively about $\phisym$.
+
+    \item \textbf{Non-exponential controls validate the exponential functional form}. Linear harmonic grids ($\fzero + n \cdot k$) fail to detect any systematic structure (mean $\text{SS} \approx 0$, max $\text{SS} < 30\%$ of $\phisym$'s), confirming that the boundary-depletion/attractor-enrichment pattern is specific to exponential (logarithmic) frequency scaling. This is a categorical negative result---not a marginal difference---that validates the exponential assumption underlying all lattice analyses.
+\end{enumerate}
+
+The central contribution of this work is to separate two questions that the $\phisym$-lattice literature has conflated: \emph{where} oscillatory modes exist and \emph{how} cognitive state modulates energy across them. These questions have different answers. A joint ($\fzero$, base) grid search across 549 candidate lattices identifies $\phisym$ at $\fzero = 8.5$~Hz as the global optimum ($\text{SS} = 45.6$), with non-overlapping bootstrap CIs across $\fzero = 7.6$--$8.5$~Hz. But this advantage is confined to a 1~Hz anchor window, with a sharp sigmoid lower boundary whose transition region ($\fzero \approx 7.48$--$7.58$~Hz) encompasses the Schumann--ionosphere eigenfrequency prediction ($7.49$~Hz), though the precise optimum within the window is dataset-dependent ($\fzero = 7.60$~Hz in the companion study, $8.5$~Hz here). The advantage collapses at $\fzero = 9.0$~Hz, and the dynamic spectral reallocation detected by the lattice framework---medium effect sizes ($r = 0.31$--$0.52$) across 109 subjects---is not $\phisym$-specific; any reasonable exponential coordinate system resolves the same redistribution.
+
+The class-level gap analysis strengthens the architectural claim by showing that the advantage extends beyond $\phisym$ alone: all four irrational bases collectively outperform all five rational bases with large effect sizes (Cohen's $d = 1.22$--$1.60$), and this ``irrational advantage window'' encompasses the SR variation range at both spectral resolutions tested. The validation that non-exponential grids produce no structural signal confirms that logarithmic frequency scaling---not any harmonic organization---underlies the observed pattern. Cross-resolution replication (nperseg = 256) confirms all findings with, if anything, stronger class-level effects ($d = 1.60$ vs.\ $1.22$), indicating that the structural organization is robust to spectral resolution.
+
+The golden ratio thus describes the fixed scaffolding of available oscillatory modes within a specific anchor range, while cognitive state modulates energy allocation through a mechanism indifferent to the spacing between them. The convergence of individual-base dominance ($\phisym$ ranked first in 100\% of bootstraps), class-level separation (irrationals vs.\ rationals, $d > 1.0$), functional form validation (exponential vs.\ linear), and cross-resolution robustness provides multi-layered evidence for logarithmic-irrational spectral organization anchored near Schumann Resonance frequencies. The categorical failure of linear grids (mean $\text{SS} \approx 0$) constitutes, to our knowledge, the first formal test confirming that the organizational principle underlying EEG spectral peaks is logarithmic rather than linear in frequency---a property long assumed from informal observation of log-frequency EEG plots, but never directly tested as a structural claim with a proper null.
+
+% =========================================================================
+\section*{Data and Code Availability}
+
+The EEGMMIDB dataset is publicly available from PhysioNet (\url{https://physionet.org/content/eegmmidb/1.0.0/}). Analysis code will be made available upon publication.
+
+% =========================================================================
+\printbibliography
+
+\end{document}

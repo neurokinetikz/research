@@ -1,0 +1,134 @@
+The alpha φ-octave (7.60–12.30 Hz) spans from f₀ to f₀×φ and is the most functionally dense band in the entire frequency architecture. Empirical enrichment data across 9 datasets (4 adult, 5 pediatric HBN; see [[phi-lattice-enrichment-data]]) reveals that alpha has the **sharpest central peak** of any band — a narrow mountain of enrichment at the attractor (+113% adult EC) and 1° Noble (+59%), with steep depletion on both flanks (boundary -84%, 7° Inv Noble -85%). This is the exact inverse of theta's U-shaped profile: where theta piles peaks at the octave edges, alpha concentrates them in the center. The pattern intensifies dramatically under EC: attractor enrichment roughly doubles (+35→+113%), flanking depletion deepens, and the mountain narrows — consistent with EC amplifying alpha at fixed lattice positions (Paper 3: d = 1.00, the largest effect size in all three papers) rather than shifting position. Alpha contains the dominant rhythm of the waking human brain, three distinct cortical generators (the Menetrey archetypes mapping to 2° Noble/attractor/3° Inv Noble), the consciousness gate (Griffiths' alpha-rhythmic routing), and the primary mechanism for attentional gating-by-inhibition. The alpha-IAF confound (Noble1 at 10.23 Hz differs from "10 Hz" by only 0.23 Hz ≈ Δf) remains unresolved — the enrichment is real but cannot be separated from generic IAF clustering at current spectral resolutions.
+
+## Position Table
+
+Enrichment values from master_enrichment.csv: adult EC (OT method, mean across EEGMMIDB, LEMON, CHBMP, Dortmund). Adult EO shown for comparison. Pediatric = mean across HBN R1-R4/R6. EC-EO delta averaged across all 4 adult datasets.
+
+| Offset | Position | Frequency | Cycle | Adult EC | Adult EO | Pediatric | EC-EO Δ | Consistency |
+|--------|----------|-----------|-------|----------|----------|-----------|---------|-------------|
+| 0.000 | **Boundary** | 7.600 Hz | 131.6 ms | **-84%** | -35% | -61% | -48% ↓ | 0/4 adult |
+| 0.034 | 7° Noble | 7.727 Hz | 129.4 ms | **-69%** | -20% | -49% | -49% ↓ | 0/4 adult |
+| 0.056 | 6° Noble | 7.807 Hz | 128.1 ms | **-59%** | -12% | -41% | -47% ↓ | 0/4 adult |
+| 0.090 | 5° Noble | 7.937 Hz | 126.0 ms | **-55%** | -13% | -31% | -44% ↓ | 0/4 adult |
+| 0.146 | 4° Noble | 8.153 Hz | 122.7 ms | **-50%** | -15% | -17% | -40% ↓ | 0/4 adult |
+| 0.236 | 3° Noble | 8.514 Hz | 117.4 ms | -22% | -26% | +11% | +1% ≈ | 1/4 adult |
+| 0.382 | **2° Noble** | 9.134 Hz | 109.5 ms | **+47%** | +3% | +49% | +37% ↑ | 4/4 adult |
+| 0.500 | **Attractor** | 9.667 Hz | 103.4 ms | **+113%** | +35% | +66% | +86% ↑ | 4/4 adult |
+| 0.618 | **1° Noble** | 10.232 Hz | 97.7 ms | **+59%** | +41% | +44% | +15% ↑ | 4/4 adult |
+| 0.764 | 3° Inv Noble | 10.977 Hz | 91.1 ms | -9% | +5% | -41% | -17% ↓ | 1/4 adult |
+| 0.854 | 4° Inv Noble | 11.463 Hz | 87.2 ms | **-66%** | -28% | -36% | -40% ↓ | 0/4 adult |
+| 0.910 | 5° Inv Noble | 11.775 Hz | 84.9 ms | **-75%** | -44% | -63% | -29% ↓ | 0/4 adult |
+| 0.944 | 6° Inv Noble | 11.972 Hz | 83.5 ms | **-82%** | -42% | -68% | -40% ↓ | 0/4 adult |
+| 0.966 | 7° Inv Noble | 12.095 Hz | 82.7 ms | **-85%** | -39% | -67% | -47% ↓ | 0/4 adult |
+| 1.000 | **Boundary (upper)** | 12.297 Hz | 81.3 ms | = φ¹ | = φ¹ | = φ¹ | — | alpha/beta border |
+
+**Key pattern**: Alpha's enrichment landscape is a sharp central mountain — a narrow 3-position peak (2° Noble +47%, Attractor +113%, 1° Noble +59%) flanked by steep bilateral depletion that reaches -84% at the lower boundary and -85% at the 7° Inverse Noble. This is the **exact inverse** of theta's U-shaped profile. Only 3 of 14 positions show enrichment; the remaining 11 are depleted.
+
+**EC amplification**: Eyes-closed dramatically sharpens the mountain. The attractor surges from +35% (EO) to +113% (EC) — a +86% gain. The 2° Noble jumps from +3% to +47%. Simultaneously, the flanks deplete further: boundary drops from -35% to -84%, inverse nobles deepen to -75% to -85%. EC doesn't shift alpha's position — it intensifies the existing pattern, pulling the mountain higher and the valleys deeper. This is the Berger effect expressed in lattice coordinates: alpha power amplifies at its fixed positions while suppressing energy at all other positions within the octave.
+
+**Pediatric comparison**: HBN data shows the same mountain pattern (attractor +66%, Noble1 +44%, 2° Noble +49%) with notable differences: (1) the 3° Noble shifts from -22% (adult) to +11% (pediatric), widening the base of the enrichment peak; (2) the attractor leads Noble1 in both populations but the adult peak is more lopsided toward the attractor (+113 vs +59) while pediatric is more balanced (+66 vs +44). This wider pediatric peak may reflect the developmental trajectory: children's alpha frequency is still accelerating toward adult IAF values, producing a broader distribution across the central octave.
+| 1.000 | Boundary (upper) | 1.000 | 12.297 Hz | 81.3 ms | = φ¹ (alpha/beta border) |
+
+## Zone 1: Lower Alpha (7.60–9.13 Hz) — The Transition Zone
+
+The lower alpha zone spans the f₀ boundary through the 2° Noble, covering the region where theta-alpha transitions occur, tACS manipulations operate, and slow alpha generators reside.
+
+**Boundary at 7.600 Hz = f₀.** The fundamental frequency of the entire φ-lattice. Simultaneously the upper boundary of theta and the lower boundary of alpha. This is the theta/alpha fulcrum described in [[critical-frequencies]] — where hippocampal encoding (theta) gives way to thalamocortical gating (alpha). Sleep onset is marked by alpha dropping out here. Flow states, meditation, and hypnagogic transitions cluster at this boundary where the brain pivots between internally-directed theta encoding and externally-directed alpha gating. EC theta converges directionally on this position from below (see [[theta-band-map]]). The Schumann Resonance fundamental (7.60 ± 0.20 Hz) anchors the entire lattice at this point (see [[schumann-ignition-events]]).
+
+**4°–5° Noble zone (~7.9–8.2 Hz).** D'Angelo et al. (2026) used tACS at 8 Hz to causally widen the temporal binding window for body ownership to 208 ms (versus 138 ms at 13 Hz), demonstrating that this low-alpha frequency creates broad temporal integration windows that merge visuotactile signals — the 8 Hz stimulation pushes the binding window toward theta-like widths, consistent with its position near the f₀ boundary. The 8 Hz zone also corresponds to the theta-alpha transition frequencies during attentional sampling: Yang et al. (2025) showed that conscious awareness shifts attentional sampling to ~7.5 Hz at the boundary, while frontoparietal connectivity under visible cues locks at 12 Hz — the upper boundary of alpha. See [[self-and-embodiment]], [[attention-and-perception]].
+
+**3° Noble at 8.514 Hz (-22% EC, -26% EO, 1/4 adult datasets positive).** Depleted in adults but notably shifts to +11% in pediatric data (12/15 HBN datasets positive) — the only position where adult and pediatric patterns diverge in sign within the alpha band. This may reflect the developing brain's broader alpha distribution before IAF converges on adult values. The EEGMMIDB joint (f₀, base) grid search found f₀ = 8.5 Hz as the global optimum (SS = 45.6), which places the lattice boundary directly at this frequency. The lowest IAF observed in LEMON (8.66 Hz) falls just above this position (see [[individual-alpha-frequency]]).
+
+**2° Noble at 9.134 Hz (+47% EC, +3% EO, 4/4 adult datasets positive under EC).** A major revision from the earlier analysis: the 2° Noble is **strongly enriched** under EC, not null. The enrichment emerges almost entirely from the EC state — under EO it is near-zero (+3%), but EC amplification pushes it to +47%. Paper 3's all-band dominant-peak analysis (which combined all bands) showed noble2 as null, but the band-specific data reveals this was driven by other bands cancelling alpha's enrichment. This is the base of the alpha mountain, where the slow alpha archetype (~8-9 Hz, Menetrey and Pascucci 2026) localizes to lateral occipital and inferior temporal regions (ventral visual stream). The slow alpha archetype dominance increases with age, producing what appears as IAF "slowing" — actually component rebalancing toward this position. In pediatric data, the 2° Noble shows even stronger enrichment (+49%), consistent with children's developing alpha spanning a wider frequency range. See [[alpha-oscillations]].
+
+## Zone 2: Central Alpha (9.13–10.98 Hz) — The Alpha Core
+
+The central zone contains the attractor and 1° Noble — the two enriched positions that together define the heart of the alpha band. This is where the dominant rhythm of the human brain operates, where consciousness gates its contents, and where individual alpha frequency is measured.
+
+**Attractor at 9.667 Hz (+113% EC, +35% EO, 4/4 adult datasets positive — the peak of the alpha mountain).** The geometric midpoint of the alpha octave and the single most enriched alpha position under EC. The +113% enrichment is a 3.2× amplification from EO (+35%), the largest EC-EO gain of any position in any band. This is the Berger effect expressed as a lattice coordinate: closing the eyes triples the concentration of alpha peaks at the attractor. The ~100 ms perceptual cycle — the "temporal quantum of perception" — maps directly to this frequency. VanRullen's perceptual cycles theory proposes that perception operates periodically as a succession of ~100 ms frames mirroring this alpha oscillation. The attractor marks the transition from lower alpha (attention/arousal) to upper alpha (semantic/cognitive processing) in Klimesch's framework. Klimesch's predicted IAF from heart rate scaling (HR × 2³ = 9.44–9.87 Hz) falls near this position. The elderly mean IAF from LEMON (9.96 Hz) and EEGMMIDB mean IAF (9.98 Hz) sit between the attractor and 1° Noble, consistent with aging shifting the dominant alpha generator toward the attractor from Noble1. Pediatric enrichment at the attractor (+66%) is lower than adult EC (+113%), consistent with the developing brain's alpha not yet reaching full EC amplification.
+
+The attractor's ~103 ms cycle defines the alpha temporal integration window described in [[consciousness-and-anesthesia]] and [[predictive-coding]] — alpha's ~100 ms cycles sample perception, creating discrete "perceptual moments." Pre-stimulus alpha phase at this frequency predicts visual detection (Busch, Dubois & VanRullen, 2009), accounting for ≥16% of performance variability. Redding et al. (2026) showed that alpha phase at ~9-10 Hz phasically gates distractor interference — but only on trials with distractors present, establishing a sensory suppression mechanism operating through phase-dependent excitability cycles (see [[attention-and-perception]]).
+
+**1° Noble at 10.232 Hz (+59% EC, +41% EO, 4/4 adult datasets positive) — The dominant frequency of the human brain.** In Paper 1's all-band aggregate, Noble1 showed the strongest enrichment (+37-92% across datasets). The 9-dataset band-specific data reveals that under EC, the alpha **attractor** (+113%) actually exceeds Noble1 (+59%) — but Noble1 remains the most consistently enriched position across conditions (EO: Noble1 +41% slightly leads attractor +35%) and the position closest to population IAF. This position is the gravitational center of human EEG:
+
+*Population IAF convergence.* The mean IAF across healthy adults converges on this position: LEMON young adults 10.15 Hz (u = 0.601), LEMON overall 10.09 Hz (u = 0.589), EEGMMIDB 9.98 Hz (u = 0.566), population peak in adulthood ~10.28 Hz (u = 0.628). All cluster within ±0.05 lattice units of the 1° Noble at u = 0.618. The theoretical 1° Noble (10.23 Hz) falls within the IAF distribution, but Paper 2 showed that this overlap creates an interpretive confound: noble1 and "round 10 Hz" differ by only 0.23 Hz ≈ Δf, at the limit of spectral resolution. Whether the enrichment reflects φ-specific organization or generic IAF clustering cannot be distinguished with current methods (see [[aperiodic-dynamics]]).
+
+*Consciousness gate.* Griffiths (2026) provided the most direct evidence that alpha at this frequency gates conscious awareness: memory content can be reactivated in sensory cortex without reaching awareness, but only representations exhibiting alpha-rhythmic (~10 Hz) fluctuations in stimulus-specific decoding enter consciousness. Global alpha desynchronization and stimulus-specific alpha rhythmicity are statistically independent, additive predictors of recall — two separable mechanisms where desynchronization clears representational noise while rhythmic routing at ~10 Hz transmits content into awareness (see [[consciousness-and-anesthesia]], [[default-mode-network]]).
+
+*PCC alpha and DMN.* The PCC — the DMN's most distinctive oscillatory hub — generates alpha at this frequency. PCC alpha suppression under psilocybin correlates with ego dissolution at R² = 0.66. The DMN's resting-state signature is dominated by alpha-band activity (8-13 Hz), particularly in PCC/precuneus. Alpha desynchronization in DMN regions signals suppression of self-referential processing (see [[default-mode-network]], [[psychedelic-states]]).
+
+*Body ownership.* IAF in posterior parietal cortex causally determines the temporal binding window for body ownership: r = -0.651 between IAF and TBW. The tACS range (8-13 Hz) spans from the lower alpha boundary through this position to the upper alpha — causally demonstrating that alpha frequency determines how tightly or loosely the brain binds multisensory signals into "self" (see [[self-and-embodiment]]).
+
+*The three archetypes.* Menetrey and Pascucci's (2026) three alpha archetypes span the central zone: middle alpha (~10 Hz, posterior parietal cortex) maps to the attractor/Noble1 region, fast alpha (~11-12 Hz) maps to the 3° Inverse Noble and above, and slow alpha (~8-9 Hz) maps to the 2° Noble region. Individual IAF emerges from the superposition of these three discrete generators, not from a single oscillator varying parametrically. The 99.88% identification accuracy across 5-year intervals reflects the stability of this compositional mixture.
+
+*EC amplification.* Under eyes-closed conditions, alpha power at stable lattice positions shows the largest effect size in all three Lacy papers: d = 1.00 (a full standard deviation). EC doubles alpha enrichment at attractor (+45% → +101%) and Noble1 (+25% → +70%) in Dortmund. Unlike theta, which migrates toward the boundary under EC, alpha amplifies in place — its generators are already at the deepest wells and EC simply increases drive at those positions (see [[schumann-ignition-events]]).
+
+*Working memory.* High-alpha (11-13 Hz) phase synchronization networks — spanning from 1° Noble into the upper alpha zone — support both content-specific representation in visual cortex and content-agnostic executive control through fronto-parietal networks. Machine learning can decode memory contents from alpha synchronization patterns (Haque et al. 2025; see [[working-memory]]).
+
+*Traveling waves and predictive coding.* Alpha traveling waves carry directional information for [[predictive-coding]]: backward waves (frontal→occipital) carry top-down predictions, forward waves (occipital→frontal) carry bottom-up sensory signals (Tarasi et al. 2026). These are genuine cortical phenomena confirmed by intracranial sEEG (Alexander & Dugue 2024), not measurement artifacts. Alpha/beta frequencies mediate feedback predictions from infragranular layers (L5/6) in the Bastos laminar framework (see [[cortical-layer-oscillations]]).
+
+*Alpha-gamma coupling.* Alpha phase modulates gamma amplitude in visual cortex — high alpha power suppresses gamma in task-irrelevant regions (gating by inhibition), while alpha desynchronization releases gamma processing in task-relevant areas. The alpha-mu band (8-12 Hz) also provides the exclusive channel for inter-brain coupling during social interaction (Goldstein et al. 2018: touch-pain coupling, r = -0.56 with pain reduction; see [[cross-frequency-coupling]], [[auditory-and-speech-oscillations]]).
+
+*Harmonic coupling.* Siebenhühner et al. (2016) found 1:2 phase-phase coupling between high theta (6.6 Hz) and high alpha (13.2 Hz), and 1:4 between alpha (13 Hz) and gamma (54 Hz). The 1° Noble at 10.23 Hz × 2 = 20.46 Hz (near the φ² boundary at 19.90 Hz), establishing harmonic bridges between the alpha and beta lattices. A task-related decrease at 8.6 Hz — where the ratio to alpha approximates the golden mean — supports φ as the maximum frequency separation for minimal coupling interference (see [[cross-frequency-coupling]]).
+
+## Zone 3: Upper Alpha (10.98–12.30 Hz) — The Perceptual Timing Edge
+
+The upper alpha zone from the 3° Inverse Noble to the φ¹ boundary contains the fast alpha archetype, the 12 Hz perceptual timing threshold, the SMR/sleep spindle onset, and the alpha-beta transition.
+
+**3° Inverse Noble at 10.977 Hz (-9% EC, +5% EO, 1/4 adult datasets positive under EC).** The transition point between the enriched Noble1 peak and the deeply depleted upper octave. Near-null under both conditions — a narrow plateau before the cliff into depletion. The fast alpha archetype (~11-12 Hz, dorsal occipito-parietal cortex, Menetrey and Pascucci 2026) has its lower edge here. Redding et al. (2026) found that alpha power lateralization contralateral to distractors peaks at 10.95 Hz — almost exactly at this position. Pediatric data shows stronger depletion (-41%), suggesting the developing brain's alpha concentrates even more tightly around the attractor/Noble1 core.
+
+**4° Inverse Noble at 11.463 Hz (-66% EC, -28% EO, 0/4 adult datasets positive under EC).** Deeply depleted — the upper alpha wasteland. Despite this, the functional literature places high-alpha (11-13 Hz) phase synchronization networks for [[working-memory]] here (Haque et al. 2025), and Klimesch's task-specific semantic processing zone spans 10-12 Hz. As with the theta attractor (functionally critical but depleted in resting dominant-peak data), this position is where alpha goes during specific tasks rather than where dominant resting peaks cluster. The SMR begins in this range at ~12-15 Hz, bridging alpha and low beta.
+
+**6°–7° Inverse Noble zone (11.97–12.10 Hz).** The immediate approach to the 12 Hz boundary. This zone represents the ~83 ms cycle that defines the temporal quantum of perceptual experience — the fastest alpha cycle that still counts as "alpha" before crossing into beta territory. The 12 Hz boundary separates slow from fast sleep spindles, lower alpha arousal from upper alpha semantics, and alpha-dominant inhibition from beta-dominant engagement (see [[critical-frequencies]]).
+
+IAF shows approximately 81% heritability (Smit et al. 2006) and stability despite ~100 hours of cognitive training (Grandy et al. 2013). IAF predicts visual temporal resolution (r = 0.39-0.53): faster IAF produces finer temporal discrimination because the alpha cycle is shorter. The ~83 ms cycle at 12 Hz represents the upper limit of alpha temporal resolution — perceptual events faster than this fall into the beta domain.
+
+**Boundary (upper) at 12.297 Hz = φ¹.** The alpha/beta border and the first integer φ-position above f₀. This boundary carries clinical significance: the 10-20 Hz range (spanning this boundary) is most dangerous for photosensitive seizure induction (see [[clinical-applications]]). Alpha anteriorization at 10-12 Hz marks the propofol-induced transition to unconsciousness — the traveling peak migrates downward through this boundary (see [[consciousness-and-anesthesia]]). Sleep spindles (10-14 Hz) straddle this boundary, with slow spindles (~9-12 Hz) below and fast spindles (~13-15 Hz) above, generated by the TRN's burst-mode T-type Ca²⁺ dynamics (see [[thalamocortical-circuits]], [[sleep-oscillations]]).
+
+## Alpha's Dynamics Within the Landscape
+
+Unlike theta's dramatic position migration under state changes, alpha is characterized by **power modulation at fixed positions**:
+
+**Resting state (EO).** The alpha mountain exists but is modest: attractor +35%, Noble1 +41%, 2° Noble +3%. The profile is relatively flat compared to EC — the mountain is low and the flanking depletion is shallow (boundary -35% vs EC -84%). Under EO, alpha is present but not strongly concentrated at lattice positions. The 1° Noble actually slightly exceeds the attractor under EO (+41% vs +35%), whereas under EC the attractor dominates (+113% vs +59%). The three archetypes span slow (~9 Hz, 2° Noble region), middle (~10 Hz, attractor/Noble1), and fast (~11 Hz, 3° Inverse Noble).
+
+**Eyes-closed.** EC transforms alpha from a modest enrichment to a dramatic mountain peak. The mechanism is **amplification and sharpening at fixed positions** — the largest effect size in all three Lacy papers (d = 1.00). The enrichment data quantifies this precisely:
+- Attractor: +35% → +113% (+86% gain, the largest EC-EO shift of any position in any band)
+- 2° Noble: +3% → +47% (+37% gain — the base of the mountain widens under EC)
+- Noble1: +41% → +59% (+15% gain — more modest, as Noble1 was already enriched under EO)
+- Boundary: -35% → -84% (-48% deepening — the flanks drop further)
+- Inv Noble 7: -39% → -85% (-47% deepening)
+
+The attractor's dominance over Noble1 under EC (+113% vs +59%) is a new finding from the 9-dataset analysis. The original papers emphasized Noble1 as the alpha peak, but the band-specific enrichment data shows that **the attractor is actually the most enriched alpha position under EC**. This shifts the interpretation: the attractor at 9.67 Hz (~100 ms cycle, the perceptual quantum) may be more architecturally significant than Noble1 at 10.23 Hz (which is confounded with the IAF/10 Hz peak). Whether the attractor's dominance reflects genuine φ-lattice organization or simply the lower edge of the IAF distribution cannot be distinguished at current spectral resolution (see alpha-IAF confound below).
+
+**Task engagement.** Alpha desynchronizes (ERD) in task-relevant regions, releasing gamma processing. Alpha synchronizes (ERS) in task-irrelevant regions, suppressing processing. This is the gating-by-inhibition framework — alpha doesn't move frequencies, it modulates **power** at its existing positions to route information. The ~100 ms pulsed inhibition creates discrete windows of varying excitability.
+
+**Psychedelic disruption.** Psychedelics produce massive suppression of posterior alpha, concentrated at the PCC (R² = 0.66 with ego dissolution). LSD uniquely increases alpha peak frequency by ~2 Hz even as power decreases — shifting the dominant generator upward, possibly from Noble1 toward the 3° Inverse Noble. Alpha collapse under psychedelics removes the precision-weighted priors of the REBUS model and dismantles one of the three pillars of the frequency scaffold ({boundary, attractor, noble1}). DMT shifts the dominant frequency to 7.36 Hz, pulling it below the f₀ boundary entirely — out of the alpha octave and into upper theta (see [[psychedelic-states]]).
+
+**Anesthesia.** Propofol anteriorizes alpha — posterior alpha coherence disappears while frontal alpha increases. The traveling peak migrates from 25-40 Hz downward through the 12 Hz boundary into the alpha band at loss of consciousness. Under sevoflurane, alpha increases at the vertex. The alpha band is where consciousness makes its last stand — the 10 Hz rhythm persists under light anesthesia before collapsing under deep anesthesia. The Schiff ABCD model tracks recovery through alpha: vegetative (only <1 Hz) → MCS (theta 4-8 Hz) → emerging (theta + beta) → full consciousness (established alpha-beta). Alpha restoration is the signature of consciousness returning (see [[consciousness-and-anesthesia]]).
+
+**Development.** Neonatal EEG has no alpha — the posterior dominant rhythm emerges at ~4-6 Hz in early childhood (in the theta octave) and accelerates through the alpha octave during development, reaching adult IAF (~10 Hz) by adolescence. IAF peaks at ~10.28 Hz around age 28, then declines to ~7 Hz by age 90 — but this "slowing" is actually archetype rebalancing (slow alpha dominance increases, middle and fast alpha decrease). The developmental trajectory represents a lifespan journey through the alpha φ-octave, from below the boundary in infancy to the Noble1 position in adulthood and back toward the attractor/2° Noble in old age (see [[development-and-aging]]).
+
+**Sex differences.** Females show ~0.5-1 Hz faster IAF than males, potentially shifting the mean female IAF closer to the 1° Noble while males sit slightly below. This may interact with hormonal modulation of GABA-A kinetics by allopregnanolone across the menstrual cycle (see [[sex-differences-in-oscillations]]).
+
+## The Alpha-IAF Confound
+
+Paper 2 identified a critical methodological limitation: the 1° Noble at 10.23 Hz differs from the canonical "10 Hz" alpha peak by only 0.23 Hz — at or below the spectral resolution of most EEG analyses. 53.7% of peaks within ±Δf of Noble1 also fall within ±Δf of 10.0 Hz. This means **alpha noble enrichment cannot be cleanly separated from generic IAF clustering** with current methods. The enrichment at this position is real and replicable across 919 subjects, but whether it reflects φ-specific lattice organization or the trivially expected concentration of peaks near the population's dominant oscillation frequency remains unresolved. Higher spectral resolution (Δf < 0.1 Hz) or datasets with known IAF variation would be needed to disambiguate (see [[aperiodic-dynamics]]).
+
+## Sources
+
+- Master enrichment data: raw/master_enrichment.csv — 9 datasets, 14 positions, all conditions (see [[phi-lattice-enrichment-data]])
+- Lacy (2026) — Paper 1: phi-lattice discovery, enrichment at Noble1
+- Lacy (2026b) — Paper 2: base specificity, alpha confound, IAF overlap
+- Lacy (2026c) — Paper 3: dominant-peak alignment, EC amplification d=1.00, three-position signal
+- Menetrey & Pascucci (2026) — Alpha archetypes: slow/middle/fast, component rebalancing with age
+- Han et al. (2026) — Berger effect localization, periodic (not aperiodic) alpha
+- Griffiths (2026) — Alpha-rhythmic gating of conscious awareness
+- D'Angelo et al. (2026) — IAF determines body ownership temporal binding window
+- Redding et al. (2026) — Alpha phase gates distractor suppression at ~9-10 Hz
+- Yang et al. (2025) — Consciousness shifts attentional sampling, 7.5→12 Hz
+- Tarasi et al. (2026) — Alpha traveling waves: backward predictions, forward sensory
+- Haque et al. (2025) — High-alpha (11-13 Hz) phase synchronization for working memory
+- Klimesch (2013, 2018) — Lower/upper alpha dissociation, binary hierarchy, golden mean
+- Busch, Dubois & VanRullen (2009) — Pre-stimulus alpha phase predicts visual detection (≥16%)
+- Smit et al. (2006) — IAF heritability ~81%
+- Grandy et al. (2013) — IAF stability, r=0.40 with intelligence (contested)
