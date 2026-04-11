@@ -98,6 +98,30 @@ CONFIGS = [
     (30, 0.001, 0.13,   12, 'adaptive', 'cap=12 + height=0.13'),
     (31, 0.001, 0.08,   10, 'adaptive', 'cap=10 + height=0.08'),
     (32, 0.001, 0.13,   10, 'adaptive', 'cap=10 + height=0.13'),
+    # --- ROUND 3: Sweep around field-standard config (thresh=2.0, height=0.0, cap=12) ---
+    # Baseline: field standard
+    (33, 2.0,   0.0,    12, 'adaptive', 'FIELD STANDARD cap=12'),
+    # Vary cap around 12 with field-standard thresholds
+    (34, 2.0,   0.0,    10, 'adaptive', 'field + cap=10'),
+    (35, 2.0,   0.0,    11, 'adaptive', 'field + cap=11'),
+    (36, 2.0,   0.0,    13, 'adaptive', 'field + cap=13'),
+    (37, 2.0,   0.0,    14, 'adaptive', 'field + cap=14'),
+    (38, 2.0,   0.0,    15, 'adaptive', 'field + cap=15 (v3 equiv)'),
+    (39, 2.0,   0.0,    20, 'adaptive', 'field + cap=20'),
+    # Vary threshold around 2.0 with cap=12
+    (40, 1.5,   0.0,    12, 'adaptive', 'thresh=1.5 + cap=12'),
+    (41, 2.5,   0.0,    12, 'adaptive', 'thresh=2.5 + cap=12'),
+    (42, 3.0,   0.0,    12, 'adaptive', 'thresh=3.0 + cap=12'),
+    # Add small absolute floor with field standard
+    (43, 2.0,   0.05,   12, 'adaptive', 'field + height=0.05'),
+    (44, 2.0,   0.10,   12, 'adaptive', 'field + height=0.10'),
+    # nperseg floor with field standard
+    (45, 2.0,   0.0,    12, '2500',     'field + cap=12 + floor=2500'),
+    # Field standard with different power filters (same extraction, test at analysis)
+    (46, 2.0,   0.0,    12, 'adaptive', 'field cap=12 (duplicate for power sweep)'),
+    # Compare: fully permissive + cap=12 vs field standard + cap=12
+    (47, 0.001, 0.0,    12, 'adaptive', 'permissive + cap=12'),
+    (48, 2.0,   0.0,     8, 'adaptive', 'field + cap=8 (low)'),
 ]
 
 # Degree-6 positions for enrichment
