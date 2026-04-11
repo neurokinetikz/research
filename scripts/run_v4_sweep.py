@@ -78,6 +78,26 @@ CONFIGS = [
     (14, 1.0,   0.05,   20, 'adaptive', 'strict thresh, generous cap'),
     (15, 0.001, 0.0001, 15, '2500',     'v3 + nperseg floor=2500'),
     (16, 1.0,   0.05,   15, '2500',     'combined moderate + floor=2500'),
+    # --- ROUND 2: Zero in on max_n_peaks and min_peak_height ---
+    # Fine-grained max_n_peaks (the dominant parameter)
+    (17, 0.001, 0.0001, 7,  'adaptive', 'cap=7'),
+    (18, 0.001, 0.0001, 8,  'adaptive', 'cap=8'),
+    (19, 0.001, 0.0001, 9,  'adaptive', 'cap=9'),
+    (20, 0.001, 0.0001, 10, 'adaptive', 'cap=10'),
+    (21, 0.001, 0.0001, 11, 'adaptive', 'cap=11'),
+    (22, 0.001, 0.0001, 12, 'adaptive', 'cap=12'),
+    (23, 0.001, 0.0001, 13, 'adaptive', 'cap=13'),
+    (24, 0.001, 0.0001, 14, 'adaptive', 'cap=14'),
+    # min_peak_height as power filter substitute (no analysis-time filter needed?)
+    (25, 0.001, 0.03,   15, 'adaptive', 'height=0.03 (10th pct)'),
+    (26, 0.001, 0.08,   15, 'adaptive', 'height=0.08 (25th pct)'),
+    (27, 0.001, 0.13,   15, 'adaptive', 'height=0.13 (50th pct)'),
+    (28, 0.001, 0.15,   15, 'adaptive', 'height=0.15 (60th pct)'),
+    # Interaction: optimal cap + height (does combining help?)
+    (29, 0.001, 0.08,   12, 'adaptive', 'cap=12 + height=0.08'),
+    (30, 0.001, 0.13,   12, 'adaptive', 'cap=12 + height=0.13'),
+    (31, 0.001, 0.08,   10, 'adaptive', 'cap=10 + height=0.08'),
+    (32, 0.001, 0.13,   10, 'adaptive', 'cap=10 + height=0.13'),
 ]
 
 # Degree-6 positions for enrichment
