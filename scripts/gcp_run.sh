@@ -99,7 +99,7 @@ gcloud compute ssh $VM_NAME --zone=$ZONE --command="
     source ~/eeg_env/bin/activate
 
     # Get latest code
-    cd ~/research && git pull 2>/dev/null || (cd ~ && git clone git@github.com:neurokinetikz/research.git)
+    cd ~/research && git pull 2>/dev/null || (cd ~ && git clone https://github.com/neurokinetikz/research.git)
     cd ~/research
 
     export OMP_NUM_THREADS=1
