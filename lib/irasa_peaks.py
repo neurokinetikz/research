@@ -197,12 +197,15 @@ def irasa_extract_peaks(data, fs, fit_lo, fit_hi, nperseg, noverlap,
         osc_snr = 0.0
 
     # Find peaks in oscillatory spectrum.
-    # IRASA P_osc is in linear power (V²/Hz or µV²/Hz) -- absolute thresholds
-    # are meaningless because scale depends on EEG units. Convert to relative
-    # thresholds based on the P_osc distribution within this band.
-    p_osc_median = np.median(P_osc[P_osc > 0]) if np.any(P_osc > 0) else 0.0
-    rel_height = max(p_osc_median * min_peak_height * 1e4, 0.0)  # scale-invariant
-    rel_prominence = max(p_osc_median * peak_prominence * 1e3, 0.0)
+    # IRASA P_osc is in linear power (V²/Hz) -- absolute thresholds are
+    # meaningless because scale depends on EEG units. Use SD-based thresholds
+    # analogous to FOOOF's peak_threshold (in SD units of flattened spectrum).
+    # With peak_prominence=0.001 (our v3 default), this is extremely permissive --
+    # just above the noise floor. Real filtering happens via the 50% power
+    # filter at enrichment analysis time, same as FOOOF.
+    p_osc_std = np.std(P_osc) if len(P_osc) > 0 else 0.0
+    rel_height = p_osc_std * min_peak_height    # ~0.0001 × SD: effectively zero
+    rel_prominence = p_osc_std * peak_prominence  # ~0.001 × SD: just above noise
     min_distance = max(1, int(np.ceil(2 * freq_res / (f[1] - f[0]))))
     peak_indices, properties = find_peaks(
         P_osc,
