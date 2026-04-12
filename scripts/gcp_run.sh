@@ -30,11 +30,11 @@ VM_NAME=$(echo "$VM_NAME" | tr '[:upper:]' '[:lower:]' | tr '_' '-' | head -c 60
 
 # Map dataset to GCS data path
 case $DATASET in
-    eegmmidb) DATA_PATHS="eegmmidb" ;;
-    lemon)    DATA_PATHS="lemon_data" ;;
-    dortmund) DATA_PATHS="dortmund_data_dl dortmund_data" ;;
-    chbmp)    DATA_PATHS="CHBMP" ;;
-    hbn)      DATA_PATHS="hbn_data" ;;
+    eegmmidb) DATA_PATHS="eegmmidb";               DISK_GB=50 ;;
+    lemon)    DATA_PATHS="lemon_data";              DISK_GB=100 ;;
+    dortmund) DATA_PATHS="dortmund_data_dl dortmund_data"; DISK_GB=100 ;;
+    chbmp)    DATA_PATHS="CHBMP";                   DISK_GB=50 ;;
+    hbn)      DATA_PATHS="hbn_data";                DISK_GB=500 ;;
     *)        echo "Unknown dataset: $DATASET"; exit 1 ;;
 esac
 
@@ -58,7 +58,7 @@ gcloud compute instances create $VM_NAME \
     --project=$PROJECT \
     --zone=$ZONE \
     --machine-type=$MACHINE_TYPE \
-    --boot-disk-size=500GB \
+    --boot-disk-size=${DISK_GB}GB \
     --boot-disk-type=pd-ssd \
     --image=$IMAGE \
     --image-project=$PROJECT \
