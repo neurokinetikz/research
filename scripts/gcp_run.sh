@@ -30,10 +30,10 @@ VM_NAME=$(echo "$VM_NAME" | tr '[:upper:]' '[:lower:]' | tr '_' '-' | head -c 60
 
 # Map dataset to GCS data path
 case $DATASET in
-    eegmmidb) DATA_PATHS="eegmmidb";               DISK_GB=50 ;;
-    lemon)    DATA_PATHS="lemon_data";              DISK_GB=100 ;;
-    dortmund) DATA_PATHS="dortmund_data_dl dortmund_data"; DISK_GB=100 ;;
-    chbmp)    DATA_PATHS="CHBMP";                   DISK_GB=50 ;;
+    eegmmidb) DATA_PATHS="eegmmidb";               DISK_GB=500 ;;
+    lemon)    DATA_PATHS="lemon_data";              DISK_GB=500 ;;
+    dortmund) DATA_PATHS="dortmund_data_dl dortmund_data"; DISK_GB=500 ;;
+    chbmp)    DATA_PATHS="CHBMP";                   DISK_GB=500 ;;
     hbn)      DATA_PATHS="hbn_data";                DISK_GB=500 ;;
     *)        echo "Unknown dataset: $DATASET"; exit 1 ;;
 esac
@@ -87,16 +87,28 @@ gcloud compute ssh $VM_NAME --zone=$ZONE --command="
     export MKL_NUM_THREADS=1
     export OPENBLAS_NUM_THREADS=1
 
-    # Pull data from GCS into /Volumes/T9 (matching hardcoded paths)
-    echo '>>> Pulling data...'
+    # Mount GCS bucket as local filesystem via gcsfuse
+    echo '>>> Mounting GCS bucket...'
+    which gcsfuse > /dev/null 2>&1 || (
+        export GCSFUSE_REPO=gcsfuse-\$(lsb_release -c -s)
+        echo \"deb [signed-by=/usr/share/keyrings/cloud.google.asc] https://packages.cloud.google.com/apt \$GCSFUSE_REPO main\" | sudo tee /etc/apt/sources.list.d/gcsfuse.list
+        curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo tee /usr/share/keyrings/cloud.google.asc
+        sudo apt-get update -qq && sudo apt-get install -y -qq gcsfuse
+    )
+    sudo mkdir -p /gcs
+    sudo chmod 777 /gcs
+    gcsfuse --implicit-dirs eeg-extraction-data /gcs
+
+    # Symlink to match hardcoded /Volumes/T9/ paths
     sudo mkdir -p /Volumes/T9
     sudo chmod 777 /Volumes/T9
     for path in $DATA_PATHS; do
-        echo \"  Pulling \$path...\"
-        gcloud storage cp -r $BUCKET/\$path /Volumes/T9/ 2>&1 | tail -1
+        ln -sf /gcs/\$path /Volumes/T9/\$(basename \$path)
     done
-    echo '  Data:'
-    ls /Volumes/T9/
+    # Also link dortmund_data for demographics
+    [ -d /gcs/dortmund_data ] && ln -sf /gcs/dortmund_data /Volumes/T9/dortmund_data
+    echo '  Mounted:'
+    ls -la /Volumes/T9/
 
     echo '>>> Starting extraction (parallel=28)...'
     export OMP_NUM_THREADS=1
