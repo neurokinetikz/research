@@ -100,37 +100,25 @@ gcloud compute ssh $VM_NAME --zone=$ZONE --command="
     export MKL_NUM_THREADS=1
     export OPENBLAS_NUM_THREADS=1
 
-    # Mount GCS bucket as local filesystem via gcsfuse
-    echo '>>> Mounting GCS bucket...'
-    which gcsfuse > /dev/null 2>&1 || (
-        export GCSFUSE_REPO=gcsfuse-\$(lsb_release -c -s)
-        echo \"deb [signed-by=/usr/share/keyrings/cloud.google.asc] https://packages.cloud.google.com/apt \$GCSFUSE_REPO main\" | sudo tee /etc/apt/sources.list.d/gcsfuse.list
-        curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo tee /usr/share/keyrings/cloud.google.asc
-        sudo apt-get update -qq && sudo apt-get install -y -qq gcsfuse
-    )
-    sudo mkdir -p /gcs
-    sudo chmod 777 /gcs
-    gcsfuse --implicit-dirs eeg-extraction-data /gcs
-
-    # Symlink to match hardcoded /Volumes/T9/ paths
-    # Preserve parent directories for nested paths (e.g., hbn_data/cmi_bids_R1)
+    # Direct copy from GCS (gcsfuse drops subjects silently)
+    echo '>>> Copying data from GCS...'
     sudo mkdir -p /Volumes/T9
     sudo chmod 777 /Volumes/T9
     for path in $DATA_PATHS; do
         parent=\$(dirname \$path)
-        base=\$(basename \$path)
         if [ \"\$parent\" != \".\" ]; then
             mkdir -p /Volumes/T9/\$parent
-            ln -sf /gcs/\$path /Volumes/T9/\$path
-        else
-            ln -sf /gcs/\$path /Volumes/T9/\$base
         fi
+        echo \"  Copying \$path...\"
+        gcloud storage cp -r $BUCKET/\$path /Volumes/T9/\$parent/ 2>&1 | tail -1
     done
-    # Also link dortmund_data for demographics
-    [ -d /gcs/dortmund_data ] && ln -sf /gcs/dortmund_data /Volumes/T9/dortmund_data
-    echo '  Mounted:'
-    ls -la /Volumes/T9/
-    ls -la /Volumes/T9/hbn_data/ 2>/dev/null
+    # Also copy dortmund_data for demographics if extracting dortmund
+    case $DATASET in dortmund*)
+        echo '  Copying dortmund_data (demographics)...'
+        gcloud storage cp -r $BUCKET/dortmund_data /Volumes/T9/ 2>&1 | tail -1
+    ;; esac
+    echo '  Data:'
+    ls /Volumes/T9/
 
     echo '>>> Starting extraction (parallel=28)...'
     export OMP_NUM_THREADS=1
