@@ -19,7 +19,7 @@ hset selection follows Gerster et al. (2022) recommendations:
 """
 
 import numpy as np
-from scipy.signal import find_peaks
+from scipy.signal import find_peaks, peak_widths
 from scipy.optimize import curve_fit
 
 from shape_vs_resonance import irasa_psd
@@ -221,13 +221,23 @@ def irasa_extract_peaks(data, fs, fit_lo, fit_hi, nperseg, noverlap,
     order = np.argsort(P_osc[peak_indices])[::-1]
     peak_indices = peak_indices[order[:max_n_peaks]]
 
-    # Fit Gaussians to each peak
-    max_half_width = max_peak_width_hz / 2.0
+    # Extract peak parameters directly from find_peaks + peak_widths.
+    # This avoids curve_fit failures that drop peaks and reduce yield.
+    # Bandwidth is estimated from peak width at half-prominence, converted
+    # to Hz. This is analogous to FOOOF's Gaussian bandwidth (2*sigma).
+    df = f[1] - f[0] if len(f) > 1 else freq_res
+    widths_result = peak_widths(P_osc, peak_indices, rel_height=0.5)
+    widths_samples = widths_result[0]  # width in samples at half height
+
     fitted_peaks = []
-    for idx in peak_indices:
-        result = _fit_gaussian(f, P_osc, idx, freq_res, max_half_width)
-        if result is not None:
-            fitted_peaks.append(result)
+    for i, idx in enumerate(peak_indices):
+        center = f[idx]
+        power = P_osc[idx]
+        bandwidth = widths_samples[i] * df  # convert samples to Hz
+        # Clamp bandwidth to reasonable range
+        bandwidth = max(bandwidth, freq_res)
+        bandwidth = min(bandwidth, max_peak_width_hz)
+        fitted_peaks.append((center, power, bandwidth))
 
     if not fitted_peaks:
         return np.empty((0, 3)), quality, osc_snr
