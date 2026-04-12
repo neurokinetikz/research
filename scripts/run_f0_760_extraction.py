@@ -63,7 +63,7 @@ MAX_N_PEAKS = 12  # = number of Voronoi bins; inflection point in cap curve
 MERGE_THETA_ALPHA = True
 
 FOOOF_BASE_PARAMS = dict(
-    peak_threshold=2.0,  # FOOOF default; v4 sweep confirmed no impact vs 0.001
+    peak_threshold=0.001,  # Permissive; 2.0 kills gamma peaks. Power filter at analysis time.
     min_peak_height=0.0001,
     aperiodic_mode='fixed',
 )
