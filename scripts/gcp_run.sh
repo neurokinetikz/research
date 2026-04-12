@@ -23,7 +23,7 @@ PROJECT="claude-493017"
 ZONE="us-central1-a"
 BUCKET="gs://eeg-extraction-data"
 MACHINE_TYPE="c2d-standard-32"
-IMAGE="eeg-extraction-image"
+IMAGE="eeg-extraction-image-100gb"
 
 # Build VM name and extraction args
 METHOD_SUFFIX=""
@@ -33,16 +33,16 @@ VM_NAME=$(echo "$VM_NAME" | tr '[:upper:]' '[:lower:]' | tr '_' '-' | head -c 60
 
 # Map dataset to GCS data path
 case $DATASET in
-    eegmmidb) DATA_PATHS="eegmmidb";               DISK_GB=500 ;;
-    lemon)    DATA_PATHS="lemon_data";              DISK_GB=500 ;;
-    dortmund) DATA_PATHS="dortmund_data_dl dortmund_data"; DISK_GB=500 ;;
-    chbmp)    DATA_PATHS="CHBMP";                   DISK_GB=500 ;;
-    hbn)      DATA_PATHS="hbn_data";                DISK_GB=500 ;;
-    hbn_r1)   DATA_PATHS="hbn_data/cmi_bids_R1";   DISK_GB=500 ;;
-    hbn_r2)   DATA_PATHS="hbn_data/cmi_bids_R2";   DISK_GB=500 ;;
-    hbn_r3)   DATA_PATHS="hbn_data/cmi_bids_R3";   DISK_GB=500 ;;
-    hbn_r4)   DATA_PATHS="hbn_data/cmi_bids_R4";   DISK_GB=500 ;;
-    hbn_r6)   DATA_PATHS="hbn_data/cmi_bids_R6";   DISK_GB=500 ;;
+    eegmmidb) DATA_PATHS="eegmmidb";               DISK_GB=100 ;;
+    lemon)    DATA_PATHS="lemon_data";              DISK_GB=150 ;;
+    dortmund) DATA_PATHS="dortmund_data_dl dortmund_data"; DISK_GB=150 ;;
+    chbmp)    DATA_PATHS="CHBMP";                   DISK_GB=100 ;;
+    hbn)      DATA_PATHS="hbn_data";                DISK_GB=800 ;;
+    hbn_r1)   DATA_PATHS="hbn_data/cmi_bids_R1";   DISK_GB=200 ;;
+    hbn_r2)   DATA_PATHS="hbn_data/cmi_bids_R2";   DISK_GB=200 ;;
+    hbn_r3)   DATA_PATHS="hbn_data/cmi_bids_R3";   DISK_GB=250 ;;
+    hbn_r4)   DATA_PATHS="hbn_data/cmi_bids_R4";   DISK_GB=350 ;;
+    hbn_r6)   DATA_PATHS="hbn_data/cmi_bids_R6";   DISK_GB=200 ;;
     *)        echo "Unknown dataset: $DATASET"; exit 1 ;;
 esac
 
