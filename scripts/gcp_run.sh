@@ -3,21 +3,22 @@
 # Spawns a VM from custom image, runs extraction for one dataset, saves to GCS, deletes VM.
 #
 # Usage:
-#   bash scripts/gcp_run.sh eegmmidb
-#   bash scripts/gcp_run.sh dortmund
+#   bash scripts/gcp_run.sh eegmmidb              # FOOOF (default)
+#   bash scripts/gcp_run.sh eegmmidb "" 1 irasa   # IRASA
 #
-# Run multiple datasets in parallel:
-#   bash scripts/gcp_run.sh eegmmidb &
-#   bash scripts/gcp_run.sh dortmund &
-#   bash scripts/gcp_run.sh lemon &
-#   bash scripts/gcp_run.sh chbmp &
+# Run all datasets with IRASA in parallel:
+#   bash scripts/gcp_run.sh eegmmidb "" 1 irasa &
+#   bash scripts/gcp_run.sh dortmund "" 1 irasa &
+#   bash scripts/gcp_run.sh lemon "" 1 irasa &
+#   bash scripts/gcp_run.sh chbmp "" 1 irasa &
 #   wait
 
 set -e
 
-DATASET=${1:?Usage: gcp_run.sh <dataset> [condition] [session]}
+DATASET=${1:?Usage: gcp_run.sh <dataset> [condition] [session] [method]}
 CONDITION=${2:-""}
 SESSION=${3:-"1"}
+METHOD=${4:-"fooof"}
 PROJECT="claude-493017"
 ZONE="us-central1-a"
 BUCKET="gs://eeg-extraction-data"
@@ -25,7 +26,9 @@ MACHINE_TYPE="c2d-standard-32"
 IMAGE="eeg-extraction-image"
 
 # Build VM name and extraction args
-VM_NAME="eeg-${DATASET}${CONDITION:+-$CONDITION}${SESSION:+-ses$SESSION}"
+METHOD_SUFFIX=""
+[ "$METHOD" = "irasa" ] && METHOD_SUFFIX="-irasa"
+VM_NAME="eeg-${DATASET}${CONDITION:+-$CONDITION}${SESSION:+-ses$SESSION}${METHOD_SUFFIX}"
 VM_NAME=$(echo "$VM_NAME" | tr '[:upper:]' '[:lower:]' | tr '_' '-' | head -c 60)
 
 # Map dataset to GCS data path
@@ -59,8 +62,11 @@ esac
 export PATH="/opt/homebrew/share/google-cloud-sdk/bin:$PATH"
 export GOOGLE_APPLICATION_CREDENTIALS="/Users/neurokinetikz/Code/research/.gcp/claude-493017-ad29d1cd661b.json"
 
+EXPORT_DIR="exports_adaptive_v4"
+[ "$METHOD" = "irasa" ] && EXPORT_DIR="exports_irasa_v4"
+
 echo "============================================================"
-echo "  GCP Run: $DATASET $CONDITION ses-$SESSION"
+echo "  GCP Run: $DATASET $CONDITION ses-$SESSION method=$METHOD"
 echo "  VM: $VM_NAME ($MACHINE_TYPE)"
 echo "  Started: $(date)"
 echo "============================================================"
@@ -124,10 +130,14 @@ gcloud compute ssh $VM_NAME --zone=$ZONE --command="
     export OMP_NUM_THREADS=1
     export MKL_NUM_THREADS=1
     export OPENBLAS_NUM_THREADS=1
-    python scripts/run_f0_760_extraction.py $EXTRACT_ARGS --parallel 28 2>&1
+    python scripts/run_f0_760_extraction.py $EXTRACT_ARGS --method $METHOD --parallel 28 2>&1
 
     echo '>>> Pushing results to GCS...'
-    gcloud storage cp -r exports_adaptive_v4 $BUCKET/results/ 2>&1 | tail -3
+    if [ '$METHOD' = 'irasa' ]; then
+        gcloud storage cp -r exports_irasa_v4 $BUCKET/results/ 2>&1 | tail -3
+    else
+        gcloud storage cp -r exports_adaptive_v4 $BUCKET/results/ 2>&1 | tail -3
+    fi
 
     echo '>>> DONE'
 " 2>&1
@@ -140,7 +150,7 @@ gcloud compute instances delete $VM_NAME \
     2>&1
 
 echo "============================================================"
-echo "  COMPLETE: $DATASET $CONDITION ses-$SESSION"
-echo "  Results: $BUCKET/results/exports_adaptive_v4/"
+echo "  COMPLETE: $DATASET $CONDITION ses-$SESSION method=$METHOD"
+echo "  Results: $BUCKET/results/$EXPORT_DIR/"
 echo "  Finished: $(date)"
 echo "============================================================"

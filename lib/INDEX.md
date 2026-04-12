@@ -106,6 +106,7 @@
 
 | File | Description |
 |------|-------------|
+| irasa_peaks.py | IRASA aperiodic removal + Gaussian peak fitting for method-independent peak extraction (P22) |
 | median_filter_peaks.py | Welch PSD + median-filter peak extraction for spectral analysis comparison |
 | psd_waterfall.py | Grand waterfall/heatmap visualization from accumulated ignition-window PSD rows |
 | synchrosqueeze.py | Ridge-sharp time-frequency analysis for SR fundamentals using synchrosqueezed CWT |

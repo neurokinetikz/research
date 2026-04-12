@@ -73,7 +73,7 @@ These were predicted by the theoretical framework and subsequently validated emp
 
 **P21. Intracranial EEG should show sharper lattice structure.** Scalp EEG limits spectral resolution and contaminates gamma with muscle artifact. Prediction: intracranial EEG analyzed with the lattice framework should show sharper enrichment peaks, gamma extending above 45 Hz, stronger φ rank without OT extraction, and resolution of the alpha Noble1/IAF confound. Would address Paper 3's recommendation for method-independent validation (see [[gamma-oscillations]], [[aperiodic-dynamics]]).
 
-**P22. IRASA or eBOSC replication should confirm or reject the OT extraction dependency.** Paper 3's most important caveat: φ ranks 1st only under per-octave aperiodic modeling (7th under standard). Prediction: if IRASA-extracted dominant peaks show φ ranking 1st without per-octave fitting, the lattice signal is method-independent. If φ drops to 7th under IRASA, the signal is an artifact of the aperiodic correction step. This is the **single most important test** for the framework's validity. Requires re-analysis only (see [[aperiodic-dynamics]]).
+**P22. IRASA or eBOSC replication should confirm or reject the OT extraction dependency.** Paper 3's most important caveat: φ ranks 1st only under per-octave aperiodic modeling (7th under standard). Prediction: if IRASA-extracted peaks show φ-lattice enrichment without per-octave parametric fitting, the lattice signal is method-independent. If enrichment disappears under IRASA, the signal is an artifact of the per-octave aperiodic correction step. This is the **single most important test** for the framework's validity. Implementation: IRASA aperiodic removal (Wen & Liu, 2016) followed by Gaussian peak fitting on the oscillatory residual, with band-adaptive resampling factors per Gerster et al. (2022) to avoid highpass edge and noise floor contamination. The same band construction, Voronoi binning, and Hz-weighted enrichment analysis are applied to IRASA-extracted peaks, enabling direct comparison with FOOOF results. IRASA is particularly well-suited for this test because its aperiodic removal is non-parametric (no assumption about peak shape or 1/f model), providing genuine methodological independence from specparam (see [[aperiodic-dynamics]]).
 
 ## Tier 3: Long-Range Theoretical Predictions
 
@@ -113,4 +113,6 @@ The remaining critical-priority prediction is **P22** (IRASA/eBOSC replication),
 - Lacy (2026, 2026b, 2026c) — The three papers generating the framework
 - Pletzer et al. (2010) — Theoretical foundation for φ predictions
 - Kramer (2022) — Cross-frequency coupling predictions
+- Wen & Liu (2016) — IRASA methodology for P22
+- Gerster et al. (2022) — FOOOF vs IRASA challenges and parameter guidance for P22 implementation (Neuroinformatics, 20:991-1012)
 - See [[unified-phi-lattice-framework]] for the seven pillars these predictions derive from

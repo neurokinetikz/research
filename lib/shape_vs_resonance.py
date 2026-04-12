@@ -120,10 +120,12 @@ def cycles_morphology(x, fs, f0=7.83, half=1.0, sharp_win=0.02):
 
 # ----------------------------- (B) IRASA‑like background removal -----------------------------
 
-def irasa_psd(x, fs, hset=(1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9), nperseg=None, fmax=60.0):
+def irasa_psd(x, fs, hset=(1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9), nperseg=None, fmax=60.0,
+              return_per_h=False):
     """Approximate IRASA: resample by h and 1/h, compute PSDs, map freqs back by /h and *h,
     take geometric mean and then median over h to estimate fractal; subtract (in linear power)
     to get oscillatory. Returns f, Pxx, P_frac, P_osc (clipped >=0).
+    If return_per_h=True, also returns P_fracs_stack (n_h × n_freqs) for quality metrics.
     """
     x = np.asarray(x, float)
     if nperseg is None:
@@ -155,8 +157,11 @@ def irasa_psd(x, fs, hset=(1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9), nperseg=None, f
         # geometric mean
         G = np.sqrt(np.maximum(Ph_map, 1e-20) * np.maximum(Phm_map, 1e-20))
         P_fracs.append(G)
-    P_frac = np.nanmedian(np.vstack(P_fracs), axis=0)
+    P_fracs_stack = np.vstack(P_fracs)
+    P_frac = np.nanmedian(P_fracs_stack, axis=0)
     P_osc = np.clip(P - P_frac, 0, None)
+    if return_per_h:
+        return f, P, P_frac, P_osc, P_fracs_stack
     return f, P, P_frac, P_osc
 
 # ----------------------------- (C) Discrete (cross‑)bicoherence -----------------------------

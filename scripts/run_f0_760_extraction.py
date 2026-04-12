@@ -31,6 +31,7 @@ import mne
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib'))
 from lemon_utils import _get_peak_params, _get_aperiodic_params, _get_r_squared
+from irasa_peaks import irasa_extract_peaks
 
 try:
     from specparam import SpectralModel
@@ -49,11 +50,13 @@ PHI = (1 + np.sqrt(5)) / 2
 F0 = 7.60  # <-- Changed from 7.83
 TARGET_FS = 250.0
 R2_MIN = 0.70
+IRASA_QUALITY_MIN = 0.70  # Fractal consistency threshold (calibrate on first run)
 PAD_OCTAVES = 0.5
 FILTER_LO = 1.0
 FREQ_CEIL = 55.0
 
 OUTPUT_BASE = os.path.join(os.path.dirname(__file__), '..', 'exports_adaptive_v4')
+IRASA_OUTPUT_BASE = os.path.join(os.path.dirname(__file__), '..', 'exports_irasa_v4')
 
 # Max peaks per FOOOF fit: slightly above 12 bins per octave
 # Optimal config from v4 sweep (48 configs on EEGMMIDB)
@@ -175,13 +178,61 @@ def merge_narrow_bands(bands, min_width_hz=1.5):
     return merged
 
 
+def _fit_channel_fooof(data, fs, fit_lo, fit_hi, nperseg, noverlap,
+                       fooof_params, r2_min):
+    """Fit a single channel with FOOOF/specparam.
+
+    Returns (peaks_Nx3, r2) or None if fit fails or R2 below threshold.
+    """
+    freqs, psd = welch(data, fs, nperseg=nperseg, noverlap=noverlap)
+    fit_mask = (freqs >= fit_lo) & (freqs <= fit_hi)
+    if fit_mask.sum() < 10:
+        return None
+
+    sm = SpectralModel(**fooof_params)
+    try:
+        sm.fit(freqs, psd, [fit_lo, fit_hi])
+    except Exception:
+        return None
+
+    r2 = _get_r_squared(sm)
+    if np.isnan(r2) or r2 < r2_min:
+        return None
+
+    peaks = _get_peak_params(sm)
+    return peaks, r2
+
+
+def _fit_channel_irasa(data, fs, fit_lo, fit_hi, nperseg, noverlap,
+                       max_n_peaks, freq_res, max_peak_width, quality_min):
+    """Fit a single channel with IRASA + Gaussian peak fitting.
+
+    Returns (peaks_Nx3, quality) or None if quality below threshold.
+    """
+    peaks, quality, osc_snr = irasa_extract_peaks(
+        data, fs, fit_lo, fit_hi, nperseg, noverlap,
+        max_n_peaks=max_n_peaks,
+        min_peak_height=0.0001,
+        peak_prominence=0.001,
+        freq_res=freq_res,
+        max_peak_width_hz=max_peak_width,
+    )
+    if quality < quality_min:
+        return None
+    if len(peaks) == 0:
+        return None
+    return peaks, quality
+
+
 def extract_adaptive_subject(raw_clean, f0, fs, freq_ceil=FREQ_CEIL,
-                             r2_min=R2_MIN):
+                             r2_min=R2_MIN, method='fooof'):
     raw_bands = build_adaptive_bands(f0, fs, freq_ceil)
     bands = merge_narrow_bands(raw_bands)
     ch_names = raw_clean.ch_names
     all_peaks = []
     band_stats = []
+
+    quality_min = IRASA_QUALITY_MIN if method == 'irasa' else r2_min
 
     for band in bands:
         bname = band['name']
@@ -216,26 +267,25 @@ def extract_adaptive_subject(raw_clean, f0, fs, freq_ceil=FREQ_CEIL,
             if len(data) < nperseg:
                 continue
 
-            freqs, psd = welch(data, fs, nperseg=nperseg, noverlap=noverlap)
-            fit_mask = (freqs >= fit_lo) & (freqs <= fit_hi)
-            if fit_mask.sum() < 10:
-                continue
-
             n_fitted += 1
-            sm = SpectralModel(**fooof_params)
-            try:
-                sm.fit(freqs, psd, [fit_lo, fit_hi])
-            except Exception:
+
+            if method == 'fooof':
+                result = _fit_channel_fooof(
+                    data, fs, fit_lo, fit_hi, nperseg, noverlap,
+                    fooof_params, r2_min)
+            else:
+                result = _fit_channel_irasa(
+                    data, fs, fit_lo, fit_hi, nperseg, noverlap,
+                    MAX_N_PEAKS, freq_res, max_peak_width, quality_min)
+
+            if result is None:
                 continue
 
-            r2 = _get_r_squared(sm)
-            if np.isnan(r2) or r2 < r2_min:
-                continue
-
+            peaks, r2 = result
             n_passed += 1
             band_r2s.append(r2)
 
-            for row in _get_peak_params(sm):
+            for row in peaks:
                 if target_lo <= row[0] < target_hi:
                     # For merged theta+alpha, assign by frequency
                     if is_merged:
@@ -409,6 +459,7 @@ def load_hbn(set_path):
 _WORKER_LOADER_NAME = None
 _WORKER_LOADER_KWARGS = None
 _WORKER_OUT_DIR = None
+_WORKER_METHOD = 'fooof'
 
 
 def _extract_one_subject(args):
@@ -445,7 +496,7 @@ def _extract_one_subject(args):
     duration = raw.n_times / fs
 
     try:
-        peaks_df, band_info = extract_adaptive_subject(raw, F0, fs)
+        peaks_df, band_info = extract_adaptive_subject(raw, F0, fs, method=_WORKER_METHOD)
     except Exception as e:
         del raw; gc.collect()
         return {'subject_id': sub_id, 'status': 'error', 'n_peaks': 0}
@@ -465,13 +516,13 @@ def _extract_one_subject(args):
 
 
 def process_subjects(subjects, loader_name, out_dir, dataset_label,
-                     loader_kwargs=None, parallel=1):
-    global _WORKER_LOADER_NAME, _WORKER_LOADER_KWARGS, _WORKER_OUT_DIR
+                     loader_kwargs=None, parallel=1, method='fooof'):
+    global _WORKER_LOADER_NAME, _WORKER_LOADER_KWARGS, _WORKER_OUT_DIR, _WORKER_METHOD
 
     os.makedirs(out_dir, exist_ok=True)
     t_start = time.time()
 
-    log.info(f"\n{dataset_label} (f0={F0}): {len(subjects)} subjects")
+    log.info(f"\n{dataset_label} (f0={F0}, method={method}): {len(subjects)} subjects")
     log.info(f"  Output: {out_dir}")
     if parallel > 1:
         log.info(f"  Parallel workers: {parallel}")
@@ -485,6 +536,8 @@ def process_subjects(subjects, loader_name, out_dir, dataset_label,
         log.info(f"  {b['name']:>12s}  {tgt:>18s}  {b['nperseg']:>8d}  "
                  f"{b['nperseg']/TARGET_FS:>7.1f}s  {b['freq_res']:>8.4f}Hz")
 
+    _WORKER_METHOD = method
+
     if parallel > 1:
         # Parallel mode
         from multiprocessing import Pool
@@ -493,7 +546,7 @@ def process_subjects(subjects, loader_name, out_dir, dataset_label,
         _WORKER_OUT_DIR = out_dir
 
         with Pool(parallel, initializer=_init_worker,
-                  initargs=(loader_name, loader_kwargs or {}, out_dir)) as pool:
+                  initargs=(loader_name, loader_kwargs or {}, out_dir, method)) as pool:
             results = pool.map(_extract_one_subject, subjects)
 
         summary_rows = results
@@ -528,12 +581,13 @@ def process_subjects(subjects, loader_name, out_dir, dataset_label,
         log.info(f"  Total peaks: {ok['n_peaks'].sum():,}")
 
 
-def _init_worker(loader_name, loader_kwargs, out_dir):
+def _init_worker(loader_name, loader_kwargs, out_dir, method='fooof'):
     """Initialize global state in each worker process."""
-    global _WORKER_LOADER_NAME, _WORKER_LOADER_KWARGS, _WORKER_OUT_DIR
+    global _WORKER_LOADER_NAME, _WORKER_LOADER_KWARGS, _WORKER_OUT_DIR, _WORKER_METHOD
     _WORKER_LOADER_NAME = loader_name
     _WORKER_LOADER_KWARGS = loader_kwargs or {}
     _WORKER_OUT_DIR = out_dir
+    _WORKER_METHOD = method
 
 
 # =========================================================================
@@ -551,6 +605,9 @@ def main():
                         help='Condition (EO for LEMON; EC-pre/EO-pre/EC-post/EO-post for Dortmund)')
     parser.add_argument('--session', type=str, default='1',
                         help='Session number for Dortmund (1 or 2)')
+    parser.add_argument('--method', type=str, default='fooof',
+                        choices=['fooof', 'irasa'],
+                        help='Peak detection method (default: fooof)')
     parser.add_argument('--separate-theta-alpha', action='store_true',
                         help='Use separate FOOOF fits for theta and alpha (for comparison)')
     parser.add_argument('--parallel', type=int, default=1,
@@ -559,11 +616,14 @@ def main():
 
     # Override global merge flag if --separate-theta-alpha is set
     global MERGE_THETA_ALPHA, OUTPUT_BASE
+    if args.method == 'irasa':
+        OUTPUT_BASE = IRASA_OUTPUT_BASE
     if args.separate_theta_alpha:
         MERGE_THETA_ALPHA = False
         OUTPUT_BASE = OUTPUT_BASE + '_separate'
 
     n_parallel = args.parallel
+    method = args.method
 
     if args.dataset == 'eegmmidb':
         data_dir = '/Volumes/T9/eegmmidb'
@@ -573,7 +633,7 @@ def main():
         subjects = [(f'S{int(s[1:]):03d}', None) for s in subs]
         out_dir = os.path.join(OUTPUT_BASE, 'eegmmidb')
         process_subjects(subjects, 'eegmmidb', out_dir, 'EEGMMIDB',
-                         parallel=n_parallel)
+                         parallel=n_parallel, method=method)
 
     elif args.dataset == 'lemon':
         data_dir = '/Volumes/T9/lemon_data/eeg_preprocessed/EEG_MPILMBB_LEMON/EEG_Preprocessed_BIDS_ID/EEG_Preprocessed'
@@ -583,7 +643,8 @@ def main():
         suffix = f'_EO' if cond == 'EO' else ''
         out_dir = os.path.join(OUTPUT_BASE, f'lemon{suffix}')
         process_subjects(subjects, 'lemon', out_dir, f'LEMON {cond}',
-                         loader_kwargs={'condition': cond}, parallel=n_parallel)
+                         loader_kwargs={'condition': cond}, parallel=n_parallel,
+                         method=method)
 
     elif args.dataset == 'dortmund':
         data_dir = '/Volumes/T9/dortmund_data_dl'
@@ -601,7 +662,7 @@ def main():
         out_dir = os.path.join(OUTPUT_BASE, f'dortmund{suffix}{ses_suffix}')
         process_subjects(subjects, 'dortmund', out_dir, f'Dortmund {cond} ses-{ses}',
                          loader_kwargs={'task': task, 'acq': acq, 'ses': ses},
-                         parallel=n_parallel)
+                         parallel=n_parallel, method=method)
 
     elif args.dataset == 'chbmp':
         data_dir = '/Volumes/T9/CHBMP/BIDS_dataset'
@@ -617,7 +678,7 @@ def main():
                     break
         out_dir = os.path.join(OUTPUT_BASE, 'chbmp')
         process_subjects(subjects, 'chbmp', out_dir, 'CHBMP',
-                         parallel=n_parallel)
+                         parallel=n_parallel, method=method)
 
     elif args.dataset == 'hbn':
         releases = ['R1', 'R2', 'R3', 'R4', 'R6'] if args.release.lower() == 'all' else [args.release]
@@ -634,7 +695,7 @@ def main():
                     seen.add(sub_id)
             out_dir = os.path.join(OUTPUT_BASE, f'hbn_{release}')
             process_subjects(subjects, 'hbn', out_dir, f'HBN {release}',
-                             parallel=n_parallel)
+                             parallel=n_parallel, method=method)
 
 
 if __name__ == '__main__':

@@ -52,6 +52,17 @@
 | pairwise_ratio_test.py | Tests whether phi-spaced frequency ratios are enriched while rationals are depleted |
 | shape_replication_inference.py | Tests whether enrichment shape replicates across datasets via Kendall's W |
 
+## v3 Enrichment Reanalysis
+
+| Script | Description |
+|--------|-------------|
+| run_f0_760_extraction.py | v3 peak extraction pipeline: merged θ+α FOOOF or IRASA (--method flag), cap=12, bandwidth floor=2×freq_res, 50 Hz notch on European datasets, R²/quality saved per peak. All datasets. |
+| run_all_f0_760_analyses.py | 22-step analysis suite on v3 extraction: pooled enrichment, cognitive correlations, HBN developmental trajectory, Dortmund aging, EC/EO, personality, test-retest, cross-band coupling, and more. |
+| run_v4_sweep.py | 48-configuration FOOOF parameter sweep on EEGMMIDB (peak_threshold, min_peak_height, max_n_peaks, nperseg). Validates v3 config as optimal. |
+| gcp_run.sh | GCP VM orchestration: spawn, extract, push results, delete. Used for all v3 extractions. |
+| boundary_sweep.py | Sweeps 2D (f0, ratio) parameter space to evaluate coordinate systems for EEG band definitions. Computes boundary sharpness, profile simplicity, band independence, cross-dataset consistency, and enrichment contrast. Also runs per-boundary slide analysis. |
+| within_band_coordinates.py | Tests within-band coordinate structure: scaling comparison (log vs linear vs ERB vs mel), landmark capture (phi vs equal vs rational vs random positions), feature alignment (permutation test), periodicity (autocorrelation), and noble vs rational enrichment. |
+
 ## f0 Optimization & Sensitivity
 
 | Script | Description |
