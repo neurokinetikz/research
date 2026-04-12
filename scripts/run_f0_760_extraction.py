@@ -53,16 +53,17 @@ PAD_OCTAVES = 0.5
 FILTER_LO = 1.0
 FREQ_CEIL = 55.0
 
-OUTPUT_BASE = os.path.join(os.path.dirname(__file__), '..', 'exports_adaptive_v3')
+OUTPUT_BASE = os.path.join(os.path.dirname(__file__), '..', 'exports_adaptive_v4')
 
 # Max peaks per FOOOF fit: slightly above 12 bins per octave
-MAX_N_PEAKS = 15
+# Optimal config from v4 sweep (48 configs on EEGMMIDB)
+MAX_N_PEAKS = 12  # = number of Voronoi bins; inflection point in cap curve
 
 # Theta and alpha share one FOOOF fit to avoid boundary artifact at f0
 MERGE_THETA_ALPHA = True
 
 FOOOF_BASE_PARAMS = dict(
-    peak_threshold=0.001,
+    peak_threshold=2.0,  # FOOOF default; v4 sweep confirmed no impact vs 0.001
     min_peak_height=0.0001,
     aperiodic_mode='fixed',
 )

@@ -105,7 +105,7 @@ gcloud compute ssh $VM_NAME --zone=$ZONE --command="
     python scripts/run_f0_760_extraction.py $EXTRACT_ARGS --parallel 28 2>&1
 
     echo '>>> Pushing results to GCS...'
-    gcloud storage cp -r exports_adaptive_v3 $BUCKET/results/ 2>&1 | tail -3
+    gcloud storage cp -r exports_adaptive_v4 $BUCKET/results/ 2>&1 | tail -3
 
     echo '>>> DONE'
 " 2>&1
@@ -119,6 +119,6 @@ gcloud compute instances delete $VM_NAME \
 
 echo "============================================================"
 echo "  COMPLETE: $DATASET $CONDITION ses-$SESSION"
-echo "  Results: $BUCKET/results/exports_adaptive_v3/"
+echo "  Results: $BUCKET/results/exports_adaptive_v4/"
 echo "  Finished: $(date)"
 echo "============================================================"
