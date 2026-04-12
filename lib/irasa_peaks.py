@@ -190,12 +190,18 @@ def irasa_extract_peaks(data, fs, fit_lo, fit_hi, nperseg, noverlap,
     else:
         osc_snr = 0.0
 
-    # Find peaks in oscillatory spectrum
+    # Find peaks in oscillatory spectrum.
+    # IRASA P_osc is in linear power (V²/Hz or µV²/Hz) -- absolute thresholds
+    # are meaningless because scale depends on EEG units. Convert to relative
+    # thresholds based on the P_osc distribution within this band.
+    p_osc_median = np.median(P_osc[P_osc > 0]) if np.any(P_osc > 0) else 0.0
+    rel_height = max(p_osc_median * min_peak_height * 1e4, 0.0)  # scale-invariant
+    rel_prominence = max(p_osc_median * peak_prominence * 1e3, 0.0)
     min_distance = max(1, int(np.ceil(2 * freq_res / (f[1] - f[0]))))
     peak_indices, properties = find_peaks(
         P_osc,
-        height=min_peak_height,
-        prominence=peak_prominence,
+        height=rel_height,
+        prominence=rel_prominence,
         distance=min_distance,
     )
 
