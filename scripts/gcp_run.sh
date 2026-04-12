@@ -113,15 +113,24 @@ gcloud compute ssh $VM_NAME --zone=$ZONE --command="
     gcsfuse --implicit-dirs eeg-extraction-data /gcs
 
     # Symlink to match hardcoded /Volumes/T9/ paths
+    # Preserve parent directories for nested paths (e.g., hbn_data/cmi_bids_R1)
     sudo mkdir -p /Volumes/T9
     sudo chmod 777 /Volumes/T9
     for path in $DATA_PATHS; do
-        ln -sf /gcs/\$path /Volumes/T9/\$(basename \$path)
+        parent=\$(dirname \$path)
+        base=\$(basename \$path)
+        if [ \"\$parent\" != \".\" ]; then
+            mkdir -p /Volumes/T9/\$parent
+            ln -sf /gcs/\$path /Volumes/T9/\$path
+        else
+            ln -sf /gcs/\$path /Volumes/T9/\$base
+        fi
     done
     # Also link dortmund_data for demographics
     [ -d /gcs/dortmund_data ] && ln -sf /gcs/dortmund_data /Volumes/T9/dortmund_data
     echo '  Mounted:'
     ls -la /Volumes/T9/
+    ls -la /Volumes/T9/hbn_data/ 2>/dev/null
 
     echo '>>> Starting extraction (parallel=28)...'
     export OMP_NUM_THREADS=1
