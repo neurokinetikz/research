@@ -35,13 +35,26 @@ case $DATASET in
     dortmund) DATA_PATHS="dortmund_data_dl dortmund_data"; DISK_GB=500 ;;
     chbmp)    DATA_PATHS="CHBMP";                   DISK_GB=500 ;;
     hbn)      DATA_PATHS="hbn_data";                DISK_GB=500 ;;
+    hbn_r1)   DATA_PATHS="hbn_data/cmi_bids_R1";   DISK_GB=500 ;;
+    hbn_r2)   DATA_PATHS="hbn_data/cmi_bids_R2";   DISK_GB=500 ;;
+    hbn_r3)   DATA_PATHS="hbn_data/cmi_bids_R3";   DISK_GB=500 ;;
+    hbn_r4)   DATA_PATHS="hbn_data/cmi_bids_R4";   DISK_GB=500 ;;
+    hbn_r6)   DATA_PATHS="hbn_data/cmi_bids_R6";   DISK_GB=500 ;;
     *)        echo "Unknown dataset: $DATASET"; exit 1 ;;
 esac
 
 # Build extraction args
-EXTRACT_ARGS="--dataset $DATASET"
-[ -n "$CONDITION" ] && EXTRACT_ARGS="$EXTRACT_ARGS --condition $CONDITION"
-[ "$SESSION" != "1" ] && EXTRACT_ARGS="$EXTRACT_ARGS --session $SESSION"
+case $DATASET in
+    hbn_r[0-9])
+        RELEASE=$(echo $DATASET | sed 's/hbn_r/R/')
+        EXTRACT_ARGS="--dataset hbn --release $RELEASE"
+        ;;
+    *)
+        EXTRACT_ARGS="--dataset $DATASET"
+        [ -n "$CONDITION" ] && EXTRACT_ARGS="$EXTRACT_ARGS --condition $CONDITION"
+        [ "$SESSION" != "1" ] && EXTRACT_ARGS="$EXTRACT_ARGS --session $SESSION"
+        ;;
+esac
 
 export PATH="/opt/homebrew/share/google-cloud-sdk/bin:$PATH"
 export GOOGLE_APPLICATION_CREDENTIALS="/Users/neurokinetikz/Code/research/.gcp/claude-493017-ad29d1cd661b.json"
