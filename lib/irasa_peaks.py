@@ -160,11 +160,17 @@ def irasa_extract_peaks(data, fs, fit_lo, fit_hi, nperseg, noverlap,
     if hset is None:
         hset = compute_safe_hset(fit_lo, fit_hi, fs)
 
+    # Give IRASA the full evaluated range so all h-values contribute at every
+    # frequency in [fit_lo, fit_hi]. Without this, the downsampled PSDs (1/h)
+    # can't reach fit_hi and the fractal estimate degrades at the band edges.
+    h_max = max(hset)
+    irasa_fmax = min(fit_hi * h_max, fs / 2.0 * 0.95)
+
     # Run IRASA with per-h fractal estimates
     f, P_total, P_frac, P_osc, P_fracs_stack = irasa_psd(
-        data, fs, hset=hset, nperseg=nperseg, fmax=fit_hi, return_per_h=True)
+        data, fs, hset=hset, nperseg=nperseg, fmax=irasa_fmax, return_per_h=True)
 
-    # Crop to fit range
+    # Crop to fit range (IRASA decomposed over wider range, we only need this slice)
     mask = (f >= fit_lo) & (f <= fit_hi)
     f = f[mask]
     P_total = P_total[mask]
