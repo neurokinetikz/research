@@ -50,6 +50,9 @@ OUT_DIR = os.path.join(BASE_DIR, 'outputs', 'f0_760_reanalysis')
 # 0 = no filter, 50 = keep top half (default), 75 = keep top quarter
 MIN_POWER_PCT = 50
 
+# Minimum peaks per band per subject for per-subject enrichment profiles
+MIN_PEAKS_PER_BAND = 30
+
 # =========================================================================
 # SHARED VORONOI MACHINERY
 # =========================================================================
@@ -401,11 +404,13 @@ def print_correlation_summary(rdf, title, top_n=20):
             print(f"  {row['target']:<20} {row['feature']:<30} {row['rho']:>+.3f} {row['p']:>10.2e} {row['p_fdr']:>10.4f} {row['n']:>5d} {sig}")
 
 
-def load_subject_enrichments(peak_dir, min_peaks=30, min_power_pct=None):
+def load_subject_enrichments(peak_dir, min_peaks=None, min_power_pct=None):
     """Load per-subject enrichment from a peak directory."""
     peak_files = sorted(glob.glob(os.path.join(peak_dir, '*_peaks.csv')))
     if not peak_files:
         return pd.DataFrame()
+    if min_peaks is None:
+        min_peaks = MIN_PEAKS_PER_BAND
     # Check if power column exists
     if min_power_pct is None:
         min_power_pct = MIN_POWER_PCT
@@ -2265,10 +2270,13 @@ def main():
     parser.add_argument('--peak-base', type=str, default=None,
                         help='Override peak CSV directory (default: exports_adaptive_v4). '
                              'Use exports_irasa_v4 for IRASA-extracted peaks.')
+    parser.add_argument('--min-peaks', type=int, default=30,
+                        help='Minimum peaks per band per subject for per-subject analyses (default: 30)')
     args = parser.parse_args()
 
-    global MIN_POWER_PCT, NEW_PEAK_BASE
+    global MIN_POWER_PCT, NEW_PEAK_BASE, MIN_PEAKS_PER_BAND
     MIN_POWER_PCT = args.min_power_pct
+    MIN_PEAKS_PER_BAND = args.min_peaks
     if args.peak_base is not None:
         NEW_PEAK_BASE = os.path.join(BASE_DIR, args.peak_base)
 

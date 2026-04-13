@@ -29,7 +29,9 @@ from shape_vs_resonance import irasa_psd
 # Keep h_max small to limit evaluated range, but large enough for peak removal.
 # For scalp EEG resting-state ("easy" spectra with narrow peaks), h_max=1.9 is
 # generally sufficient. For bands near the noise floor, reduce h_max.
-HSET_DEFAULT = (1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9)
+# 17 h-values (0.05 steps) matching Gerster's reference implementation
+HSET_DEFAULT = (1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5,
+                1.55, 1.6, 1.65, 1.7, 1.75, 1.8, 1.85, 1.9)
 HSET_REDUCED = (1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5)
 
 
@@ -196,35 +198,35 @@ def irasa_extract_peaks(data, fs, fit_lo, fit_hi, nperseg, noverlap,
     else:
         osc_snr = 0.0
 
-    # Find peaks in oscillatory spectrum.
-    # IRASA P_osc is in linear power (V²/Hz) -- absolute thresholds are
-    # meaningless because scale depends on EEG units. Use SD-based thresholds
-    # analogous to FOOOF's peak_threshold (in SD units of flattened spectrum).
-    # With peak_prominence=0.001 (our v3 default), this is extremely permissive --
-    # just above the noise floor. Real filtering happens via the 50% power
-    # filter at enrichment analysis time, same as FOOOF.
-    p_osc_std = np.std(P_osc) if len(P_osc) > 0 else 0.0
-    rel_height = p_osc_std * min_peak_height    # ~0.0001 × SD: effectively zero
-    rel_prominence = p_osc_std * peak_prominence  # ~0.001 × SD: just above noise
+    # Find peaks in log-space oscillatory spectrum.
+    # IRASA P_osc is in linear power -- beta-high peaks are tiny in absolute
+    # terms because power drops as 1/f. Detecting peaks in log10(P_osc)
+    # matches what FOOOF does internally (peaks above 1/f in log-power space)
+    # and makes small high-frequency peaks as detectable as large alpha peaks.
+    log_p_osc = np.log10(np.maximum(P_osc, 1e-30))
+    # Shift so minimum is 0 (find_peaks needs positive values for height)
+    log_p_osc -= log_p_osc.min()
+
     min_distance = max(1, int(np.ceil(2 * freq_res / (f[1] - f[0]))))
+    # Permissive thresholds in log space -- just above noise floor
+    log_range = np.ptp(log_p_osc)
     peak_indices, properties = find_peaks(
-        P_osc,
-        height=rel_height,
-        prominence=rel_prominence,
+        log_p_osc,
+        height=log_range * 0.01,        # 1% of log range
+        prominence=log_range * 0.005,    # 0.5% of log range
         distance=min_distance,
     )
 
     if len(peak_indices) == 0:
         return np.empty((0, 3)), quality, osc_snr
 
-    # Sort by power (descending) and cap
+    # Sort by linear power (descending) and cap
     order = np.argsort(P_osc[peak_indices])[::-1]
     peak_indices = peak_indices[order[:max_n_peaks]]
 
     # Extract peak parameters directly from find_peaks + peak_widths.
-    # This avoids curve_fit failures that drop peaks and reduce yield.
-    # Bandwidth is estimated from peak width at half-prominence, converted
-    # to Hz. This is analogous to FOOOF's Gaussian bandwidth (2*sigma).
+    # Bandwidth estimated from peak width at half-prominence in the linear
+    # P_osc (not log), converted to Hz.
     df = f[1] - f[0] if len(f) > 1 else freq_res
     widths_result = peak_widths(P_osc, peak_indices, rel_height=0.5)
     widths_samples = widths_result[0]  # width in samples at half height
