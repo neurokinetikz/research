@@ -1,6 +1,7 @@
 # Credentials
 .gcp/
 .claude/
+dryad/
 
 # Extracted data (all versions)
 exports*/

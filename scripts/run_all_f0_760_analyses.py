@@ -43,7 +43,7 @@ from phi_frequency_model import PHI, F0
 PHI_INV = 1.0 / PHI
 BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 OLD_PEAK_BASE = os.path.join(BASE_DIR, 'exports_adaptive')
-NEW_PEAK_BASE = os.path.join(BASE_DIR, 'exports_adaptive_v4')
+NEW_PEAK_BASE = os.path.join(BASE_DIR, 'exports_adaptive_v3')
 OUT_DIR = os.path.join(BASE_DIR, 'outputs', 'f0_760_reanalysis')
 
 # Global power filter: keep top N% of peaks by power within each band
@@ -2268,7 +2268,7 @@ def main():
     parser.add_argument('--min-power-pct', type=int, default=50,
                         help='Keep top N%% of peaks by power per band (0=all, 50=top half)')
     parser.add_argument('--peak-base', type=str, default=None,
-                        help='Override peak CSV directory (default: exports_adaptive_v4). '
+                        help='Override peak CSV directory (default: exports_adaptive_v3). '
                              'Use exports_irasa_v4 for IRASA-extracted peaks.')
     parser.add_argument('--min-peaks', type=int, default=30,
                         help='Minimum peaks per band per subject for per-subject analyses (default: 30)')
