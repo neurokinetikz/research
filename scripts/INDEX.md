@@ -255,6 +255,18 @@
 | visualize_prediction_errors.py | gedBounds prediction error analysis with 4 figures |
 | visualize_sr_harmonics.py | Publication-quality visualizations of SR harmonic detection results |
 
+## Schumann Resonance Exploratory Analyses
+
+| Script | Description |
+|--------|-------------|
+| schumann_alignment_test.py | Permutation test for trough–SR mode overlap significance (4/5 troughs in SR ranges); includes sensitivity analysis on SR range widths, restricted T2-T5 test, and φ-constrained null |
+| schumann_depth_correlation.py | Correlates trough depletion depth with SR mode amplitude; tests aligned subset (T2/SR1, T3/SR2, T5/SR5) and all pairs; uses age-binned depths and trough shape metrics |
+| schumann_frequency_precision.py | Quantifies precision of trough–SR frequency alignment: absolute distance, z-scores, CI overlap, log-space distances; highlights T2–SR1 as strongest candidate (Δ = 0.01 Hz) |
+| schumann_bridge_sr3.py | Analyzes bridge enrichment at ~20 Hz (f₀×φ²) vs SR3 (19.5–21.5 Hz); per-dataset bridge enrichment patterns; frequency comparison with motor control frequencies |
+| schumann_developmental_trajectories.py | Compares developmental trajectories of SR-aligned (T2,T3,T5) vs non-aligned (T1) troughs; per-subject age correlations (N=1738) and age-binned analysis |
+| schumann_phi_packing.py | Constrained optimization: fix avoidance zones at SR frequencies, optimize band placement to maximize desynchronization; tests whether φ emerges as packing ratio |
+| schumann_alternative_nulls.py | Specificity test: compares trough alignment with SR vs chromatic scale, Bark, ERB, harmonic series, equal-log-spaced, and φ-lattice reference systems |
+
 ## Statistical Validation & Bootstrap
 
 | Script | Description |
