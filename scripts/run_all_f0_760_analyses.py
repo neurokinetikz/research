@@ -123,12 +123,14 @@ EC_DATASETS = {
     'eegmmidb': 'eegmmidb', 'lemon': 'lemon', 'dortmund': 'dortmund',
     'chbmp': 'chbmp', 'hbn_R1': 'hbn_R1', 'hbn_R2': 'hbn_R2',
     'hbn_R3': 'hbn_R3', 'hbn_R4': 'hbn_R4', 'hbn_R6': 'hbn_R6',
+    'tdbrain': 'tdbrain',
 }
 
 SHORT_NAMES = {
     'eegmmidb': 'EEGM', 'lemon': 'LEM', 'dortmund': 'Dort',
     'chbmp': 'CHBMP', 'hbn_R1': 'R1', 'hbn_R2': 'R2',
     'hbn_R3': 'R3', 'hbn_R4': 'R4', 'hbn_R6': 'R6',
+    'tdbrain': 'TDB',
 }
 
 
@@ -627,6 +629,163 @@ def run_hbn_age():
         sex_df['significant'] = rej
         print(f"  FDR survivors: {sex_df['significant'].sum()}")
         sex_df.to_csv(os.path.join(OUT_DIR, 'hbn_sex_differences.csv'), index=False)
+
+
+# =========================================================================
+# STEP 3b: TDBRAIN (Age, Diagnosis, Psychopathology, Personality)
+# =========================================================================
+
+TDBRAIN_PARTICIPANTS = os.path.expanduser(
+    '~/Desktop/TDBRAIN_participants_V2_data/TDBRAIN_participants_V2.tsv')
+
+
+def run_tdbrain():
+    from scipy import stats
+    from statsmodels.stats.multitest import multipletests
+
+    print("=" * 70)
+    print("  STEP 3b: TDBRAIN (Age, Diagnosis, Psychopathology, Personality)")
+    print("=" * 70)
+
+    # Load demographics
+    if not os.path.exists(TDBRAIN_PARTICIPANTS):
+        print(f"  ERROR: {TDBRAIN_PARTICIPANTS} not found")
+        return
+    demo = pd.read_csv(TDBRAIN_PARTICIPANTS, sep='\t')
+    demo['age_float'] = demo['age'].str.replace(',', '.').astype(float)
+    demo['dx_group'] = 'OTHER'
+    demo.loc[demo['indication'] == 'HEALTHY', 'dx_group'] = 'HEALTHY'
+    demo.loc[demo['indication'].str.contains('ADHD', na=False) &
+             ~demo['indication'].str.contains('MDD', na=False), 'dx_group'] = 'ADHD'
+    demo.loc[demo['indication'].str.contains('MDD', na=False) &
+             ~demo['indication'].str.contains('ADHD', na=False), 'dx_group'] = 'MDD'
+    demo.loc[demo['indication'].str.contains('OCD', na=False), 'dx_group'] = 'OCD'
+
+    # Only discovery set
+    demo = demo[demo['DISC/REP'] == 'DISCOVERY']
+    print(f"  Demographics: {len(demo)} discovery subjects")
+
+    # Load per-subject enrichment
+    peak_dir = os.path.join(NEW_PEAK_BASE, 'tdbrain')
+    df = load_subject_enrichments(peak_dir)
+    print(f"  Per-subject enrichment: {len(df)} subjects")
+
+    # Merge with demographics (TDBRAIN subjects use sub-{numeric_id})
+    # The participants file uses numeric IDs, peaks use sub-{id}
+    # participants_ID already has 'sub-' prefix in the V2 file
+    pid_str = demo['participants_ID'].astype(str)
+    demo['subject_key'] = pid_str.where(pid_str.str.startswith('sub-'), 'sub-' + pid_str)
+    df = df.merge(demo[['subject_key', 'age_float', 'gender', 'dx_group',
+                         'indication', 'formal_status']],
+                  left_on='subject', right_on='subject_key', how='inner')
+    df['age'] = df['age_float']
+    df['sex'] = df['gender'].map({0: 'M', 1: 'F'})
+
+    n_age = df['age'].notna().sum()
+    print(f"  Merged: {len(df)} subjects, {n_age} with age")
+    print(f"  Groups: {df['dx_group'].value_counts().to_dict()}")
+
+    enrich_cols = get_enrich_cols(df)
+
+    # --- 1. Age correlations ---
+    age_rdf = run_correlations(df, enrich_cols, ['age'])
+    print(f"\n  --- TDBRAIN AGE × ENRICHMENT (N={n_age}, ages {df['age'].min():.0f}-{df['age'].max():.0f}) ---")
+    print_correlation_summary(age_rdf, 'TDBRAIN Age', top_n=15)
+    age_rdf.to_csv(os.path.join(OUT_DIR, 'tdbrain_age_correlations.csv'), index=False)
+
+    # --- 2. Diagnosis group comparisons ---
+    print(f"\n  --- DIAGNOSTIC GROUP COMPARISONS ---")
+    adults = df[df['age'] >= 18]
+    for dx_pair in [('ADHD', 'MDD'), ('ADHD', 'HEALTHY'), ('MDD', 'HEALTHY')]:
+        g1 = adults[adults.dx_group == dx_pair[0]]
+        g2 = adults[adults.dx_group == dx_pair[1]]
+        if len(g1) < 10 or len(g2) < 10:
+            print(f"  {dx_pair[0]} vs {dx_pair[1]}: insufficient N ({len(g1)} vs {len(g2)})")
+            continue
+        print(f"\n  {dx_pair[0]} (N={len(g1)}, age={g1['age'].mean():.1f}) vs "
+              f"{dx_pair[1]} (N={len(g2)}, age={g2['age'].mean():.1f}):")
+        dx_results = []
+        for col in enrich_cols:
+            v1 = g1[col].dropna()
+            v2 = g2[col].dropna()
+            if len(v1) < 10 or len(v2) < 10:
+                continue
+            u, p = stats.mannwhitneyu(v1, v2, alternative='two-sided')
+            pooled_sd = np.sqrt((v1.std()**2 + v2.std()**2) / 2)
+            d = (v1.mean() - v2.mean()) / pooled_sd if pooled_sd > 0 else 0
+            dx_results.append({'feature': col, 'd': d, 'p': p, 'abs_d': abs(d),
+                                'group1': dx_pair[0], 'group2': dx_pair[1]})
+        dx_df = pd.DataFrame(dx_results)
+        if len(dx_df) > 0:
+            rej, pfdr, _, _ = multipletests(dx_df['p'].values, method='fdr_bh', alpha=0.05)
+            dx_df['p_fdr'] = pfdr
+            dx_df['significant'] = rej
+            n_sig = dx_df['significant'].sum()
+            print(f"    FDR survivors: {n_sig}/{len(dx_df)}")
+            top = dx_df.nlargest(5, 'abs_d')
+            for _, r in top.iterrows():
+                sig = '*' if r['p_fdr'] < 0.05 else ''
+                print(f"      {r['feature']:<35} d={r['d']:>+.3f} p_FDR={r['p_fdr']:.4f} {sig}")
+            dx_df.to_csv(os.path.join(OUT_DIR, f'tdbrain_{dx_pair[0]}_vs_{dx_pair[1]}.csv'), index=False)
+
+    # --- 3. NEO-FFI personality correlations ---
+    # NEO-FFI items are neoFFI_q1-q60 in participants file
+    # Compute Big Five from items: N=1-12, E=13-24, O=25-36, A=37-48, C=49-60
+    # (reverse-scored items would need the scoring key -- use raw sum for now)
+    demo_full = pd.read_csv(TDBRAIN_PARTICIPANTS, sep='\t')
+    demo_full = demo_full[demo_full['DISC/REP'] == 'DISCOVERY']
+    neo_cols = [f'neoFFI_q{i}' for i in range(1, 61)]
+    has_neo = all(c in demo_full.columns for c in neo_cols[:5])
+    if has_neo:
+        # Convert to numeric (may have 'REPLICATION' strings)
+        for c in neo_cols:
+            demo_full[c] = pd.to_numeric(demo_full[c], errors='coerce')
+        # Simple sum scores (approximate, ignoring reverse scoring)
+        demo_full['NEO_N'] = demo_full[[f'neoFFI_q{i}' for i in range(1, 13)]].sum(axis=1, min_count=6)
+        demo_full['NEO_E'] = demo_full[[f'neoFFI_q{i}' for i in range(13, 25)]].sum(axis=1, min_count=6)
+        demo_full['NEO_O'] = demo_full[[f'neoFFI_q{i}' for i in range(25, 37)]].sum(axis=1, min_count=6)
+        demo_full['NEO_A'] = demo_full[[f'neoFFI_q{i}' for i in range(37, 49)]].sum(axis=1, min_count=6)
+        demo_full['NEO_C'] = demo_full[[f'neoFFI_q{i}' for i in range(49, 61)]].sum(axis=1, min_count=6)
+
+        demo_full['subject_key'] = 'sub-' + demo_full['participants_ID'].astype(str)
+        personality_cols = ['NEO_N', 'NEO_E', 'NEO_O', 'NEO_A', 'NEO_C']
+        for col in personality_cols:
+            df[col] = df['subject'].map(dict(zip(demo_full['subject_key'], demo_full[col])))
+
+        valid_personality = df[personality_cols].notna().all(axis=1).sum()
+        if valid_personality > 50:
+            print(f"\n  --- NEO-FFI PERSONALITY × ENRICHMENT (N={valid_personality}) ---")
+            pers_rdf = run_correlations(df, enrich_cols, personality_cols)
+            n_sig = pers_rdf['significant'].sum() if len(pers_rdf) > 0 else 0
+            n_total = len(pers_rdf)
+            print(f"  FDR survivors: {n_sig}/{n_total}")
+            pers_rdf.to_csv(os.path.join(OUT_DIR, 'tdbrain_personality_correlations.csv'), index=False)
+
+    # --- 4. Sex differences ---
+    males = df[df['sex'] == 'M']
+    females = df[df['sex'] == 'F']
+    if len(males) > 30 and len(females) > 30:
+        print(f"\n  --- SEX DIFFERENCES (M={len(males)}, F={len(females)}) ---")
+        sex_results = []
+        for col in enrich_cols:
+            m_vals = males[col].dropna()
+            f_vals = females[col].dropna()
+            if len(m_vals) < 30 or len(f_vals) < 30:
+                continue
+            u, p = stats.mannwhitneyu(m_vals, f_vals, alternative='two-sided')
+            pooled_sd = np.sqrt((m_vals.std()**2 + f_vals.std()**2) / 2)
+            d = (m_vals.mean() - f_vals.mean()) / pooled_sd if pooled_sd > 0 else 0
+            sex_results.append({'feature': col, 'd': d, 'p': p, 'abs_d': abs(d)})
+        sex_df = pd.DataFrame(sex_results)
+        if len(sex_df) > 0:
+            rej, pfdr, _, _ = multipletests(sex_df['p'].values, method='fdr_bh', alpha=0.05)
+            sex_df['p_fdr'] = pfdr
+            sex_df['significant'] = rej
+            print(f"  FDR survivors: {sex_df['significant'].sum()}")
+            sex_df.to_csv(os.path.join(OUT_DIR, 'tdbrain_sex_differences.csv'), index=False)
+
+    # Save full per-subject data
+    df.to_csv(os.path.join(OUT_DIR, 'tdbrain_per_subject_enrichment.csv'), index=False)
 
 
 # =========================================================================
@@ -2264,7 +2423,8 @@ def main():
                                  'personality', 'reliability', 'within_session',
                                  'adult_pediatric', 'lifespan', 'cross_band',
                                  'medical', 'handedness', 'sex_age', 'state_age',
-                                 'power_sensitivity', 'report_comparison', 'all'])
+                                 'power_sensitivity', 'report_comparison',
+                                 'tdbrain', 'all'])
     parser.add_argument('--min-power-pct', type=int, default=50,
                         help='Keep top N%% of peaks by power per band (0=all, 50=top half)')
     parser.add_argument('--peak-base', type=str, default=None,
@@ -2297,6 +2457,7 @@ def main():
         'adult_pediatric': run_adult_vs_pediatric,
         'hbn_per_release': run_hbn_per_release,
         'lifespan': run_lifespan,
+        'tdbrain': run_tdbrain,
         'cross_band': run_cross_band_coupling,
         'within_session': run_within_session,
         'medical': run_medical,

@@ -436,6 +436,97 @@ def load_chbmp(sub_id, data_dir='/Volumes/T9/CHBMP/BIDS_dataset'):
     return raw
 
 
+def load_tdbrain(sub_id, data_dir='/Volumes/T9/tdbrain/derivatives',
+                  condition='EC', session=None):
+    """Load TDBRAIN derivatives CSV as MNE Raw object.
+
+    TDBRAIN derivatives are raw EEG in CSV format with channels as columns.
+    26 EEG channels (10-10) + artifact/physio channels.
+    Sampling rate: 500 Hz. European dataset (50 Hz mains).
+    Reference: Linked Mastoids.
+
+    CSV format: index column, then channel columns (with trailing whitespace
+    in names). Values are in nanovolts (scale ~1e4). channels.tsv claims
+    Volts but values are clearly not in SI units.
+    """
+    task = 'restEC' if condition == 'EC' else 'restEO'
+    # If session specified, use only that session; otherwise try ses-1 then ses-2
+    sessions = [session] if session else ['1', '2']
+    csv_path = None
+    json_path = None
+    for ses in sessions:
+        candidate = os.path.join(data_dir, sub_id, f'ses-{ses}', 'eeg',
+                                 f'{sub_id}_ses-{ses}_task-{task}_eeg.csv')
+        if os.path.isfile(candidate):
+            csv_path = candidate
+            json_path = candidate.replace('_eeg.csv', '_eeg.json')
+            break
+    if csv_path is None:
+        return None
+
+    try:
+        df = pd.read_csv(csv_path)
+    except Exception:
+        return None
+
+    if len(df) < 1000:
+        return None
+
+    # Strip whitespace from column names
+    df.columns = [c.strip() for c in df.columns]
+
+    # 26 standard EEG channels (10-10 system)
+    # TDBRAIN uses T3/T4/T5/T6 or T7/T8/P7/P8 depending on version
+    standard_eeg = ['Fp1', 'Fp2', 'F7', 'F3', 'Fz', 'F4', 'F8',
+                    'FC3', 'FCz', 'FC4',
+                    'T7', 'T3', 'C3', 'Cz', 'C4', 'T8', 'T4',
+                    'CP3', 'CPz', 'CP4',
+                    'P7', 'T5', 'P3', 'Pz', 'P4', 'P8', 'T6',
+                    'O1', 'Oz', 'O2']
+    eeg_cols = [c for c in df.columns if c in standard_eeg]
+
+    if len(eeg_cols) < 10:
+        return None
+
+    # Get sampling rate from JSON sidecar if available, else default 500 Hz
+    fs = 500.0
+    if json_path and os.path.isfile(json_path):
+        try:
+            import json
+            with open(json_path) as jf:
+                meta = json.load(jf)
+            fs = float(meta.get('SamplingFrequency', 500.0))
+        except Exception:
+            pass
+
+    # Convert to MNE Raw
+    data = df[eeg_cols].values.T.astype(np.float64)  # (n_channels, n_samples)
+
+    # Scale to Volts for MNE
+    # TDBRAIN values are ~1e3-1e5 range. The channels.tsv says "V" but
+    # values like -8799 are clearly not Volts. They appear to be in
+    # nanovolts (nV) based on typical EEG amplitudes (~10-100 µV).
+    # 10 µV = 10,000 nV, which matches the ~1e4 scale.
+    data = data * 1e-9  # nanovolts to Volts
+
+    ch_names = [c for c in eeg_cols]  # clean copy
+    info = mne.create_info(ch_names=ch_names, sfreq=fs, ch_types='eeg')
+    raw = mne.io.RawArray(data, info, verbose=False)
+
+    # Resample to target
+    if raw.info['sfreq'] > TARGET_FS:
+        raw.resample(TARGET_FS, verbose=False)
+
+    # European dataset: notch 50 Hz before bandpass
+    nyq = raw.info['sfreq'] / 2.0
+    if nyq > 52:
+        raw.notch_filter(50, verbose=False)
+    h_freq = min(59, nyq - 1)
+    raw.filter(FILTER_LO, h_freq, verbose=False)
+
+    return raw
+
+
 def load_hbn(set_path):
     try:
         raw = mne.io.read_raw_eeglab(set_path, preload=True, verbose=False)
@@ -486,6 +577,10 @@ def _extract_one_subject(args):
             raw = load_chbmp(sub_id)
         elif _WORKER_LOADER_NAME == 'hbn':
             raw = load_hbn(load_arg)
+        elif _WORKER_LOADER_NAME == 'tdbrain':
+            raw = load_tdbrain(sub_id,
+                               condition=_WORKER_LOADER_KWARGS.get('condition', 'EC'),
+                               session=_WORKER_LOADER_KWARGS.get('session', None))
         else:
             return {'subject_id': sub_id, 'status': 'error', 'n_peaks': 0}
 
@@ -598,7 +693,7 @@ def main():
     parser = argparse.ArgumentParser(
         description='F0=7.60 adaptive-resolution overlap-trim extraction')
     parser.add_argument('--dataset', type=str, required=True,
-                        choices=['eegmmidb', 'lemon', 'dortmund', 'chbmp', 'hbn'])
+                        choices=['eegmmidb', 'lemon', 'dortmund', 'chbmp', 'hbn', 'tdbrain', 'tdbrain_val'])
     parser.add_argument('--release', type=str, default='R1',
                         help='HBN release (R1-R6 or all)')
     parser.add_argument('--condition', type=str, default=None,
@@ -696,6 +791,36 @@ def main():
             out_dir = os.path.join(OUTPUT_BASE, f'hbn_{release}')
             process_subjects(subjects, 'hbn', out_dir, f'HBN {release}',
                              parallel=n_parallel, method=method)
+
+    elif args.dataset in ('tdbrain', 'tdbrain_val'):
+        if args.dataset == 'tdbrain_val':
+            data_dir = '/Volumes/T9/tdbrain/adult_validation/AdultValidationSampleTDBRAIN/derivatives'
+        else:
+            data_dir = '/Volumes/T9/tdbrain/derivatives'
+        cond = args.condition or 'EC'
+        ses = args.session  # None = try both, '1' or '2' = specific
+        task = 'restEC' if cond == 'EC' else 'restEO'
+        sessions_to_try = [ses] if ses and ses != '1' else ['1', '2']
+        # Find all subjects with the target condition and session
+        subs = sorted(set(
+            d for d in os.listdir(data_dir)
+            if d.startswith('sub-') and os.path.isdir(os.path.join(data_dir, d))))
+        subjects = []
+        for s in subs:
+            for ses_try in sessions_to_try:
+                csv = os.path.join(data_dir, s, f'ses-{ses_try}', 'eeg',
+                                   f'{s}_ses-{ses_try}_task-{task}_eeg.csv')
+                if os.path.isfile(csv):
+                    subjects.append((s, None))
+                    break
+        ds_prefix = 'tdbrain_val' if args.dataset == 'tdbrain_val' else 'tdbrain'
+        suffix = '_EO' if cond == 'EO' else ''
+        ses_suffix = f'_ses{ses}' if ses and ses != '1' else ''
+        out_dir = os.path.join(OUTPUT_BASE, f'{ds_prefix}{suffix}{ses_suffix}')
+        process_subjects(subjects, 'tdbrain', out_dir,
+                         f'TDBRAIN {cond} ses-{ses or "1"}',
+                         loader_kwargs={'condition': cond, 'session': ses},
+                         parallel=n_parallel, method=method)
 
 
 if __name__ == '__main__':

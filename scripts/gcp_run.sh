@@ -43,6 +43,8 @@ case $DATASET in
     hbn_r3)   DATA_PATHS="hbn_data/cmi_bids_R3";   DISK_GB=250 ;;
     hbn_r4)   DATA_PATHS="hbn_data/cmi_bids_R4";   DISK_GB=350 ;;
     hbn_r6)   DATA_PATHS="hbn_data/cmi_bids_R6";   DISK_GB=200 ;;
+    tdbrain)       DATA_PATHS="tdbrain/derivatives";                DISK_GB=200 ;;
+    tdbrain_val)   DATA_PATHS="tdbrain/adult_validation";         DISK_GB=100 ;;
     *)        echo "Unknown dataset: $DATASET"; exit 1 ;;
 esac
 
