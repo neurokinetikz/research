@@ -1,16 +1,23 @@
 #!/bin/bash
 # GCP Extraction Runner
-# Spawns a VM from custom image, runs extraction for one dataset, saves to GCS, deletes VM.
+# Spawns a VM from custom image with persistent data disk, runs extraction, saves to GCS, deletes VM.
+#
+# The persistent data disk (eeg-data-disk, 1TB) contains all raw EEG datasets
+# pre-loaded. VMs attach it read-only -- no data download needed.
 #
 # Usage:
 #   bash scripts/gcp_run.sh eegmmidb              # FOOOF (default)
 #   bash scripts/gcp_run.sh eegmmidb "" 1 irasa   # IRASA
 #
-# Run all datasets with IRASA in parallel:
-#   bash scripts/gcp_run.sh eegmmidb "" 1 irasa &
-#   bash scripts/gcp_run.sh dortmund "" 1 irasa &
+# Run all datasets in parallel (8 VMs, 256 CPU quota):
+#   bash scripts/gcp_run.sh tdbrain "" 1 fooof &
+#   bash scripts/gcp_run.sh tdbrain "" 1 irasa &
+#   bash scripts/gcp_run.sh lemon "" 1 fooof &
 #   bash scripts/gcp_run.sh lemon "" 1 irasa &
-#   bash scripts/gcp_run.sh chbmp "" 1 irasa &
+#   bash scripts/gcp_run.sh dortmund "" 1 fooof &
+#   bash scripts/gcp_run.sh dortmund "" 1 irasa &
+#   bash scripts/gcp_run.sh hbn_r1 "" 1 fooof &
+#   bash scripts/gcp_run.sh hbn_r2 "" 1 fooof &
 #   wait
 
 set -e
@@ -24,29 +31,13 @@ ZONE="us-central1-a"
 BUCKET="gs://eeg-extraction-data"
 MACHINE_TYPE="c2d-standard-32"
 IMAGE="eeg-extraction-image-100gb"
+DATA_DISK="eeg-data-disk"
 
 # Build VM name and extraction args
 METHOD_SUFFIX=""
 [ "$METHOD" = "irasa" ] && METHOD_SUFFIX="-irasa"
 VM_NAME="eeg-${DATASET}${CONDITION:+-$CONDITION}${SESSION:+-ses$SESSION}${METHOD_SUFFIX}"
 VM_NAME=$(echo "$VM_NAME" | tr '[:upper:]' '[:lower:]' | tr '_' '-' | head -c 60)
-
-# Map dataset to GCS data path
-case $DATASET in
-    eegmmidb) DATA_PATHS="eegmmidb";               DISK_GB=100 ;;
-    lemon)    DATA_PATHS="lemon_data";              DISK_GB=150 ;;
-    dortmund) DATA_PATHS="dortmund_data_dl dortmund_data"; DISK_GB=150 ;;
-    chbmp)    DATA_PATHS="CHBMP";                   DISK_GB=100 ;;
-    hbn)      DATA_PATHS="hbn_data";                DISK_GB=800 ;;
-    hbn_r1)   DATA_PATHS="hbn_data/cmi_bids_R1";   DISK_GB=200 ;;
-    hbn_r2)   DATA_PATHS="hbn_data/cmi_bids_R2";   DISK_GB=200 ;;
-    hbn_r3)   DATA_PATHS="hbn_data/cmi_bids_R3";   DISK_GB=250 ;;
-    hbn_r4)   DATA_PATHS="hbn_data/cmi_bids_R4";   DISK_GB=350 ;;
-    hbn_r6)   DATA_PATHS="hbn_data/cmi_bids_R6";   DISK_GB=200 ;;
-    tdbrain)       DATA_PATHS="tdbrain/derivatives";                DISK_GB=200 ;;
-    tdbrain_val)   DATA_PATHS="tdbrain/adult_validation";         DISK_GB=100 ;;
-    *)        echo "Unknown dataset: $DATASET"; exit 1 ;;
-esac
 
 # Build extraction args
 case $DATASET in
@@ -70,20 +61,22 @@ EXPORT_DIR="exports_adaptive_v4"
 echo "============================================================"
 echo "  GCP Run: $DATASET $CONDITION ses-$SESSION method=$METHOD"
 echo "  VM: $VM_NAME ($MACHINE_TYPE)"
+echo "  Data disk: $DATA_DISK (read-only)"
 echo "  Started: $(date)"
 echo "============================================================"
 
-# 1. Create VM from custom image (deps pre-installed)
-echo ">>> Creating VM from custom image..."
+# 1. Create VM with persistent data disk attached read-only
+echo ">>> Creating VM..."
 gcloud compute instances create $VM_NAME \
     --project=$PROJECT \
     --zone=$ZONE \
     --machine-type=$MACHINE_TYPE \
-    --boot-disk-size=${DISK_GB}GB \
+    --boot-disk-size=100GB \
     --boot-disk-type=pd-ssd \
     --image=$IMAGE \
     --image-project=$PROJECT \
     --scopes=storage-full \
+    --disk=name=$DATA_DISK,device-name=eeg-data,mode=ro \
     2>&1
 
 # 2. Wait for SSH
@@ -104,34 +97,19 @@ gcloud compute ssh $VM_NAME --zone=$ZONE --command="
     cd ~/research && git pull 2>/dev/null || (cd ~ && git clone https://github.com/neurokinetikz/research.git)
     cd ~/research
 
+    # Mount persistent data disk at /Volumes/T9
+    sudo mkdir -p /Volumes/T9
+    sudo mount -o ro /dev/disk/by-id/google-eeg-data /Volumes/T9
+    echo '>>> Data disk mounted:'
+    ls /Volumes/T9/
+    echo '  Disk usage:'
+    df -h /Volumes/T9 | tail -1
+
     export OMP_NUM_THREADS=1
     export MKL_NUM_THREADS=1
     export OPENBLAS_NUM_THREADS=1
-
-    # Direct copy from GCS (gcsfuse drops subjects silently)
-    echo '>>> Copying data from GCS...'
-    sudo mkdir -p /Volumes/T9
-    sudo chmod 777 /Volumes/T9
-    for path in $DATA_PATHS; do
-        parent=\$(dirname \$path)
-        if [ \"\$parent\" != \".\" ]; then
-            mkdir -p /Volumes/T9/\$parent
-        fi
-        echo \"  Copying \$path...\"
-        gcloud storage cp -r $BUCKET/\$path /Volumes/T9/\$parent/ 2>&1 | tail -1
-    done
-    # Also copy dortmund_data for demographics if extracting dortmund
-    case $DATASET in dortmund*)
-        echo '  Copying dortmund_data (demographics)...'
-        gcloud storage cp -r $BUCKET/dortmund_data /Volumes/T9/ 2>&1 | tail -1
-    ;; esac
-    echo '  Data:'
-    ls /Volumes/T9/
 
     echo '>>> Starting extraction (parallel=28)...'
-    export OMP_NUM_THREADS=1
-    export MKL_NUM_THREADS=1
-    export OPENBLAS_NUM_THREADS=1
     python scripts/run_f0_760_extraction.py $EXTRACT_ARGS --method $METHOD --parallel 28 2>&1
 
     echo '>>> Pushing results to GCS...'
@@ -144,7 +122,7 @@ gcloud compute ssh $VM_NAME --zone=$ZONE --command="
     echo '>>> DONE'
 " 2>&1
 
-# 4. Delete VM
+# 4. Delete VM (disk persists)
 echo ">>> Deleting VM..."
 gcloud compute instances delete $VM_NAME \
     --zone=$ZONE \
