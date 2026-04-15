@@ -436,6 +436,32 @@ def load_chbmp(sub_id, data_dir='/Volumes/T9/CHBMP/BIDS_dataset'):
     return raw
 
 
+def load_srm(sub_id, data_dir='/Volumes/T9/srm_resting_eeg', ses='t1'):
+    """Load SRM resting-state EEG (BioSemi 64ch, EDF, BIDS).
+
+    Norway dataset: 50 Hz mains, no hardware filtering applied.
+    Data is average-referenced, unfiltered.
+    """
+    edf_path = os.path.join(data_dir, sub_id, f'ses-{ses}', 'eeg',
+                            f'{sub_id}_ses-{ses}_task-resteyesc_eeg.edf')
+    if not os.path.isfile(edf_path):
+        return None
+    try:
+        raw = mne.io.read_raw_edf(edf_path, preload=True, verbose=False)
+    except Exception:
+        return None
+    eeg_picks = mne.pick_types(raw.info, eeg=True, exclude='bads')
+    if len(eeg_picks) == 0:
+        return None
+    raw.pick(eeg_picks)
+    if raw.info['sfreq'] > TARGET_FS:
+        raw.resample(TARGET_FS, verbose=False)
+    # European dataset: notch 50 Hz before bandpass
+    raw.notch_filter(50, verbose=False)
+    raw.filter(FILTER_LO, 59, verbose=False)
+    return raw
+
+
 def load_tdbrain(sub_id, data_dir='/Volumes/T9/tdbrain/derivatives',
                   condition='EC', session=None):
     """Load TDBRAIN derivatives CSV as MNE Raw object.
@@ -581,6 +607,8 @@ def _extract_one_subject(args):
             raw = load_tdbrain(sub_id,
                                condition=_WORKER_LOADER_KWARGS.get('condition', 'EC'),
                                session=_WORKER_LOADER_KWARGS.get('session', None))
+        elif _WORKER_LOADER_NAME == 'srm':
+            raw = load_srm(sub_id, ses=_WORKER_LOADER_KWARGS.get('ses', 't1'))
         else:
             return {'subject_id': sub_id, 'status': 'error', 'n_peaks': 0}
 
@@ -693,7 +721,7 @@ def main():
     parser = argparse.ArgumentParser(
         description='F0=7.60 adaptive-resolution overlap-trim extraction')
     parser.add_argument('--dataset', type=str, required=True,
-                        choices=['eegmmidb', 'lemon', 'dortmund', 'chbmp', 'hbn', 'tdbrain', 'tdbrain_val'])
+                        choices=['eegmmidb', 'lemon', 'dortmund', 'chbmp', 'hbn', 'tdbrain', 'tdbrain_val', 'srm'])
     parser.add_argument('--release', type=str, default='R1',
                         help='HBN release (R1-R6 or all)')
     parser.add_argument('--condition', type=str, default=None,
@@ -820,6 +848,21 @@ def main():
         process_subjects(subjects, 'tdbrain', out_dir,
                          f'TDBRAIN {cond} ses-{ses or "1"}',
                          loader_kwargs={'condition': cond, 'session': ses},
+                         parallel=n_parallel, method=method)
+
+    elif args.dataset == 'srm':
+        data_dir = '/Volumes/T9/srm_resting_eeg'
+        ses = args.session if args.session != '1' else 't1'
+        if ses in ('1', '2'):
+            ses = f't{ses}'
+        subs = sorted([d for d in os.listdir(data_dir)
+                       if d.startswith('sub-') and
+                       os.path.isdir(os.path.join(data_dir, d, f'ses-{ses}', 'eeg'))])
+        subjects = [(s, None) for s in subs]
+        ses_suffix = '_t2' if ses == 't2' else ''
+        out_dir = os.path.join(OUTPUT_BASE, f'srm{ses_suffix}')
+        process_subjects(subjects, 'srm', out_dir, f'SRM ses-{ses}',
+                         loader_kwargs={'ses': ses},
                          parallel=n_parallel, method=method)
 
 
