@@ -98,9 +98,9 @@ gcloud compute ssh $VM_NAME --zone=$ZONE --command="
     cd ~/research && git pull 2>/dev/null || (cd ~ && git clone https://github.com/neurokinetikz/research.git)
     cd ~/research
 
-    # Mount persistent data disk at /Volumes/T9
-    sudo mkdir -p /Volumes/T9
-    sudo mount -o ro /dev/disk/by-id/google-eeg-data /Volumes/T9
+    # Mount persistent data disk -- disk contains T9/ dir, so mount at /Volumes
+    sudo mkdir -p /Volumes
+    sudo mount -o ro /dev/disk/by-id/google-eeg-data /Volumes
     echo '>>> Data disk mounted:'
     ls /Volumes/T9/
     echo '  Disk usage:'
