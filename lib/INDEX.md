@@ -38,6 +38,7 @@
 | shape_vs_resonance.py | Distinguishes waveform morphology from true multi-mode resonance via IRASA and bicoherence |
 | spatial_source_harmonics.py | H-PLI topographies, source localization, and harmonic network graphs at Schumann frequencies |
 | detect_ignition.py | Ignition/expansion event detection via Schumann harmonics with robust SR envelope tracking |
+| mne_to_ignition.py | Bridge layer: adapts MNE Raw objects to detect_ignition.py's DataFrame format for batch SIE detection on research-grade datasets |
 | ignition_rebound.py | Band power plotting and topographic mapping for ignition vs rebound conditions |
 | non_sr_clustering.py | Collection and clustering of non-Schumann resonance peaks from FOOOF analysis |
 

@@ -42,6 +42,7 @@
 | voronoi_cross_band_coupling.py | Cross-band coupling: do subjects with stronger alpha mountain have deeper beta-low U-shape? Tests all pairwise cross-band correlations across LEMON, Dortmund, and HBN with replication analysis. |
 | voronoi_sex_age_interaction.py | Sex × age interaction: does the inverted-U trajectory differ between M and F? Fisher z-test on sex-stratified age rhos. Result: 0 FDR survivors in both HBN and Dortmund. |
 | voronoi_longitudinal.py | 5-year longitudinal test-retest (Dortmund ses-1 vs ses-2, N=208). ICC, group stability, and baseline age × 5-year change. |
+| voronoi_regional_enrichment.py | Per-channel and per-region (frontal/central/temporal/parietal/occipital) Voronoi enrichment across 9 datasets. Includes topographic maps, regional EC/EO comparison, and regional age trajectories with FDR-corrected Spearman correlations. Usage: `--step all`. |
 | voronoi_medical_handedness.py | Medical/metabolic (LEMON BMI, BP, blood biomarkers) and handedness (HBN EHQ, Dortmund) × enrichment. Both null (0 FDR survivors). |
 | voronoi_hbn_per_release_age.py | Tests whether developmental age correlations replicate independently within each HBN release. Cross-release rho correlations r=0.68-0.82. Alpha inv_noble_3/4 significant in ALL 5 releases. |
 | voronoi_longitudinal_2x2.py | 5-year 2×2 replication: full EC/EO × pre/post pattern ses-1 vs ses-2 (N=208). Beta-low r=0.99 profile correlation, 13/13 stable across all 8 conditions. |
@@ -59,7 +60,9 @@
 | run_f0_760_extraction.py | v3 peak extraction pipeline: merged θ+α FOOOF or IRASA (--method flag), cap=12, bandwidth floor=2×freq_res, 50 Hz notch on European datasets, R²/quality saved per peak. All datasets. |
 | run_all_f0_760_analyses.py | 22-step analysis suite on v3 extraction: pooled enrichment, cognitive correlations, HBN developmental trajectory, Dortmund aging, EC/EO, personality, test-retest, cross-band coupling, and more. |
 | run_v4_sweep.py | 48-configuration FOOOF parameter sweep on EEGMMIDB (peak_threshold, min_peak_height, max_n_peaks, nperseg). Validates v3 config as optimal. |
-| gcp_run.sh | GCP VM orchestration: spawn, extract, push results, delete. Used for all v3 extractions. |
+| gcp_run.sh | GCP VM orchestration: spawn, extract, push results, delete. Supports fooof, irasa, and sie methods. |
+| gcp_run_all_sie.sh | Orchestrates SIE detection across all datasets with up to 8 concurrent VMs. |
+| run_sie_extraction.py | Batch SIE detection across research-grade datasets (LEMON, Dortmund, HBN, TDBRAIN, CHBMP, EEGMMIDB). Uses fooof_hybrid with phi-lattice harmonics (f₀=7.6, 9 harmonics). |
 | boundary_sweep.py | Sweeps 2D (f0, ratio) parameter space to evaluate coordinate systems for EEG band definitions. Computes boundary sharpness, profile simplicity, band independence, cross-dataset consistency, and enrichment contrast. Also runs per-boundary slide analysis. |
 | within_band_coordinates.py | Tests within-band coordinate structure: scaling comparison (log vs linear vs ERB vs mel), landmark capture (phi vs equal vs rational vs random positions), feature alignment (permutation test), periodicity (autocorrelation), and noble vs rational enrichment. |
 
@@ -254,6 +257,25 @@
 | regenerate_nc4_figure.py | NC4 figure with fixed Panel B visualization and statistical annotations |
 | visualize_prediction_errors.py | gedBounds prediction error analysis with 4 figures |
 | visualize_sr_harmonics.py | Publication-quality visualizations of SR harmonic detection results |
+
+## φ-Trough Inhibition Exploration
+
+| Script | Description |
+|--------|-------------|
+| phi_trough_inhibition_exploration.py | Explores inhibitory φ-trough hypothesis: per-subject depth composites, trough covariance structure, ratio-depth relationships, bridge as inhibitory failure, GABA/psychopathology signatures, cognition at troughs, and mode-locking resistance analysis |
+| find_true_f0.py | Estimates the true lattice seed frequency f₀ using 6 approaches: log-space least squares, free-ratio fit, period concatenation consistency, precision-weighted fit, bridge-excluded fit, and bootstrap distribution |
+| trough_displacement_analysis.py | Tests two-forces model (lattice pull vs peak mass pull): trough displacement from ideal φ-positions, slope asymmetry as mass proxy, precision-as-regulation analysis, developmental slope trajectories |
+| ec_eo_trough_comparison.py | Compares trough positions between eyes-closed and eyes-open conditions for LEMON (N=202) and Dortmund (N=608); bootstrapped CIs for each condition; tests α-mass displacement prediction |
+| irasa_trough_replication.py | Method-independence test: detects troughs from 3.3M IRASA peaks (2,045 subjects), compares positions/ratios to FOOOF, bootstrap CIs, per-dataset consistency, EC-EO comparison, f₀ estimation |
+| irasa_fooof_density_comparison.py | Side-by-side density comparison of FOOOF vs IRASA peak distributions: θ/α region detail, bandwidth by band, density at FOOOF fit boundaries, per-Hz peak count ratios |
+| raw_psd_trough_test.py | Computes grand-average Welch PSD from raw EEG (LEMON N=203, no FOOOF/IRASA), tests multiple detrending methods for trough detection |
+| audit_corrections.py | Comprehensive fixes for 8 audit issues: Hungarian matching (#1), two-forces independence (#4), comparable bandwidth (#5), IRASA EC-EO (#6), gentler detrending (#7), IRASA 11.86 Hz (#8), artifact ruling (#9), raw PSD geo mean (#10) |
+| sharpening_and_direction_tests.py | Three tests: (1) α/β suppression zone width vs age from IRASA (sharpening prediction), (2) preliminary IRASA trough depth × psychopathology (superseded by irasa_trough_depth_functional.py), (3) period addition vs frequency addition direction comparison |
+| irasa_trough_depth_functional.py | Proper IRASA replication of functional correlations using paper's exact depth metric: per-subject windowed log-frequency counts for HBN psychopathology (N=922) and LEMON cognition, side-by-side with FOOOF |
+| audit_fixes_v2.py | Second-round audit fixes: IRASA noise attenuation analysis (#7), within-dataset sharpening trends (#6), bridge fine-grained peak distribution (#8), high-res raw PSD (#10), FDR correction and R² for all functional claims (#5+12) |
+| final_audit_analyses.py | Final audit: bridge EO slope signature (wall vs depletion), depth-width coupling (sharpening test), period concatenation under IRASA (fails at 23-28% error), complete effect size table for all claims |
+| tdbrain_trough_analysis.py | TDBRAIN out-of-sample test: ADHD vs MDD α/β trough depth comparison with age-controlled analysis, all 5 troughs, and 3-way ADHD/HEALTHY/MDD comparison |
+| tdbrain_challenge_predictions.py | TDBRAIN Challenge submissions: ADHD vs MDD diagnostic prediction (logistic regression on enrichment features), age prediction (ridge regression), and single-feature α/β baseline |
 
 ## Schumann Resonance Exploratory Analyses
 

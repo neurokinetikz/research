@@ -57,6 +57,7 @@ export GOOGLE_APPLICATION_CREDENTIALS="/Users/neurokinetikz/Code/research/.gcp/c
 
 EXPORT_DIR="exports_adaptive_v4"
 [ "$METHOD" = "irasa" ] && EXPORT_DIR="exports_irasa_v4"
+[ "$METHOD" = "sie" ] && EXPORT_DIR="exports_sie"
 
 echo "============================================================"
 echo "  GCP Run: $DATASET $CONDITION ses-$SESSION method=$METHOD"
@@ -110,11 +111,17 @@ gcloud compute ssh $VM_NAME --zone=$ZONE --command="
     export OPENBLAS_NUM_THREADS=1
 
     echo '>>> Starting extraction (parallel=28)...'
-    python scripts/run_f0_760_extraction.py $EXTRACT_ARGS --method $METHOD --parallel 28 2>&1
+    if [ '$METHOD' = 'sie' ]; then
+        python scripts/run_sie_extraction.py $EXTRACT_ARGS --parallel 28 2>&1
+    else
+        python scripts/run_f0_760_extraction.py $EXTRACT_ARGS --method $METHOD --parallel 28 2>&1
+    fi
 
     echo '>>> Pushing results to GCS...'
     if [ '$METHOD' = 'irasa' ]; then
         gcloud storage cp -r exports_irasa_v4 $BUCKET/results/ 2>&1 | tail -3
+    elif [ '$METHOD' = 'sie' ]; then
+        gcloud storage cp -r exports_sie $BUCKET/results/ 2>&1 | tail -3
     else
         gcloud storage cp -r exports_adaptive_v4 $BUCKET/results/ 2>&1 | tail -3
     fi
