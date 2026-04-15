@@ -85,16 +85,15 @@ def mne_raw_to_ignition_df(raw: mne.io.BaseRaw,
     data = raw_subset.get_data()  # (n_channels, n_samples), in Volts
     times = raw_subset.times
 
-    # Build DataFrame with EEG.X naming convention
-    df = pd.DataFrame({'Timestamp': times})
+    # Build DataFrame with EEG.X naming convention (use dict + concat to avoid fragmentation warning)
+    cols = {'Timestamp': times}
     eeg_channels = []
     for i, ch in enumerate(raw_subset.ch_names):
-        # Map old names to modern
         display_name = alias_map.get(ch, ch)
         col_name = f'EEG.{display_name}'
-        # Convert Volts to microvolts (detect_ignition expects µV-scale data)
-        df[col_name] = data[i] * 1e6
+        cols[col_name] = data[i] * 1e6  # Volts to µV
         eeg_channels.append(col_name)
+    df = pd.DataFrame(cols)
 
     return df, eeg_channels
 
