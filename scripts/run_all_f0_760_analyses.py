@@ -123,7 +123,7 @@ EC_DATASETS = {
     'eegmmidb': 'eegmmidb', 'lemon': 'lemon', 'dortmund': 'dortmund',
     'chbmp': 'chbmp', 'hbn_R1': 'hbn_R1', 'hbn_R2': 'hbn_R2',
     'hbn_R3': 'hbn_R3', 'hbn_R4': 'hbn_R4', 'hbn_R5': 'hbn_R5', 'hbn_R6': 'hbn_R6',
-    'hbn_R7': 'hbn_R7',
+    'hbn_R7': 'hbn_R7', 'hbn_R8': 'hbn_R8',
     'tdbrain': 'tdbrain', 'srm': 'srm',
 }
 
@@ -131,7 +131,7 @@ SHORT_NAMES = {
     'eegmmidb': 'EEGM', 'lemon': 'LEM', 'dortmund': 'Dort',
     'chbmp': 'CHBMP', 'hbn_R1': 'R1', 'hbn_R2': 'R2',
     'hbn_R3': 'R3', 'hbn_R4': 'R4', 'hbn_R5': 'R5', 'hbn_R6': 'R6',
-    'hbn_R7': 'R7n', 'tdbrain': 'TDB', 'srm': 'SRM',
+    'hbn_R7': 'R7n', 'hbn_R8': 'R8', 'tdbrain': 'TDB', 'srm': 'SRM',
 }
 
 
