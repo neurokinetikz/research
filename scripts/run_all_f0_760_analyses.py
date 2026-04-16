@@ -43,7 +43,7 @@ from phi_frequency_model import PHI, F0
 PHI_INV = 1.0 / PHI
 BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 OLD_PEAK_BASE = os.path.join(BASE_DIR, 'exports_adaptive')
-NEW_PEAK_BASE = os.path.join(BASE_DIR, 'exports_adaptive_v3')
+NEW_PEAK_BASE = os.path.join(BASE_DIR, 'exports_adaptive_v4')
 OUT_DIR = os.path.join(BASE_DIR, 'outputs', 'f0_760_reanalysis')
 
 # Global power filter: keep top N% of peaks by power within each band
@@ -123,7 +123,7 @@ EC_DATASETS = {
     'eegmmidb': 'eegmmidb', 'lemon': 'lemon', 'dortmund': 'dortmund',
     'chbmp': 'chbmp', 'hbn_R1': 'hbn_R1', 'hbn_R2': 'hbn_R2',
     'hbn_R3': 'hbn_R3', 'hbn_R4': 'hbn_R4', 'hbn_R5': 'hbn_R5', 'hbn_R6': 'hbn_R6',
-    'hbn_R7': 'hbn_R7', 'hbn_R8': 'hbn_R8', 'hbn_R11': 'hbn_R11',
+    'hbn_R7': 'hbn_R7', 'hbn_R8': 'hbn_R8', 'hbn_R9': 'hbn_R9', 'hbn_R10': 'hbn_R10', 'hbn_R11': 'hbn_R11',
     'tdbrain': 'tdbrain', 'srm': 'srm',
 }
 
@@ -131,7 +131,7 @@ SHORT_NAMES = {
     'eegmmidb': 'EEGM', 'lemon': 'LEM', 'dortmund': 'Dort',
     'chbmp': 'CHBMP', 'hbn_R1': 'R1', 'hbn_R2': 'R2',
     'hbn_R3': 'R3', 'hbn_R4': 'R4', 'hbn_R5': 'R5', 'hbn_R6': 'R6',
-    'hbn_R7': 'R7n', 'hbn_R8': 'R8', 'hbn_R11': 'R11', 'tdbrain': 'TDB', 'srm': 'SRM',
+    'hbn_R7': 'R7n', 'hbn_R8': 'R8', 'hbn_R9': 'R9', 'hbn_R10': 'R10', 'hbn_R11': 'R11', 'tdbrain': 'TDB', 'srm': 'SRM',
 }
 
 
@@ -538,7 +538,7 @@ def run_cognitive():
 # STEP 3: HBN AGE/SEX/PSYCHOPATHOLOGY
 # =========================================================================
 
-HBN_RELEASES = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R11']
+HBN_RELEASES = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11']
 
 
 def run_hbn_age():
