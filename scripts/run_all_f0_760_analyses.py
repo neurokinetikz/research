@@ -122,15 +122,16 @@ BAND_HZ = {
 EC_DATASETS = {
     'eegmmidb': 'eegmmidb', 'lemon': 'lemon', 'dortmund': 'dortmund',
     'chbmp': 'chbmp', 'hbn_R1': 'hbn_R1', 'hbn_R2': 'hbn_R2',
-    'hbn_R3': 'hbn_R3', 'hbn_R4': 'hbn_R4', 'hbn_R6': 'hbn_R6',
-    'tdbrain': 'tdbrain',
+    'hbn_R3': 'hbn_R3', 'hbn_R4': 'hbn_R4', 'hbn_R5': 'hbn_R5', 'hbn_R6': 'hbn_R6',
+    'hbn_R7': 'hbn_R7',
+    'tdbrain': 'tdbrain', 'srm': 'srm',
 }
 
 SHORT_NAMES = {
     'eegmmidb': 'EEGM', 'lemon': 'LEM', 'dortmund': 'Dort',
     'chbmp': 'CHBMP', 'hbn_R1': 'R1', 'hbn_R2': 'R2',
-    'hbn_R3': 'R3', 'hbn_R4': 'R4', 'hbn_R6': 'R6',
-    'tdbrain': 'TDB',
+    'hbn_R3': 'R3', 'hbn_R4': 'R4', 'hbn_R5': 'R5', 'hbn_R6': 'R6',
+    'hbn_R7': 'R7n', 'tdbrain': 'TDB', 'srm': 'SRM',
 }
 
 
@@ -537,7 +538,7 @@ def run_cognitive():
 # STEP 3: HBN AGE/SEX/PSYCHOPATHOLOGY
 # =========================================================================
 
-HBN_RELEASES = ['R1', 'R2', 'R3', 'R4', 'R6']
+HBN_RELEASES = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']
 
 
 def run_hbn_age():
