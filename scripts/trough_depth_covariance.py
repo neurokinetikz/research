@@ -142,8 +142,14 @@ def load_per_subject_depths():
                 filtered = []
                 for octave in df['phi_octave'].unique():
                     bp = df[df.phi_octave == octave]
+                    if len(bp) < 2:
+                        continue
                     thresh = bp['power'].quantile(MIN_POWER_PCT / 100)
-                    filtered.append(bp[bp['power'] >= thresh])
+                    kept = bp[bp['power'] >= thresh]
+                    if len(kept) > 0:
+                        filtered.append(kept)
+                if not filtered:
+                    continue
                 df = pd.concat(filtered, ignore_index=True)
 
             freqs = df['freq'].values
