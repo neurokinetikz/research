@@ -24,7 +24,7 @@ from scipy.stats import spearmanr
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'lib'))
 
 BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-PEAK_BASE = os.path.join(BASE_DIR, 'exports_adaptive_v3')
+PEAK_BASE = os.path.join(BASE_DIR, 'exports_adaptive_v4')
 OUT_DIR = os.path.join(BASE_DIR, 'outputs', 'trough_depth_by_age')
 MIN_POWER_PCT = 50
 
@@ -34,7 +34,7 @@ TROUGH_LABELS = ['δ/θ', 'θ/α', 'α/β', 'βL/βH', 'βH/γ']
 LOG_HALF_WINDOW = 0.06
 LOG_FLANK_OFFSET = 0.15
 
-HBN_RELEASES = ['R1', 'R2', 'R3', 'R4', 'R6']
+HBN_RELEASES = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11']
 HBN_DEMO_TEMPLATE = '/Volumes/T9/hbn_data/cmi_bids_{release}/participants.tsv'
 PSY_VARS = ['externalizing', 'internalizing', 'p_factor', 'attention']
 

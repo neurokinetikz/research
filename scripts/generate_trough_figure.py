@@ -50,6 +50,11 @@ def main():
     per_subj = pd.read_csv(os.path.join(OUT_DIR, 'per_subject_trough_depths.csv'))
     psy = pd.read_csv(os.path.join(OUT_DIR, 'trough_depth_psychopathology.csv'))
 
+    # Load TDBRAIN trough data for Panel A extension
+    tdb_path = os.path.join(BASE_DIR, 'outputs', 'tdbrain_analysis',
+                            'tdbrain_trough_depth_by_age.csv')
+    tdb = pd.read_csv(tdb_path) if os.path.exists(tdb_path) else None
+
     fig = plt.figure(figsize=(12, 10))
     gs = gridspec.GridSpec(2, 2, hspace=0.35, wspace=0.30)
 
@@ -59,6 +64,7 @@ def main():
     ax = fig.add_subplot(gs[0, 0])
 
     color_ab = '#2ecc71'
+    color_tdb = '#8e44ad'  # purple for TDBRAIN
     for cohort, marker, ls in [('HBN', 'o', '-'), ('Dortmund', 's', '-')]:
         sub = v2[(v2.cohort == cohort) & (v2.trough_label == 'α/β (13.4)')]
         sub = sub.sort_values('age_center')
@@ -77,18 +83,31 @@ def main():
                 linewidth=1.5, label=cohort, markeredgecolor='black',
                 markeredgewidth=0.3)
 
+    # TDBRAIN extension (ages 5-88, purple)
+    if tdb is not None:
+        tdb_ab = tdb[tdb.trough == 'α/β (13.4)'].sort_values('age_center')
+        if len(tdb_ab) > 0:
+            x_tdb = tdb_ab['age_center'].values
+            y_tdb = tdb_ab['depletion_pct'].values
+            ax.plot(x_tdb, y_tdb, 'D-', color=color_tdb, markersize=4,
+                    linewidth=1.5, label='TDBRAIN', markeredgecolor='black',
+                    markeredgewidth=0.3, alpha=0.8)
+
     ax.set_xlabel('Age (years)')
     ax.set_ylabel('Trough depletion (%)')
     ax.set_title('A. α/β trough depth across lifespan', fontweight='bold')
-    ax.legend(fontsize=8, loc='lower right')
+    ax.legend(fontsize=7, loc='lower right')
     ax.grid(True, alpha=0.2)
-    ax.set_xlim(4, 70)
-    ax.annotate('ρ = +0.82\np = 0.023', xy=(15, 45), fontsize=7, color=color_ab,
+    ax.set_xlim(4, 82)
+    ax.annotate('ρ = +0.897\np < 0.0001', xy=(15, 45), fontsize=7, color=color_ab,
                 fontweight='bold', bbox=dict(boxstyle='round,pad=0.3',
                 facecolor='white', edgecolor=color_ab, alpha=0.8))
-    ax.annotate('ρ ≈ 0\np = 0.99', xy=(50, 62), fontsize=7, color=color_ab,
+    ax.annotate('ρ ≈ 0\np = 0.99', xy=(45, 62), fontsize=7, color=color_ab,
                 fontweight='bold', bbox=dict(boxstyle='round,pad=0.3',
                 facecolor='white', edgecolor=color_ab, alpha=0.8))
+    ax.annotate('late-life\nshallowing', xy=(72, 30), fontsize=7, color=color_tdb,
+                fontweight='bold', bbox=dict(boxstyle='round,pad=0.3',
+                facecolor='white', edgecolor=color_tdb, alpha=0.8))
 
     # ================================================================
     # Panel B: Differential maturation (% adult depth)

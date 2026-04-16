@@ -24,14 +24,14 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'
 from phi_frequency_model import PHI, F0
 
 BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-PEAK_BASE = os.path.join(BASE_DIR, 'exports_adaptive_v3')
+PEAK_BASE = os.path.join(BASE_DIR, 'exports_adaptive_v4')
 OUT_DIR = os.path.join(BASE_DIR, 'outputs', 'trough_depth_by_age')
 MIN_POWER_PCT = 50
 
 KNOWN_TROUGHS_HZ = np.array([5.08, 7.81, 13.42, 25.30, 35.04])
 TROUGH_LABELS = ['δ/θ (5.1)', 'θ/α (7.8)', 'α/β (13.4)', 'βL/βH (25.3)', 'βH/γ (35.0)']
 
-HBN_RELEASES = ['R1', 'R2', 'R3', 'R4', 'R6']
+HBN_RELEASES = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11']
 HBN_DEMO_TEMPLATE = '/Volumes/T9/hbn_data/cmi_bids_{release}/participants.tsv'
 DORTMUND_DEMO = '/Volumes/T9/dortmund_data/participants.tsv'
 LEMON_DEMO = ('/Volumes/T9/lemon_data/behavioral/'
@@ -79,7 +79,9 @@ def load_peaks_with_age(age_map, dataset_filter=None):
     """
     datasets = {
         'hbn_R1': 'hbn', 'hbn_R2': 'hbn', 'hbn_R3': 'hbn',
-        'hbn_R4': 'hbn', 'hbn_R6': 'hbn',
+        'hbn_R4': 'hbn', 'hbn_R5': 'hbn', 'hbn_R6': 'hbn',
+        'hbn_R7': 'hbn', 'hbn_R8': 'hbn', 'hbn_R9': 'hbn',
+        'hbn_R10': 'hbn', 'hbn_R11': 'hbn',
         'dortmund': 'dortmund', 'lemon': 'lemon',
     }
 

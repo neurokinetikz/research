@@ -484,15 +484,16 @@ def fig6_cognitive():
 # =========================================================================
 
 def fig7_lifespan():
-    """Inverted-U developmental trajectory schematic with key features."""
-    # Key features with their developmental and aging rhos
+    """Four-phase lifespan trajectory: rise, plateau, mid-life decline, late-life degradation."""
+    # Key features with their developmental, aging, and TDBRAIN lifespan rhos
+    # Updated for N=2,880 (11 HBN releases)
     features = [
-        ('α inv_noble₄', +0.354, -0.276, C_ALPHA),
-        ('α asymmetry', +0.351, -0.250, C_ALPHA),
-        ('α ramp_depth', +0.328, -0.240, C_ALPHA),
-        ('βL attractor', -0.194, +0.311, C_BETA_L),
-        ('βL noble₃', -0.194, +0.200, C_BETA_L),
-        ('γ noble₃', -0.207, +0.150, C_GAMMA),
+        ('α asymmetry', +0.327, -0.241, C_ALPHA),
+        ('α inv_noble₃', +0.316, -0.276, C_ALPHA),
+        ('α inv_noble₄', +0.308, -0.199, C_ALPHA),
+        ('α ramp_depth', +0.299, -0.205, C_ALPHA),
+        ('βH center_depl', -0.263, +0.150, C_BETA_H),
+        ('βL attractor', -0.135, +0.311, C_BETA_L),
     ]
 
     fig, axes = plt.subplots(1, 2, figsize=(7, 3.5))
@@ -506,7 +507,7 @@ def fig7_lifespan():
 
     y = np.arange(len(features))
     ax.barh(y - 0.15, dev_rho, 0.3, color=[c for c in colors], alpha=0.7,
-            edgecolor='black', linewidth=0.5, label='Development (HBN, 5-21)')
+            edgecolor='black', linewidth=0.5, label='Development (HBN, 5-22)')
     ax.barh(y + 0.15, age_rho, 0.3, color=[c for c in colors], alpha=0.3,
             edgecolor='black', linewidth=0.5, hatch='//',
             label='Aging (Dortmund, 20-70)')
@@ -518,43 +519,61 @@ def fig7_lifespan():
     ax.set_title('A. Opposite age effects', fontweight='bold')
     ax.invert_yaxis()
 
-    # Panel B: Schematic with visible dataset boundary
+    # Panel B: Four-phase trajectory schematic (HBN + Dortmund + TDBRAIN)
     ax = axes[1]
-    # HBN trajectory (observed: increasing)
-    x_hbn = np.linspace(5, 21, 80)
-    y_hbn = 0.04 * (x_hbn - 5) + 0.1  # linear increase
+
+    # Phase 1: HBN developmental rise (5-22)
+    x_hbn = np.linspace(5, 22, 80)
+    y_hbn = 0.04 * (x_hbn - 5) + 0.1
     ax.plot(x_hbn, y_hbn, '-', linewidth=2.5, color=C_POS)
     ax.fill_between(x_hbn, y_hbn, alpha=0.15, color=C_POS, label='Differentiation ↑')
 
-    # Gap at splice point (21-22 years)
-    x_gap = np.linspace(21, 22, 10)
+    # Gap at HBN-Dortmund splice (22-23)
+    x_gap1 = np.linspace(22, 23, 10)
     y_gap_lo = y_hbn[-1]
     y_gap_hi = y_gap_lo + 0.05
-    ax.plot(x_gap, np.linspace(y_gap_lo, y_gap_hi, len(x_gap)),
+    ax.plot(x_gap1, np.linspace(y_gap_lo, y_gap_hi, len(x_gap1)),
             '--', linewidth=1.5, color='gray', alpha=0.5)
 
-    # Dortmund trajectory (observed: monotonic decline)
-    x_dort = np.linspace(22, 70, 120)
-    y_dort = y_gap_hi - 0.012 * (x_dort - 22)  # linear decline
+    # Phase 2-3: Dortmund plateau + mid-life decline (23-70)
+    x_dort = np.linspace(23, 70, 120)
+    y_dort = y_gap_hi - 0.012 * (x_dort - 22)
     ax.plot(x_dort, y_dort, '-', linewidth=2.5, color=C_NEG)
     ax.fill_between(x_dort, y_dort, alpha=0.15, color=C_NEG, label='De-differentiation ↓')
 
-    # Dataset boundary annotation
-    ax.axvline(21, color='black', linestyle='--', linewidth=1.2, alpha=0.6)
-    ax.text(21, ax.get_ylim()[1] * 0.95, 'dataset\nboundary', ha='center',
-            fontsize=7, color='black', fontstyle='italic', va='top',
-            bbox=dict(boxstyle='round,pad=0.2', facecolor='white',
-                      edgecolor='gray', alpha=0.8))
+    # Phase 4: TDBRAIN late-life degradation (70-88)
+    # TDBRAIN α/β depletion: 47.8% (45-60) → 36.7% (60-90)
+    # Normalized: continued decline steepening past 70
+    x_tdb = np.linspace(70, 88, 40)
+    y_dort_end = y_dort[-1]
+    y_tdb = y_dort_end - 0.015 * (x_tdb - 70)  # steeper decline in late life
+    ax.plot(x_tdb, y_tdb, '-', linewidth=2.5, color='#8e44ad')  # purple for TDBRAIN
+    ax.fill_between(x_tdb, y_tdb, alpha=0.15, color='#8e44ad', label='Late-life degradation')
+
+    # Dataset boundary annotations
+    ax.axvline(21, color='black', linestyle='--', linewidth=1.0, alpha=0.5)
+    ax.axvline(70, color='black', linestyle='--', linewidth=1.0, alpha=0.5)
 
     # Dataset labels
-    ax.text(13, 0.05, 'HBN\n(5–21)', ha='center', fontsize=7, color=C_THETA)
-    ax.text(46, 0.05, 'Dortmund\n(20–70)', ha='center', fontsize=7, color=C_BETA_L)
+    ax.text(13, 0.05, 'HBN\n(5–22)', ha='center', fontsize=6.5, color=C_THETA)
+    ax.text(46, 0.05, 'Dortmund\n(20–70)', ha='center', fontsize=6.5, color=C_BETA_L)
+    ax.text(79, 0.05, 'TDBRAIN\n(60–88)', ha='center', fontsize=6.5, color='#8e44ad')
+
+    # Phase labels
+    ax.annotate('rise', xy=(13, y_hbn[40]), fontsize=7, color=C_POS,
+                fontweight='bold', ha='center', va='bottom')
+    ax.annotate('plateau', xy=(30, y_gap_hi + 0.02), fontsize=7, color='gray',
+                fontweight='bold', ha='center')
+    ax.annotate('decline', xy=(55, y_dort[80] + 0.02), fontsize=7, color=C_NEG,
+                fontweight='bold', ha='center')
+    ax.annotate('degradation', xy=(79, y_tdb[20] + 0.02), fontsize=7,
+                color='#8e44ad', fontweight='bold', ha='center')
 
     ax.set_xlabel('Age (years)')
     ax.set_ylabel('Spectral differentiation')
-    ax.set_title('B. Inverted-U lifespan trajectory', fontweight='bold')
-    ax.set_xlim(0, 75)
-    ax.legend(fontsize=7)
+    ax.set_title('B. Four-phase lifespan trajectory', fontweight='bold')
+    ax.set_xlim(0, 93)
+    ax.legend(fontsize=6.5, loc='upper right')
 
     plt.tight_layout()
     savefig(fig, 'fig7_lifespan')
