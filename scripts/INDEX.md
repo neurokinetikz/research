@@ -1,21 +1,40 @@
 # Scripts Index
 
+Scripts stay in a flat directory by repository convention. This index is the
+organizational layer: group scripts by workflow, dataset, and purpose so new
+analyses remain discoverable without moving files on disk.
+
 ## Paper Figures
 
 | Script | Description |
 |--------|-------------|
+| add_panel_labels.py | Adds panel labels and axis-label fixes to assembled manuscript figures for the Frontiers revision |
 | create_nature_fig1.py | Figure 1: SIE discovery characterization with exemplar spectrograms, harmonic ratios, and convergence |
 | create_nature_fig2.py | Figure 2: Continuous spectral architecture with peak distributions and enrichment |
 | create_nature_fig3.py | Figure 3: Band-stratified analysis and gamma dominance with lattice histograms |
 | create_nature_fig4.py | Figure 4: Multi-channel GED convergence with FOOOF vs GED comparison |
 | create_nature_fig5.py | Figure 5: Substrate-ignition model with lattice schematic and f0 convergence |
 | create_nature_fig6.py | Figure 6: Structural specificity with bootstrap gap and cross-resolution robustness |
+| generate_spectral_diff_figures.py | Main 8-figure generation script for the spectral differentiation paper. Loads enrichment, cognitive, lifespan, and ICC data from analysis CSVs (exports_adaptive_v4, 15 datasets including HBN R1-R11). |
+| generate_striking_images.py | Produces label-free high-impact figure candidates for manuscript submission |
 | generate_lemon_paper_figures.py | All figures for LEMON phi-lattice paper from pre-computed CSV exports |
 | generate_paper3_dortmund_figures.py | Figures for Paper 3 revision incorporating Dortmund replication data |
 | generate_paper_statistics.py | Computes all statistics for SIE analysis paper from structured CSV for LaTeX |
+| generate_trough_figure.py | 4-panel supplementary figure for trough developmental, covariance, and psychopathology analyses |
+| phi_lattice_schematic.py | Clean schematic of the φ-lattice with band boundaries and repeating position types |
 | power_analysis_paper.py | Sensitivity power analysis and achieved power for all key statistical tests |
 | paper3_step0_freeze_numbers.py | Freezes numbers for Paper 3 by computing measurement-quality gradient |
 | e8_poster.py | Conference poster figure visualizing E8 energy flow simulation results |
+
+## Manuscript Support & Release Packaging
+
+| Script | Description |
+|--------|-------------|
+| assemble_dryad.py | Builds the Dryad package: pooled peak tables, per-subject enrichments, and demographics linkage files |
+| generate_supplemental_tables.py | Writes supplemental tables covering the full φⁿ prediction grid through 7th-degree nobles/inverses |
+| regenerate_supplemental.py | Replaces the supplemental prediction tables inside `frontiers_revision.tex` |
+| supplementary_analyses.py | Runs manuscript-only supplementary analyses such as Dortmund quadratic vertex estimates and Steiger tests |
+| verify_peak_counts.py | Verifies extracted, filtered, and paper-reported peak counts per dataset and in total |
 
 ## Phi-Lattice Analysis
 
@@ -31,9 +50,9 @@
 | per_subject_phi_ratios.py | Analyzes per-subject phi-ratio precision to show relationships hold within individuals |
 | comprehensive_phi_comparison.py | Compares gedBounds boundaries against all phi-position types across datasets |
 | band_position_enrichment.py | Enrichment at 12 lattice positions within 5 frequency bands with heatmap visualization |
-| voronoi_enrichment_analysis.py | Per-band degree-6 Voronoi enrichment across 9 datasets with split boundary, cross-dataset summary, and HBN cross-release consistency. Reproducible via `--all --summary`. |
+| voronoi_enrichment_analysis.py | Per-band degree-6 Voronoi enrichment across 15 datasets (exports_adaptive_v4, HBN R1-R11) with Hz-weighted null model, split boundary, cross-dataset summary, and HBN cross-release consistency. Reproducible via `--all --summary`. |
 | voronoi_condition_comparisons.py | EC vs EO, pre vs post fatigue, and adult vs pediatric enrichment comparisons across datasets. Usage: `--analysis all`. |
-| voronoi_lifespan_trajectory.py | Per-subject enrichment × age across HBN (5-21), Dortmund (20-70), and LEMON (20-77). Computes Spearman correlations with FDR, compares developmental vs aging trajectories. Usage: `--dataset all`. |
+| voronoi_lifespan_trajectory.py | Per-subject enrichment × age across HBN R1-R11 (5-21), Dortmund (20-70), and LEMON (20-77) from exports_adaptive_v4. Computes Spearman correlations with FDR, compares developmental vs aging trajectories. Usage: `--dataset all`. |
 | per_subject_voronoi_cognitive.py | Per-subject Voronoi enrichment × LEMON cognitive battery (8 tests). Correlates enrichment at each position × band with cognitive scores. Also computes age × enrichment. |
 | per_subject_voronoi_hbn_age.py | Per-subject enrichment × age/sex/psychopathology for HBN (N=927). Includes p_factor, attention, internalizing, externalizing correlations. |
 | per_subject_voronoi_personality.py | Per-subject enrichment × LEMON emotion/personality battery (133 subscales from 23 instruments). 0 FDR survivors across 8,778 tests. |
@@ -42,7 +61,7 @@
 | voronoi_cross_band_coupling.py | Cross-band coupling: do subjects with stronger alpha mountain have deeper beta-low U-shape? Tests all pairwise cross-band correlations across LEMON, Dortmund, and HBN with replication analysis. |
 | voronoi_sex_age_interaction.py | Sex × age interaction: does the inverted-U trajectory differ between M and F? Fisher z-test on sex-stratified age rhos. Result: 0 FDR survivors in both HBN and Dortmund. |
 | voronoi_longitudinal.py | 5-year longitudinal test-retest (Dortmund ses-1 vs ses-2, N=208). ICC, group stability, and baseline age × 5-year change. |
-| voronoi_regional_enrichment.py | Per-channel and per-region (frontal/central/temporal/parietal/occipital) Voronoi enrichment across 9 datasets. Includes topographic maps, regional EC/EO comparison, and regional age trajectories with FDR-corrected Spearman correlations. Usage: `--step all`. |
+| voronoi_regional_enrichment.py | Per-channel and per-region (frontal/central/temporal/parietal/occipital) Voronoi enrichment across 15 datasets (exports_adaptive_v4, HBN R1-R11). Includes topographic maps, regional EC/EO comparison, and regional age trajectories with FDR-corrected Spearman correlations. Usage: `--step all`. |
 | voronoi_medical_handedness.py | Medical/metabolic (LEMON BMI, BP, blood biomarkers) and handedness (HBN EHQ, Dortmund) × enrichment. Both null (0 FDR survivors). |
 | voronoi_hbn_per_release_age.py | Tests whether developmental age correlations replicate independently within each HBN release. Cross-release rho correlations r=0.68-0.82. Alpha inv_noble_3/4 significant in ALL 5 releases. |
 | voronoi_longitudinal_2x2.py | 5-year 2×2 replication: full EC/EO × pre/post pattern ses-1 vs ses-2 (N=208). Beta-low r=0.99 profile correlation, 13/13 stable across all 8 conditions. |
@@ -53,24 +72,29 @@
 | pairwise_ratio_test.py | Tests whether phi-spaced frequency ratios are enriched while rationals are depleted |
 | shape_replication_inference.py | Tests whether enrichment shape replicates across datasets via Kendall's W |
 
-## v3 Enrichment Reanalysis
+## v4 Enrichment Reanalysis
 
 | Script | Description |
 |--------|-------------|
+| run_adaptive_resolution_extraction.py | Adaptive-resolution overlap-trim extraction with band-specific Welch windows so all degree-7 lattice positions are spectrally resolvable |
 | run_f0_760_extraction.py | v3 peak extraction pipeline: merged θ+α FOOOF or IRASA (--method flag), cap=12, bandwidth floor=2×freq_res, 50 Hz notch on European datasets, R²/quality saved per peak. All datasets. |
 | run_all_f0_760_analyses.py | 22-step analysis suite on v3 extraction: pooled enrichment, cognitive correlations, HBN developmental trajectory, Dortmund aging, EC/EO, personality, test-retest, cross-band coupling, and more. |
 | run_v4_sweep.py | 48-configuration FOOOF parameter sweep on EEGMMIDB (peak_threshold, min_peak_height, max_n_peaks, nperseg). Validates v3 config as optimal. |
 | gcp_run.sh | GCP VM orchestration: spawn, extract, push results, delete. Supports fooof, irasa, and sie methods. |
 | gcp_run_all_sie.sh | Orchestrates SIE detection across all datasets with up to 8 concurrent VMs. |
 | run_sie_extraction.py | Batch SIE detection across research-grade datasets (LEMON, Dortmund, HBN, TDBRAIN, CHBMP, EEGMMIDB). Uses fooof_hybrid with phi-lattice harmonics (f₀=7.6, 9 harmonics). |
+| log_scaling_test.py | Formal model comparison testing log-frequency versus linear-frequency scaling of pooled EEG peak densities |
+| bootstrap_trough_locations.py | Subject-level bootstrap of pooled peak-density trough locations and their ratios to address nested-data concerns |
 | boundary_sweep.py | Sweeps 2D (f0, ratio) parameter space to evaluate coordinate systems for EEG band definitions. Computes boundary sharpness, profile simplicity, band independence, cross-dataset consistency, and enrichment contrast. Also runs per-boundary slide analysis. |
 | within_band_coordinates.py | Tests within-band coordinate structure: scaling comparison (log vs linear vs ERB vs mel), landmark capture (phi vs equal vs rational vs random positions), feature alignment (permutation test), periodicity (autocorrelation), and noble vs rational enrichment. |
+| irasa_subsample_test.py | Tests whether IRASA's lower cognitive hit rate is explained by peak-yield reduction versus a true method difference |
 
 ## f0 Optimization & Sensitivity
 
 | Script | Description |
 |--------|-------------|
 | optimize_f0.py | Finds optimal f0 maximizing alignment between GED peaks and phi-positions via KDE scoring |
+| compare_f0_enrichment.py | Side-by-side Voronoi enrichment comparison for peaks extracted at f₀=7.83 versus f₀=7.60 |
 | explain_f0_shift.py | Visualizes how changing f0 affects which frequencies land at special lattice positions |
 | generate_f0_ranking_simple.py | Intuitive bar charts showing f0 ranking validation at key f0 values |
 | generate_f0_ranking_validation.py | Shows f0=7.6 Hz satisfies theoretical enrichment ranking across lattice positions |
@@ -85,6 +109,7 @@
 | golden_ratio_emotions.py | Golden ratio relationships in EMOTIONS dataset (256 Hz sampling) |
 | golden_ratio_per_file_histograms.py | Individual histograms of FOOOF-detected peaks for each EEG file |
 | eeg_phi.py | Tests golden ratio organization hypothesis in EEG spectral peaks using phase-rotation null control |
+| eeg_phi (1).py | Archival exploratory copy of `eeg_phi.py` retained for provenance; tests the same φⁿ organization hypothesis on EEGMMIDB |
 
 ## Null Controls
 
@@ -107,6 +132,13 @@
 | run_null_control.py | Quick runner for null control test with predefined dataset selections |
 | validate_null_control_2.py | Comprehensive validation of distributional null control model |
 | notebook_null_control_helper.py | Simplified aliases for running null control tests in Jupyter notebooks |
+
+## Extended Gamma & Extraction Variants
+
+| Script | Description |
+|--------|-------------|
+| analyze_p20_extended_gamma.py | P20 analysis of the previously unmeasured n+4 extended-gamma octave with 60 Hz exclusion and n+3 comparison |
+| run_theta_alpha_extraction.py | Theta-plus-alpha-only extraction for Dortmund, CHBMP, and HBN to resolve the merged θ/α boundary question |
 
 ## Replication Pipelines (by Dataset)
 
@@ -145,17 +177,20 @@
 | run_dortmund_dominant_peak.py | Replicates LEMON analysis on Dortmund Vital Study (608 subjects, 64 channels, 4 conditions) |
 | run_dortmund_longitudinal.py | 5-year longitudinal follow-up (208 subjects) assessing within-subject stability |
 | run_dortmund_overlap_trim.py | Overlap-trim FOOOF solving 1/f knee contamination, predicting EC delta sign-flip |
+| run_dortmund_p20_extraction.py | Dortmund EC-pre overlap-trim extraction through the full gamma octave for P20 extended-range analyses |
 
 ### HBN
 | Script | Description |
 |--------|-------------|
 | run_hbn_phi_replication.py | Locked protocol on HBN Release 1 (136 subjects, 500 to 250 Hz) |
 | run_hbn_release_phi_replication.py | Per-release phi replication runner for specified HBN data releases |
+| run_hbn_p20_extraction.py | Per-release HBN overlap-trim extraction through the full gamma octave for P20 analyses |
 
 ### CHBMP
 | Script | Description |
 |--------|-------------|
 | run_chbmp_phi_replication.py | Locked protocol on Cuban Human Brain Mapping Project (282 subjects, 120-channel, EC/EO) |
+| run_chbmp_phioctave_overlap_trim.py | CHBMP overlap-trim per-phi-octave extraction with optional 75 Hz ceiling for P20 extended-gamma work |
 
 ### Bonn
 | Script | Description |
@@ -221,6 +256,7 @@
 | decisive_phi_tests.py | Five tests to discriminate SR vs geometric-accident explanations of phi-lattice alignment |
 | decisive_phi_tests_1sd.py | Variant using hard threshold (1 sigma = 0.03) for peak alignment determination |
 | ec_eo_lattice_comparison.py | Compares phi-lattice positions between eyes-closed and eyes-open conditions |
+| iaf_partial_cognitive.py | Tests whether cognition correlations survive partialing out individual alpha frequency rather than only age |
 
 ## E8 & Consciousness Modeling
 
@@ -239,6 +275,14 @@
 | analyze_ignition_custom.py | Detects ignition events based on SR band power fluctuations using custom detection logic |
 | batch_analyze_sessions.py | Runs all configured EEG files, uses Claude API for chart analysis, generates session summaries |
 | aggregate_non_sr_peaks.py | Aggregates non-SR peaks from session CSVs for cross-session clustering analysis |
+
+## SIE Replication & Follow-Up
+
+| Script | Description |
+|--------|-------------|
+| analyze_sie_replication.py | Phase 1 research-grade SIE replication across ~3,500 subjects and ~15,000 events |
+| analyze_sie_phase2_3.py | Phase 2 and 3 SIE follow-up: developmental trajectory, cognitive correlates, and clinical associations |
+| analyze_sie_full_clean.py | Full clean SIE analysis combining replication, age/state/correlate analyses, PLV, and artifact filtering |
 
 ## Visualization & Figure Generation
 
@@ -264,6 +308,13 @@
 |--------|-------------|
 | phi_trough_inhibition_exploration.py | Explores inhibitory φ-trough hypothesis: per-subject depth composites, trough covariance structure, ratio-depth relationships, bridge as inhibitory failure, GABA/psychopathology signatures, cognition at troughs, and mode-locking resistance analysis |
 | find_true_f0.py | Estimates the true lattice seed frequency f₀ using 6 approaches: log-space least squares, free-ratio fit, period concatenation consistency, precision-weighted fit, bridge-excluded fit, and bootstrap distribution |
+| trough_depth_by_age.py | Lifespan analysis of trough-depth trajectories across HBN, LEMON, and Dortmund using age-binned pooled KDEs |
+| trough_depth_by_age_v2.py | Within-dataset trough-depth trajectories with subject-level bootstrap confidence intervals |
+| trough_differential_maturation.py | Compares maturation timing of the δ/θ and α/β troughs under the SST+/PV+ inhibition hypothesis |
+| trough_depth_covariance.py | Tests whether trough depths covary across people or reflect independent inhibitory populations |
+| trough_width_asymmetry.py | Characterizes trough width and left/right flank asymmetry across development |
+| trough_depth_cognition.py | Tests whether per-subject trough depth predicts LEMON cognitive performance |
+| trough_depth_psychopathology.py | HBN psychopathology analysis of trough depth, especially the α/β trough |
 | trough_displacement_analysis.py | Tests two-forces model (lattice pull vs peak mass pull): trough displacement from ideal φ-positions, slope asymmetry as mass proxy, precision-as-regulation analysis, developmental slope trajectories |
 | ec_eo_trough_comparison.py | Compares trough positions between eyes-closed and eyes-open conditions for LEMON (N=202) and Dortmund (N=608); bootstrapped CIs for each condition; tests α-mass displacement prediction |
 | irasa_trough_replication.py | Method-independence test: detects troughs from 3.3M IRASA peaks (2,045 subjects), compares positions/ratios to FOOOF, bootstrap CIs, per-dataset consistency, EC-EO comparison, f₀ estimation |
@@ -274,8 +325,19 @@
 | irasa_trough_depth_functional.py | Proper IRASA replication of functional correlations using paper's exact depth metric: per-subject windowed log-frequency counts for HBN psychopathology (N=922) and LEMON cognition, side-by-side with FOOOF |
 | audit_fixes_v2.py | Second-round audit fixes: IRASA noise attenuation analysis (#7), within-dataset sharpening trends (#6), bridge fine-grained peak distribution (#8), high-res raw PSD (#10), FDR correction and R² for all functional claims (#5+12) |
 | final_audit_analyses.py | Final audit: bridge EO slope signature (wall vs depletion), depth-width coupling (sharpening test), period concatenation under IRASA (fails at 23-28% error), complete effect size table for all claims |
-| tdbrain_trough_analysis.py | TDBRAIN out-of-sample test: ADHD vs MDD α/β trough depth comparison with age-controlled analysis, all 5 troughs, and 3-way ADHD/HEALTHY/MDD comparison |
-| tdbrain_challenge_predictions.py | TDBRAIN Challenge submissions: ADHD vs MDD diagnostic prediction (logistic regression on enrichment features), age prediction (ridge regression), and single-feature α/β baseline |
+| tdbrain_trough_analysis.py | TDBRAIN out-of-sample test of α/β trough depth and all-five-trough profiles for ADHD vs MDD |
+| tdbrain_challenge_predictions.py | TDBRAIN Challenge prediction scripts for diagnosis and age from enrichment features |
+
+## SRM & TDBRAIN Spectral Differentiation
+
+| Script | Description |
+|--------|-------------|
+| srm_spectral_differentiation.py | Full spectral-differentiation workflow for the SRM Oslo resting-state dataset, including cognition, age, reliability, and FOOOF-versus-IRASA |
+| srm_hz_weighted_analysis.py | Re-runs SRM analyses with the paper's Hz-weighted Voronoi machinery rather than u-space counts |
+| tdbrain_enrichment_analysis.py | TDBRAIN enrichment-based ADHD versus MDD analysis when trough metrics are underpowered |
+| tdbrain_remaining_analyses.py | Remaining TDBRAIN analyses: personality, cognition, trough detection, IRASA comparison, and cross-band coupling |
+| tdbrain_final_analyses.py | Final TDBRAIN pass including IRASA correlations, age-partialed cognition, and sensitivity analyses |
+| tdbrain_regional_trough.py | Regional enrichment plus pooled trough analyses for TDBRAIN |
 
 ## Schumann Resonance Exploratory Analyses
 
@@ -335,6 +397,7 @@
 | test_debug_wrapper.py | Tests debug wrapper with exact user configuration |
 | test_fix_directly.py | Direct test demonstrating the per-event FOOOF canonical fix |
 | test_fooof_compat.py | FOOOF/SpecParam compatibility test for specparam vs legacy fooof |
+| test_fooof_custom_params.py | Synthetic-data check of FOOOF integration under a custom sensitivity parameter set |
 | test_fooof_harmonics.py | Demonstrates fooof_harmonics module with example usage patterns |
 | test_fooof_hybrid.py | Tests FOOOF hybrid mode combining session-level and per-event harmonics |
 | test_fooof_integration.py | Demonstrates all three harmonic detection methods |
@@ -346,6 +409,7 @@
 | test_max_n_peaks.py | Verifies fooof_max_n_peaks parameter works correctly |
 | test_max_n_peaks_detailed.py | Detailed test of fooof_max_n_peaks parameter behavior |
 | test_max_n_peaks_integration.py | Integration test of fooof_max_n_peaks in detect_ignitions_session |
+| test_merged_theta_alpha.py | Compares merged θ+α FOOOF extraction against separate per-band fits on a Dortmund subset |
 | test_nperseg_sec.py | Verifies nperseg_sec parameter controls spectral resolution |
 | test_null_control.py | Quick test of null control functions with a single file |
 | test_per_harmonic_fooof.py | Tests per-harmonic FOOOF fitting with separate fits per canonical frequency |

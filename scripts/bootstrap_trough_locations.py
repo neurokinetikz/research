@@ -36,6 +36,7 @@ PEAK_BASE = os.path.join(BASE_DIR, 'exports_adaptive_v4')
 OUT_DIR = os.path.join(BASE_DIR, 'outputs', 'bootstrap_troughs')
 MIN_POWER_PCT = 50
 
+# All datasets: 11 HBN releases + 4 non-HBN + TDBRAIN = 16 strata
 EC_DATASETS = {
     'eegmmidb': 'eegmmidb', 'lemon': 'lemon', 'dortmund': 'dortmund',
     'chbmp': 'chbmp',
@@ -43,6 +44,7 @@ EC_DATASETS = {
     'hbn_R4': 'hbn_R4', 'hbn_R5': 'hbn_R5', 'hbn_R6': 'hbn_R6',
     'hbn_R7': 'hbn_R7', 'hbn_R8': 'hbn_R8', 'hbn_R9': 'hbn_R9',
     'hbn_R10': 'hbn_R10', 'hbn_R11': 'hbn_R11',
+    'tdbrain': 'tdbrain',
 }
 
 

@@ -85,15 +85,20 @@ BAND_LABELS = {
 
 PHI_INV = 1.0 / PHI
 BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-PEAK_BASE = os.path.join(BASE_DIR, 'exports_adaptive_v3')
+PEAK_BASE = os.path.join(BASE_DIR, 'exports_adaptive_v4')
 IMG_DIR = os.path.join(BASE_DIR, 'papers', 'images')
 OUT_DIR = os.path.join(BASE_DIR, 'outputs')
+ANALYSIS_DIR = os.path.join(OUT_DIR, 'f0_760_reanalysis')
 MIN_POWER_PCT = 50
 
+# 6-dataset convention: HBN merged across 11 releases, TDBRAIN included
 EC_DATASETS = {
-    'eegmmidb': 'eegmmidb', 'lemon': 'lemon', 'dortmund': 'dortmund',
-    'chbmp': 'chbmp', 'hbn_R1': 'hbn_R1', 'hbn_R2': 'hbn_R2',
-    'hbn_R3': 'hbn_R3', 'hbn_R4': 'hbn_R4', 'hbn_R6': 'hbn_R6',
+    'eegmmidb': 'eegmmidb',
+    'lemon': 'lemon',
+    'dortmund': 'dortmund',
+    'chbmp': 'chbmp',
+    'hbn': [f'hbn_R{i}' for i in range(1, 12)],
+    'tdbrain': 'tdbrain',
 }
 
 BAND_HZ = {
@@ -124,22 +129,51 @@ POS_NAMES = [p[0] for p in POS_LIST]
 POS_SHORT = ['bnd', 'n6', 'n5', 'n4', 'n3', 'in1', 'att', 'n1',
              'in3', 'in4', 'in5', 'in6', 'bhi']
 
-# Enrichment values from v3 (9-dataset means, Hz-corrected, top 50% power)
-ENRICHMENT = {
-    'theta':     [-52, -57, -59, -57, -55, -45, -31, -3, +35, +66, +83, +93, +123],
-    'alpha':     [-35, -23, -14, -3, +20, +36, +41, +30, -5, -37, -55, -68, -73],
-    'beta_low':  [-31, -36, -49, -54, -56, -40, -22, +1, +29, +53, +77, +87, +83],
-    'beta_high': [+85, +60, +50, +30, +11, -3, -13, -15, -14, -12, -15, -13, -18],
-    'gamma':     [-14, -25, -31, -33, -33, -27, -12, +2, +22, +55, +11, +55, +29],
+# Enrichment values — loaded from analysis outputs, with static fallback
+_ENRICHMENT_FALLBACK = {
+    # 6-dataset means (EEGMMIDB, LEMON, Dortmund, CHBMP, HBN merged, TDBRAIN)
+    'theta':     [-64, -59, -57, -56, -50, -39, -22, +2, +36, +58, +74, +80, +94],
+    'alpha':     [-6, -2, +3, +4, +13, +14, +16, +15, +1, -18, -31, -43, -52],
+    'beta_low':  [-34, -44, -52, -56, -55, -41, -17, +10, +34, +54, +66, +69, +72],
+    'beta_high': [+44, +37, +32, +18, +7, -5, -9, -8, -6, -5, -6, -9, -12],
+    'gamma':     [-12, -16, -16, -20, -18, -9, -1, +2, +12, +50, -19, +14, -8],
 }
+
+
+def _load_enrichment():
+    """Load enrichment from 6-dataset merged CSV, fall back to static values."""
+    csv_path = os.path.join(ANALYSIS_DIR, 'enrichment_6dataset_merged.csv')
+    if not os.path.exists(csv_path):
+        # Try legacy CSV
+        csv_path = os.path.join(ANALYSIS_DIR, 'enrichment_comparison_full.csv')
+    if not os.path.exists(csv_path):
+        print(f"  WARNING: no enrichment CSV found, using fallback enrichment values")
+        return _ENRICHMENT_FALLBACK
+    df = pd.read_csv(csv_path)
+    # enrichment_6dataset_merged.csv uses 'enrichment_pct'; legacy CSV uses 'new_v2'
+    value_col = 'enrichment_pct' if 'enrichment_pct' in df.columns else 'new_v2'
+    result = {}
+    for band in BAND_ORDER:
+        bdf = df[df['band'] == band]
+        means = bdf.groupby('position')[value_col].mean()
+        # Preserve position order
+        result[band] = [round(means.get(p, 0)) for p in POS_NAMES]
+    return result
+
+
+ENRICHMENT = _load_enrichment()
 
 
 def load_all_freqs():
     """Load and power-filter peaks, return pooled frequency array."""
     all_freqs = []
     for name, subdir in EC_DATASETS.items():
-        path = os.path.join(PEAK_BASE, subdir)
-        files = sorted(glob.glob(os.path.join(path, '*_peaks.csv')))
+        # Handle merged datasets (list of subdirs)
+        subdirs = subdir if isinstance(subdir, list) else [subdir]
+        files = []
+        for sd in subdirs:
+            path = os.path.join(PEAK_BASE, sd)
+            files.extend(sorted(glob.glob(os.path.join(path, '*_peaks.csv'))))
         if not files:
             continue
         first = pd.read_csv(files[0], nrows=1)
@@ -213,7 +247,9 @@ def fig1_peak_density(all_freqs):
         Line2D([0], [0], color=C_PHI, linestyle='--', linewidth=1.5),
         Line2D([0], [0], marker='v', color=C_NEG, linestyle='None', markersize=8),
     ], ['$\\varphi$-lattice boundaries', 'Density troughs'], loc='upper right')
-    ax.set_title('A. Peak frequency distribution (4.57M peaks, 9 datasets)', fontweight='bold')
+    n_peaks = len(all_freqs)
+    n_ds = len(EC_DATASETS)
+    ax.set_title(f'A. Peak frequency distribution ({n_peaks/1e6:.1f}M peaks, {n_ds} datasets)', fontweight='bold')
 
     # Panel B: model comparison bar chart
     ax = axes[1]
@@ -388,7 +424,8 @@ def fig4_enrichment_landscape():
                     fontsize=6.5, color=color, fontweight='bold')
 
     plt.colorbar(im, ax=ax, label='Enrichment (%)', shrink=0.9, pad=0.02)
-    ax.set_title('Enrichment landscape (9 datasets, $\\approx$2,097 subjects)', fontweight='bold')
+    n_ds = len(EC_DATASETS)
+    ax.set_title(f'Enrichment landscape ({n_ds} datasets, cross-dataset mean)', fontweight='bold')
 
     plt.tight_layout()
     savefig(fig, 'fig4_enrichment_landscape')
@@ -400,19 +437,20 @@ def fig4_enrichment_landscape():
 
 def fig5_cross_boundary():
     """Four boundary types: cliff, void, bridge, weak."""
+    # 6-dataset means (EEGMMIDB, LEMON, Dortmund, CHBMP, HBN merged, TDBRAIN)
     boundaries = [
         ('$\\theta / \\alpha$\n(Cliff)', 7.60, 'theta', 'alpha',
-         [(7.08, +65), (7.28, +86), (7.40, +98), (7.60, +126)],
-         [(7.60, -35), (7.81, -24), (7.94, -15), (8.15, -2)]),
+         [(7.09, +58), (7.28, +74), (7.40, +80), (7.60, +94)],
+         [(7.60, -6), (7.81, -2), (7.94, +3), (8.15, +4)]),
         ('$\\alpha / \\beta_L$\n(Void)', 12.30, 'alpha', 'beta_low',
-         [(11.46, -40), (11.78, -57), (11.97, -69), (12.30, -74)],
-         [(12.30, -33), (12.63, -38), (12.84, -49), (13.19, -56)]),
+         [(11.46, -18), (11.77, -31), (11.97, -43), (12.30, -52)],
+         [(12.30, -34), (12.63, -44), (12.85, -52), (13.19, -56)]),
         ('$\\beta_L / \\beta_H$\n(Bridge)', 19.90, 'beta_low', 'beta_high',
-         [(18.55, +52), (19.05, +74), (19.37, +82), (19.90, +78)],
-         [(19.90, +86), (20.44, +58), (20.78, +48), (21.34, +29)]),
+         [(18.55, +54), (19.06, +66), (19.38, +69), (19.90, +72)],
+         [(19.90, +44), (20.44, +37), (20.78, +32), (21.35, +18)]),
         ('$\\beta_H / \\gamma$\n(Weak)', 32.19, 'beta_high', 'gamma',
-         [(30.01, -13), (30.83, -16), (31.34, -14), (32.19, -20)],
-         [(32.19, -4), (33.07, -18), (33.62, -24), (34.54, -27)]),
+         [(30.02, -5), (30.83, -6), (31.35, -9), (32.19, -12)],
+         [(32.19, -12), (33.06, -16), (33.62, -16), (34.53, -20)]),
     ]
 
     fig, axes = plt.subplots(1, 4, figsize=(7, 2.8), sharey=True)
@@ -441,22 +479,64 @@ def fig5_cross_boundary():
 # FIGURE 6: Cognitive correlations
 # =========================================================================
 
+_COGNITIVE_FALLBACK = [
+    ('LPS', 'βL center_depl', -0.273),
+    ('TAP', 'θ ushape', +0.267),
+    ('TAP', 'θ boundary', +0.263),
+    ('TAP', 'θ mountain', -0.260),
+    ('RWT', 'γ inv_noble₄', +0.260),
+    ('RWT', 'γ ramp_depth', +0.256),
+    ('TMT', 'α inv_noble₆', -0.253),
+    ('LPS', 'βL mountain', -0.250),
+    ('LPS', 'βL ushape', +0.249),
+    ('LPS', 'βL attractor', -0.245),
+    ('LPS', 'γ inv_noble₄', +0.243),
+    ('LPS', 'βL boundary', +0.240),
+]
+
+_BAND_ABBREV = {
+    'theta': 'θ', 'alpha': 'α', 'beta_low': 'βL',
+    'beta_high': 'βH', 'gamma': 'γ',
+}
+
+# Ordered longest-first so beta_low matches before beta
+_BAND_PREFIXES = sorted(_BAND_ABBREV.keys(), key=len, reverse=True)
+
+
+def _parse_feature(feature_name):
+    """Split 'beta_low_ushape' -> ('beta_low', 'ushape'). Handles compound band names."""
+    for prefix in _BAND_PREFIXES:
+        if feature_name.startswith(prefix + '_'):
+            return prefix, feature_name[len(prefix) + 1:]
+        if feature_name == prefix:
+            return prefix, prefix
+    # Fallback: split on first underscore
+    parts = feature_name.split('_', 1)
+    return parts[0], (parts[1] if len(parts) > 1 else parts[0])
+
+
+def _load_cognitive(n_top=12):
+    """Load top FDR-significant cognitive correlations from analysis CSV."""
+    csv_path = os.path.join(ANALYSIS_DIR, 'cognitive_correlations.csv')
+    if not os.path.exists(csv_path):
+        print(f"  WARNING: {csv_path} not found, using fallback cognitive data")
+        return _COGNITIVE_FALLBACK, 203
+    df = pd.read_csv(csv_path)
+    sig = df[df['significant'] == True].copy()
+    sig = sig.sort_values('abs_rho', ascending=False).head(n_top)
+    data = []
+    for _, row in sig.iterrows():
+        target = row['target']
+        band_key, feat_name = _parse_feature(row['feature'])
+        abbrev = _BAND_ABBREV.get(band_key, band_key)
+        data.append((target, f'{abbrev} {feat_name}', round(row['rho'], 3)))
+    n_subj = int(sig['n'].iloc[0]) if len(sig) > 0 else 203
+    return data, n_subj
+
+
 def fig6_cognitive():
     """Top FDR-significant cognitive correlations."""
-    data = [
-        ('LPS', 'βL center_depl', -0.273),
-        ('TAP', 'θ ushape', +0.267),
-        ('TAP', 'θ boundary', +0.263),
-        ('TAP', 'θ mountain', -0.260),
-        ('RWT', 'γ inv_noble₄', +0.260),
-        ('RWT', 'γ ramp_depth', +0.256),
-        ('TMT', 'α inv_noble₆', -0.253),
-        ('LPS', 'βL mountain', -0.250),
-        ('LPS', 'βL ushape', +0.249),
-        ('LPS', 'βL attractor', -0.245),
-        ('LPS', 'γ inv_noble₄', +0.243),
-        ('LPS', 'βL boundary', +0.240),
-    ]
+    data, n_subj = _load_cognitive()
 
     fig, ax = plt.subplots(figsize=(5, 4))
 
@@ -471,9 +551,11 @@ def fig6_cognitive():
     ax.set_xlabel('Spearman $\\rho$')
     ax.axvline(0, color='black', linewidth=0.8)
     ax.invert_yaxis()
-    ax.set_title('Top 12 FDR-significant cognition correlations\n(LEMON EC, $N=203$, $q<0.05$)',
+    ax.set_title(f'Top {len(data)} FDR-significant cognition correlations\n'
+                 f'(LEMON EC, $N={n_subj}$, $q<0.05$)',
                  fontweight='bold')
-    ax.set_xlim(-0.32, 0.32)
+    rho_max = max(abs(r) for r in rhos) + 0.05 if rhos else 0.32
+    ax.set_xlim(-rho_max, rho_max)
 
     plt.tight_layout()
     savefig(fig, 'fig6_cognitive')
@@ -483,18 +565,44 @@ def fig6_cognitive():
 # FIGURE 7: Inverted-U lifespan trajectory
 # =========================================================================
 
+_LIFESPAN_FALLBACK = [
+    ('α asymmetry', +0.327, -0.241, C_ALPHA),
+    ('α inv_noble₃', +0.316, -0.276, C_ALPHA),
+    ('α inv_noble₄', +0.308, -0.199, C_ALPHA),
+    ('α ramp_depth', +0.299, -0.205, C_ALPHA),
+    ('βH center_depl', -0.263, +0.150, C_BETA_H),
+    ('βL attractor', -0.135, +0.311, C_BETA_L),
+]
+
+_BAND_COLOR_MAP = {
+    'alpha': C_ALPHA, 'theta': C_THETA, 'beta_low': C_BETA_L,
+    'beta_high': C_BETA_H, 'gamma': C_GAMMA,
+}
+
+
+def _load_lifespan(n_top=6):
+    """Load top inverted-U lifespan features from analysis CSV."""
+    csv_path = os.path.join(ANALYSIS_DIR, 'lifespan_trajectory.csv')
+    if not os.path.exists(csv_path):
+        print(f"  WARNING: {csv_path} not found, using fallback lifespan data")
+        return _LIFESPAN_FALLBACK
+    df = pd.read_csv(csv_path)
+    inv_u = df[df['pattern'] == 'inverted-U'].copy()
+    inv_u['abs_hbn'] = inv_u['hbn_rho'].abs()
+    inv_u = inv_u.sort_values('abs_hbn', ascending=False).head(n_top)
+    features = []
+    for _, row in inv_u.iterrows():
+        band_key, feat_name = _parse_feature(row['feature'])
+        abbrev = _BAND_ABBREV.get(band_key, band_key)
+        color = _BAND_COLOR_MAP.get(band_key, C_ALPHA)
+        features.append((f'{abbrev} {feat_name}', round(row['hbn_rho'], 3),
+                         round(row['dort_rho'], 3), color))
+    return features
+
+
 def fig7_lifespan():
     """Four-phase lifespan trajectory: rise, plateau, mid-life decline, late-life degradation."""
-    # Key features with their developmental, aging, and TDBRAIN lifespan rhos
-    # Updated for N=2,880 (11 HBN releases)
-    features = [
-        ('α asymmetry', +0.327, -0.241, C_ALPHA),
-        ('α inv_noble₃', +0.316, -0.276, C_ALPHA),
-        ('α inv_noble₄', +0.308, -0.199, C_ALPHA),
-        ('α ramp_depth', +0.299, -0.205, C_ALPHA),
-        ('βH center_depl', -0.263, +0.150, C_BETA_H),
-        ('βL attractor', -0.135, +0.311, C_BETA_L),
-    ]
+    features = _load_lifespan()
 
     fig, axes = plt.subplots(1, 2, figsize=(7, 3.5))
 
@@ -583,35 +691,84 @@ def fig7_lifespan():
 # FIGURE 8: Reliability
 # =========================================================================
 
+_ICC_FALLBACK = {
+    'band_medians': {'beta_low': 0.604, 'beta_high': 0.507, 'alpha': 0.454,
+                     'theta': 0.382, 'gamma': 0.250},
+    'best_feature': ('beta_low_ushape', 0.746),
+    'overall_median': 0.421,
+    'n_subj': 208,
+}
+
+
+def _load_icc():
+    """Load test-retest ICC from analysis CSV."""
+    csv_path = os.path.join(ANALYSIS_DIR, 'test_retest_reliability.csv')
+    if not os.path.exists(csv_path):
+        print(f"  WARNING: {csv_path} not found, using fallback ICC data")
+        return _ICC_FALLBACK
+    df = pd.read_csv(csv_path)
+    # Extract band from feature name using compound-aware parser
+    df['band'] = df['feature'].apply(lambda f: _parse_feature(f)[0])
+    band_medians = df.groupby('band')['icc'].median().to_dict()
+    best_idx = df['icc'].idxmax()
+    best_feature = df.loc[best_idx, 'feature']
+    best_icc = df.loc[best_idx, 'icc']
+    overall_median = df['icc'].median()
+    n_subj = int(df['n'].iloc[0])
+    return {
+        'band_medians': band_medians,
+        'best_feature': (best_feature, best_icc),
+        'overall_median': overall_median,
+        'n_subj': n_subj,
+    }
+
+
 def fig8_reliability():
     """Five-year test-retest ICC and group profile stability."""
     fig, axes = plt.subplots(1, 2, figsize=(7, 3))
 
-    # Panel A: ICC by band
+    icc_data = _load_icc()
+    band_medians = icc_data['band_medians']
+    best_feat, best_icc = icc_data['best_feature']
+    overall_med = icc_data['overall_median']
+    n_subj = icc_data['n_subj']
+
+    # Panel A: ICC by band (sorted descending)
     ax = axes[0]
-    bands = ['Beta-low', 'Beta-high', 'Alpha', 'Theta', 'Gamma']
-    iccs = [0.604, 0.507, 0.454, 0.382, 0.250]
-    colors = [BAND_COLORS[b] for b in ['beta_low', 'beta_high', 'alpha', 'theta', 'gamma']]
+    band_keys = ['beta_low', 'beta_high', 'alpha', 'theta', 'gamma']
+    band_keys = sorted([b for b in band_keys if b in band_medians],
+                       key=lambda b: band_medians[b], reverse=True)
+    band_labels = [BAND_LABELS.get(b, b) for b in band_keys]
+    iccs = [round(band_medians[b], 3) for b in band_keys]
+    colors = [BAND_COLORS[b] for b in band_keys]
 
-    bars = ax.barh(range(len(bands)), iccs, color=colors, edgecolor='black',
+    bars = ax.barh(range(len(band_labels)), iccs, color=colors, edgecolor='black',
                    linewidth=0.5, height=0.6)
-    ax.set_yticks(range(len(bands)))
-    ax.set_yticklabels(bands)
+    ax.set_yticks(range(len(band_labels)))
+    ax.set_yticklabels(band_labels)
     ax.set_xlabel('Median ICC (5-year)')
-    ax.set_xlim(0, 0.8)
+    ax.set_xlim(0, max(best_icc + 0.1, 0.8))
 
-    # Mark beta_low_ushape
-    ax.plot(0.746, 0, 'D', color='black', markersize=8, zorder=10)
-    ax.annotate('βL ushape\nICC=0.746', xy=(0.746, 0), xytext=(0.72, 1.5),
+    # Mark best individual feature
+    best_band = best_feat.replace('_ushape', '').replace('_asymmetry', '')
+    best_short = best_feat.split('_', 2)[-1] if '_' in best_feat else best_feat
+    best_band_idx = next((i for i, b in enumerate(band_keys) if best_feat.startswith(b)), 0)
+    ax.plot(best_icc, best_band_idx, 'D', color='black', markersize=8, zorder=10)
+    ax.annotate(f'{best_short}\nICC={best_icc:.3f}',
+                xy=(best_icc, best_band_idx),
+                xytext=(best_icc - 0.02, best_band_idx + 1.5),
                 fontsize=7, ha='center',
                 arrowprops=dict(arrowstyle='->', color='black', lw=0.8))
 
-    ax.axvline(0.421, color='gray', linestyle=':', linewidth=1)
-    ax.text(0.421, 4.5, 'Overall\n0.421', fontsize=7, ha='center', color='gray')
-    ax.set_title('A. 5-year test-retest ICC\n(Dortmund, $N=208$)', fontweight='bold')
+    ax.axvline(overall_med, color='gray', linestyle=':', linewidth=1)
+    ax.text(overall_med, len(band_keys) - 0.5, f'Overall\n{overall_med:.3f}',
+            fontsize=7, ha='center', color='gray')
+    ax.set_title(f'A. 5-year test-retest ICC\n(Dortmund, $N={n_subj}$)', fontweight='bold')
     ax.invert_yaxis()
 
-    # Panel B: Group profile stability
+    # Panel B: Group profile stability (13-position enrichment profile correlation
+    # between sessions — a derived metric not stored in a separate output CSV,
+    # so these values remain hard-coded from the Dortmund 5-year analysis)
     ax = axes[1]
     bands_b = ['Beta-low', 'Beta-high', 'Theta', 'Alpha', 'Gamma']
     r_vals = [0.988, 0.987, 0.983, 0.977, 0.964]

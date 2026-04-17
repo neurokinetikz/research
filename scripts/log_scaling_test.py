@@ -40,15 +40,20 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'
 from phi_frequency_model import PHI, F0
 
 BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-PEAK_BASE = os.path.join(BASE_DIR, 'exports_adaptive_v3')
+PEAK_BASE = os.path.join(BASE_DIR, 'exports_adaptive_v4')
 OUT_DIR = os.path.join(BASE_DIR, 'outputs', 'log_scaling_test')
 
 MIN_POWER_PCT = 50
 
+# All datasets: 11 HBN releases + 4 non-HBN + TDBRAIN
 EC_DATASETS = {
     'eegmmidb': 'eegmmidb', 'lemon': 'lemon', 'dortmund': 'dortmund',
-    'chbmp': 'chbmp', 'hbn_R1': 'hbn_R1', 'hbn_R2': 'hbn_R2',
-    'hbn_R3': 'hbn_R3', 'hbn_R4': 'hbn_R4', 'hbn_R6': 'hbn_R6',
+    'chbmp': 'chbmp',
+    'hbn_R1': 'hbn_R1', 'hbn_R2': 'hbn_R2', 'hbn_R3': 'hbn_R3',
+    'hbn_R4': 'hbn_R4', 'hbn_R5': 'hbn_R5', 'hbn_R6': 'hbn_R6',
+    'hbn_R7': 'hbn_R7', 'hbn_R8': 'hbn_R8', 'hbn_R9': 'hbn_R9',
+    'hbn_R10': 'hbn_R10', 'hbn_R11': 'hbn_R11',
+    'tdbrain': 'tdbrain',
 }
 
 # Candidate models: name -> ratio

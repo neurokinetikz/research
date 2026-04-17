@@ -57,15 +57,35 @@ POS_NAMES = [p[0] for p in POS_LIST]
 POS_VALS = np.array([p[1] for p in POS_LIST])
 N_POS = len(POS_VALS)
 
-# Circular Voronoi cell sizes
+# Hz-weighted Voronoi bin fractions (matches run_all_f0_760_analyses.py)
+# Under a Hz-uniform null, expected_count = HZ_FRAC[i] * total_peaks
+_VORONOI_EDGES = []
+for i in range(N_POS):
+    if i == 0:
+        u_left = (POS_VALS[-1] + POS_VALS[0] + 1) / 2 % 1.0
+        u_right = (POS_VALS[0] + POS_VALS[1]) / 2
+    elif i == N_POS - 1:
+        u_left = (POS_VALS[i - 1] + POS_VALS[i]) / 2
+        u_right = (POS_VALS[i] + POS_VALS[0] + 1) / 2
+    else:
+        u_left = (POS_VALS[i - 1] + POS_VALS[i]) / 2
+        u_right = (POS_VALS[i] + POS_VALS[i + 1]) / 2
+    _VORONOI_EDGES.append((u_left, u_right))
+
 VORONOI_BINS = []
 for i in range(N_POS):
-    d_prev = (POS_VALS[i] - POS_VALS[(i - 1) % N_POS]) % 1.0
-    d_next = (POS_VALS[(i + 1) % N_POS] - POS_VALS[i]) % 1.0
-    VORONOI_BINS.append(d_prev / 2 + d_next / 2)
+    u_left, u_right = _VORONOI_EDGES[i]
+    if i == 0:
+        hz_frac = (PHI ** 1.0 - PHI ** u_left + PHI ** u_right - PHI ** 0.0) / (PHI - 1)
+    else:
+        hz_frac = (PHI ** u_right - PHI ** u_left) / (PHI - 1)
+    VORONOI_BINS.append(hz_frac)
 
 # Boundary half-width for split: half distance to noble_6
 BOUNDARY_HW = POS_VALS[1] / 2  # ~0.02786
+# Hz-weighted half-boundary fractions (matches run_all_f0_760_analyses.py)
+BOUNDARY_LO_HZ_FRAC = (PHI ** BOUNDARY_HW - PHI ** 0.0) / (PHI - 1)
+BOUNDARY_HI_HZ_FRAC = (PHI ** 1.0 - PHI ** (1 - BOUNDARY_HW)) / (PHI - 1)
 
 # Phi-octave to band name mapping
 OCTAVE_BAND = {
@@ -88,16 +108,29 @@ BAND_HZ = {
 }
 
 # Known dataset directories
+# Per-release HBN entries (used for cross-release analyses)
+HBN_RELEASES = {
+    f'hbn_R{i}': f'exports_adaptive_v4/hbn_R{i}' for i in range(1, 12)
+}
+
+# 6-dataset convention: HBN merged, TDBRAIN included
+DATASETS_MERGED = {
+    'eegmmidb': 'exports_adaptive_v4/eegmmidb',
+    'lemon':    'exports_adaptive_v4/lemon',
+    'dortmund': 'exports_adaptive_v4/dortmund',
+    'chbmp':    'exports_adaptive_v4/chbmp',
+    'hbn':      [f'exports_adaptive_v4/hbn_R{i}' for i in range(1, 12)],
+    'tdbrain':  'exports_adaptive_v4/tdbrain',
+}
+
+# Per-release (legacy) — used with --per-release flag
 DATASETS = {
-    'eegmmidb': 'exports_adaptive/eegmmidb',
-    'lemon':    'exports_adaptive/lemon',
-    'dortmund': 'exports_adaptive/dortmund',
-    'chbmp':    'exports_adaptive/chbmp',
-    'hbn_R1':   'exports_adaptive/hbn_R1',
-    'hbn_R2':   'exports_adaptive/hbn_R2',
-    'hbn_R3':   'exports_adaptive/hbn_R3',
-    'hbn_R4':   'exports_adaptive/hbn_R4',
-    'hbn_R6':   'exports_adaptive/hbn_R6',
+    'eegmmidb': 'exports_adaptive_v4/eegmmidb',
+    'lemon':    'exports_adaptive_v4/lemon',
+    'dortmund': 'exports_adaptive_v4/dortmund',
+    'chbmp':    'exports_adaptive_v4/chbmp',
+    **HBN_RELEASES,
+    'tdbrain':  'exports_adaptive_v4/tdbrain',
 }
 
 
@@ -119,16 +152,20 @@ def assign_voronoi(u_vals):
 
 
 def load_peaks(directory):
-    """Load all peak CSVs from a dataset directory with phi_octave column."""
-    files = sorted(glob.glob(os.path.join(directory, '*_peaks.csv')))
-    if not files:
+    """Load all peak CSVs from a dataset directory (or list of directories) with phi_octave column."""
+    dirs = directory if isinstance(directory, list) else [directory]
+    all_files = []
+    for d in dirs:
+        files = sorted(glob.glob(os.path.join(d, '*_peaks.csv')))
+        all_files.extend(files)
+    if not all_files:
         raise FileNotFoundError(f"No peak files found in {directory}")
     dfs = []
-    for f in files:
+    for f in all_files:
         df = pd.read_csv(f, usecols=['freq', 'phi_octave'])
         dfs.append(df)
     peaks = pd.concat(dfs, ignore_index=True)
-    return peaks, len(files)
+    return peaks, len(all_files)
 
 
 def compute_enrichment(peaks_df, f0=F0):
@@ -172,11 +209,13 @@ def compute_enrichment(peaks_df, f0=F0):
             counts.append(count)
 
         # Split boundary: peaks near u=0 (lower edge) vs u=1 (upper edge)
+        # Use Hz-weighted expected counts (matches run_all_f0_760_analyses.py)
         lower_count = int((u < BOUNDARY_HW).sum())
         upper_count = int((u >= (1 - BOUNDARY_HW)).sum())
-        exp_half = BOUNDARY_HW * n
-        enr_lower = round((lower_count / exp_half - 1) * 100) if exp_half > 0 else 0
-        enr_upper = round((upper_count / exp_half - 1) * 100) if exp_half > 0 else 0
+        exp_lower = BOUNDARY_LO_HZ_FRAC * n
+        exp_upper = BOUNDARY_HI_HZ_FRAC * n
+        enr_lower = round((lower_count / exp_lower - 1) * 100) if exp_lower > 0 else 0
+        enr_upper = round((upper_count / exp_upper - 1) * 100) if exp_upper > 0 else 0
 
         # Boundary (lower)
         rows.append({
@@ -230,8 +269,11 @@ def cross_dataset_summary(all_results):
     ds_names = list(all_results.keys())
     short_names = {
         'eegmmidb': 'EEGM', 'lemon': 'LEM', 'dortmund': 'Dort',
-        'chbmp': 'CHBMP', 'hbn_R1': 'R1', 'hbn_R2': 'R2',
-        'hbn_R3': 'R3', 'hbn_R4': 'R4', 'hbn_R6': 'R6',
+        'chbmp': 'CHBMP', 'hbn': 'HBN', 'tdbrain': 'TDB',
+        'hbn_R1': 'R1', 'hbn_R2': 'R2', 'hbn_R3': 'R3',
+        'hbn_R4': 'R4', 'hbn_R5': 'R5', 'hbn_R6': 'R6',
+        'hbn_R7': 'R7', 'hbn_R8': 'R8', 'hbn_R9': 'R9',
+        'hbn_R10': 'R10', 'hbn_R11': 'R11',
     }
 
     all_positions = POS_NAMES + ['boundary_hi']
@@ -372,9 +414,10 @@ def hbn_cross_release(all_results):
 
 def main():
     parser = argparse.ArgumentParser(description='Voronoi enrichment analysis')
-    parser.add_argument('--dataset', '-d', type=str, help='Dataset name (e.g., eegmmidb, lemon)')
+    parser.add_argument('--dataset', '-d', type=str, help='Dataset name (e.g., eegmmidb, lemon, hbn)')
     parser.add_argument('--dir', type=str, help='Custom directory with peak CSVs')
-    parser.add_argument('--all', action='store_true', help='Run all known datasets')
+    parser.add_argument('--all', action='store_true', help='Run all known datasets (6 merged)')
+    parser.add_argument('--per-release', action='store_true', help='Use per-release HBN entries instead of merged')
     parser.add_argument('--csv', type=str, help='Save results to CSV')
     parser.add_argument('--summary', action='store_true', help='Print cross-dataset summary only')
     parser.add_argument('--f0', type=float, default=F0, help=f'Fundamental frequency (default: {F0})')
@@ -394,9 +437,17 @@ def main():
         return
 
     if args.dataset:
-        datasets_to_run = {args.dataset: DATASETS[args.dataset]}
+        source = DATASETS if args.per_release else DATASETS_MERGED
+        if args.dataset not in source:
+            source = DATASETS  # fall back to per-release for specific release names
+        datasets_to_run = {args.dataset: source[args.dataset]}
     elif args.all or args.summary:
-        datasets_to_run = {k: v for k, v in DATASETS.items() if os.path.exists(v)}
+        source = DATASETS if args.per_release else DATASETS_MERGED
+        def _exists(v):
+            if isinstance(v, list):
+                return any(os.path.exists(d) for d in v)
+            return os.path.exists(v)
+        datasets_to_run = {k: v for k, v in source.items() if _exists(v)}
     else:
         parser.print_help()
         return
@@ -405,7 +456,11 @@ def main():
     all_dfs = []
 
     for name, directory in datasets_to_run.items():
-        if not os.path.exists(directory):
+        if isinstance(directory, list):
+            if not any(os.path.exists(d) for d in directory):
+                print(f"SKIP {name}: no directories found")
+                continue
+        elif not os.path.exists(directory):
             print(f"SKIP {name}: {directory} not found")
             continue
         peaks, n_sub = load_peaks(directory)

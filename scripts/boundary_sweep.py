@@ -44,14 +44,18 @@ from scipy import stats
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'lib'))
 
 BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-PEAK_BASE = os.path.join(BASE_DIR, 'exports_adaptive_v3')
+PEAK_BASE = os.path.join(BASE_DIR, 'exports_adaptive_v4')
 OUT_DIR = os.path.join(BASE_DIR, 'outputs', 'boundary_sweep')
 
-# Datasets (EC conditions only, matching v3 analysis)
+# All datasets (EC conditions, full pool including all 11 HBN releases + TDBRAIN)
 EC_DATASETS = {
     'eegmmidb': 'eegmmidb', 'lemon': 'lemon', 'dortmund': 'dortmund',
-    'chbmp': 'chbmp', 'hbn_R1': 'hbn_R1', 'hbn_R2': 'hbn_R2',
-    'hbn_R3': 'hbn_R3', 'hbn_R4': 'hbn_R4', 'hbn_R6': 'hbn_R6',
+    'chbmp': 'chbmp',
+    'hbn_R1': 'hbn_R1', 'hbn_R2': 'hbn_R2', 'hbn_R3': 'hbn_R3',
+    'hbn_R4': 'hbn_R4', 'hbn_R5': 'hbn_R5', 'hbn_R6': 'hbn_R6',
+    'hbn_R7': 'hbn_R7', 'hbn_R8': 'hbn_R8', 'hbn_R9': 'hbn_R9',
+    'hbn_R10': 'hbn_R10', 'hbn_R11': 'hbn_R11',
+    'tdbrain': 'tdbrain',
 }
 
 # Power filter: keep top 50% by power within each band (matching v3)

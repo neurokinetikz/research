@@ -2429,7 +2429,7 @@ def main():
     parser.add_argument('--min-power-pct', type=int, default=50,
                         help='Keep top N%% of peaks by power per band (0=all, 50=top half)')
     parser.add_argument('--peak-base', type=str, default=None,
-                        help='Override peak CSV directory (default: exports_adaptive_v3). '
+                        help='Override peak CSV directory (default: exports_adaptive_v4). '
                              'Use exports_irasa_v4 for IRASA-extracted peaks.')
     parser.add_argument('--min-peaks', type=int, default=30,
                         help='Minimum peaks per band per subject for per-subject analyses (default: 30)')

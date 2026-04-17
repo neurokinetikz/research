@@ -1,4 +1,8 @@
-# lib/ Index
+# Lib Index
+
+`lib/` holds reusable modules shared across analysis scripts. Keep one-off or
+paper-specific orchestration in `scripts/`; promote stable signal-processing,
+statistics, dataset adapters, and analysis primitives into the categories below.
 
 ## Phi-Frequency Architecture
 

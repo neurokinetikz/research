@@ -41,7 +41,7 @@ VM_NAME=$(echo "$VM_NAME" | tr '[:upper:]' '[:lower:]' | tr '_' '-' | head -c 60
 
 # Build extraction args
 case $DATASET in
-    hbn_r[0-9])
+    hbn_r[0-9]|hbn_r[0-9][0-9])
         RELEASE=$(echo $DATASET | sed 's/hbn_r/R/')
         EXTRACT_ARGS="--dataset hbn --release $RELEASE"
         ;;

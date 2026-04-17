@@ -161,7 +161,7 @@ def run_age_analysis(peak_dir, demo_loader, label, output_csv=None):
 def load_hbn_demo():
     """Load HBN demographics across all releases."""
     demo = {}
-    for release in ['R1', 'R2', 'R3', 'R4', 'R6']:
+    for release in ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11']:
         tsv = f'/Volumes/T9/hbn_data/cmi_bids_{release}/participants.tsv'
         if os.path.exists(tsv):
             df = pd.read_csv(tsv, sep='\t')
@@ -267,19 +267,19 @@ def main():
 
     configs = {
         'hbn': {
-            'dirs': [f'exports_adaptive/hbn_{r}' for r in ['R1', 'R2', 'R3', 'R4', 'R6']],
+            'dirs': [f'exports_adaptive_v4/hbn_{r}' for r in ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11']],
             'demo_loader': load_hbn_demo,
             'label': 'HBN (5-21)',
             'output': 'outputs/hbn_age_enrichment.csv',
         },
         'dortmund': {
-            'dirs': ['exports_adaptive/dortmund'],
+            'dirs': ['exports_adaptive_v4/dortmund'],
             'demo_loader': load_dortmund_demo,
             'label': 'Dortmund (20-70)',
             'output': 'outputs/dortmund_age_enrichment.csv',
         },
         'lemon': {
-            'dirs': ['exports_adaptive/lemon'],
+            'dirs': ['exports_adaptive_v4/lemon'],
             'demo_loader': load_lemon_demo,
             'label': 'LEMON (20-77)',
             'output': 'outputs/lemon_age_enrichment.csv',

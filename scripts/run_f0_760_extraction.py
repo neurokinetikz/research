@@ -677,7 +677,10 @@ def process_subjects(subjects, loader_name, out_dir, dataset_label,
             if r['status'] == 'ok':
                 log.info(f"  {r['subject_id']}: {r['n_peaks']} peaks R²={r.get('mean_r_squared', 0):.3f}")
     else:
-        # Sequential mode (original)
+        # Sequential mode — set worker globals so _extract_one_subject() works
+        _WORKER_LOADER_NAME = loader_name
+        _WORKER_LOADER_KWARGS = loader_kwargs or {}
+        _WORKER_OUT_DIR = out_dir
         summary_rows = []
         for i, (sub_id, load_arg) in enumerate(subjects):
             result = _extract_one_subject((sub_id, load_arg))
@@ -723,7 +726,7 @@ def main():
     parser.add_argument('--dataset', type=str, required=True,
                         choices=['eegmmidb', 'lemon', 'dortmund', 'chbmp', 'hbn', 'tdbrain', 'tdbrain_val', 'srm'])
     parser.add_argument('--release', type=str, default='R1',
-                        help='HBN release (R1-R6 or all)')
+                        help='HBN release (R1-R11 or all)')
     parser.add_argument('--condition', type=str, default=None,
                         help='Condition (EO for LEMON; EC-pre/EO-pre/EC-post/EO-post for Dortmund)')
     parser.add_argument('--session', type=str, default='1',
@@ -804,7 +807,7 @@ def main():
                          parallel=n_parallel, method=method)
 
     elif args.dataset == 'hbn':
-        releases = ['R1', 'R2', 'R3', 'R4', 'R6'] if args.release.lower() == 'all' else [args.release]
+        releases = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11'] if args.release.lower() == 'all' else [args.release]
         for release in releases:
             release_dir = os.path.join('/Volumes/T9/hbn_data', f'cmi_bids_{release}')
             pattern = os.path.join(release_dir, 'sub-*', 'eeg', '*RestingState_eeg.set')
