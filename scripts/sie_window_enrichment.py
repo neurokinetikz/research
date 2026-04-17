@@ -374,7 +374,7 @@ def main():
     parser.add_argument('--release', default='R1')
     parser.add_argument('--window', type=int, default=20)
     parser.add_argument('--buffer', type=float, default=5.0)
-    parser.add_argument('--min-events', type=int, default=3)
+    parser.add_argument('--min-events', type=int, default=2)
     args = parser.parse_args()
 
     results_df = run_dataset(
