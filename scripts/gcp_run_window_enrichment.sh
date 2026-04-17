@@ -90,7 +90,7 @@ gcloud compute ssh $VM_NAME --zone=$ZONE --command="
     export OPENBLAS_NUM_THREADS=1
 
     echo '>>> Starting window enrichment...'
-    python scripts/sie_window_enrichment.py $EXTRACT_ARGS --window 20 --buffer 5 --min-events 5 2>&1
+    python scripts/sie_window_enrichment.py $EXTRACT_ARGS --window 20 --buffer 5 --min-events 3 2>&1
 
     echo '>>> Pushing results to GCS...'
     gcloud storage cp outputs/sie_window_enrichment_*.csv ${BUCKET}/results/sie_window_enrichment/ 2>&1 | tail -3
