@@ -225,7 +225,7 @@ def get_loader_for(dataset, condition=None, session='1', release='R1'):
             files = g.glob(pattern)
             if not files:
                 return None
-            return load_hbn(files[0])
+            return lambda: load_hbn(files[0])
     elif dataset == 'tdbrain':
         cond = condition or 'EC'
         sie_dir = 'tdbrain' if cond == 'EC' else 'tdbrain_EO'
