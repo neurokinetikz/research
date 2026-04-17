@@ -192,19 +192,70 @@ def process_subject(sub_id, raw_loader_fn, events_df, window_sec=20,
     }
 
 
-def run_eegmmidb(window_sec=20, buffer_sec=5.0, min_events=3, parallel=1):
-    """Run window enrichment analysis on EEGMMIDB."""
+def get_loader_for(dataset, condition=None, session='1', release='R1'):
+    """Return a function that loads a given subject from a given dataset."""
+    if dataset == 'eegmmidb':
+        sie_dir = 'eegmmidb'
+        def make_loader(sub_id):
+            return lambda: load_eegmmidb(int(sub_id[1:]))
+    elif dataset == 'lemon':
+        sie_dir = 'lemon' if (not condition or condition == 'EC') else 'lemon_EO'
+        cond = condition or 'EC'
+        def make_loader(sub_id):
+            return lambda: load_lemon(sub_id, condition=cond)
+    elif dataset == 'dortmund':
+        cond = condition or 'EC-pre'
+        task = 'EyesOpen' if cond.startswith('EO') else 'EyesClosed'
+        acq = 'post' if cond.endswith('post') else 'pre'
+        suffix = '' if (cond == 'EC-pre' and session == '1') else f'_{cond.replace("-", "_")}'
+        ses_suffix = f'_ses2' if session == '2' else ''
+        sie_dir = f'dortmund{suffix}{ses_suffix}'
+        def make_loader(sub_id):
+            return lambda: load_dortmund(sub_id, task=task, acq=acq, ses=session)
+    elif dataset == 'chbmp':
+        sie_dir = 'chbmp'
+        def make_loader(sub_id):
+            return lambda: load_chbmp(sub_id)
+    elif dataset == 'hbn':
+        sie_dir = f'hbn_{release}'
+        release_dir = f'/Volumes/T9/hbn_data/cmi_bids_{release}'
+        def make_loader(sub_id):
+            import glob as g
+            pattern = os.path.join(release_dir, sub_id, 'eeg', '*RestingState_eeg.set')
+            files = g.glob(pattern)
+            if not files:
+                return None
+            return load_hbn(files[0])
+    elif dataset == 'tdbrain':
+        cond = condition or 'EC'
+        sie_dir = 'tdbrain' if cond == 'EC' else 'tdbrain_EO'
+        def make_loader(sub_id):
+            return lambda: load_tdbrain(sub_id, condition=cond, session=session if session != '1' else None)
+    else:
+        raise ValueError(f"Unknown dataset: {dataset}")
+
+    return sie_dir, make_loader
+
+
+def run_dataset(dataset, condition=None, session='1', release='R1',
+                 window_sec=20, buffer_sec=5.0, min_events=3):
+    """Run window enrichment analysis on any dataset."""
+    sie_dir, make_loader = get_loader_for(dataset, condition, session, release)
+
+    label = f"{dataset}{f'_{condition}' if condition else ''}{f'_R{release[1:]}' if dataset=='hbn' else ''}"
     print(f"\n{'='*80}")
-    print(f"SIE Window Enrichment: EEGMMIDB")
-    print(f"Window={window_sec}s, buffer={buffer_sec}s, min_events={min_events}")
+    print(f"SIE Window Enrichment: {label}")
+    print(f"SIE dir: {sie_dir}, Window={window_sec}s, buffer={buffer_sec}s, min_events={min_events}")
     print(f"{'='*80}\n")
 
-    events_df = load_sie_events_for_dataset('eegmmidb')
+    events_df = load_sie_events_for_dataset(sie_dir)
+    if len(events_df) == 0:
+        print(f"No events found in {sie_dir}, aborting")
+        return pd.DataFrame()
+
     print(f"Loaded {len(events_df):,} clean events from "
           f"{events_df['subject_id'].nunique()} subjects")
 
-    subjects = events_df['subject_id'].unique()
-    # Filter to subjects with enough events
     event_counts = events_df.groupby('subject_id').size()
     subjects = event_counts[event_counts >= min_events].index.tolist()
     print(f"Subjects with ≥{min_events} events: {len(subjects)}")
@@ -212,10 +263,9 @@ def run_eegmmidb(window_sec=20, buffer_sec=5.0, min_events=3, parallel=1):
     results = []
     t_start = time.time()
     for i, sub_id in enumerate(subjects):
-        sub_num = int(sub_id[1:])
-
-        def loader():
-            return load_eegmmidb(sub_num)
+        loader = make_loader(sub_id)
+        if loader is None:
+            continue
 
         result = process_subject(sub_id, loader, events_df, window_sec,
                                   buffer_sec, min_events)
@@ -229,7 +279,8 @@ def run_eegmmidb(window_sec=20, buffer_sec=5.0, min_events=3, parallel=1):
                       f"({n_ok} ok, {rate:.1f}/min)")
 
     results_df = pd.DataFrame(results)
-    out_path = os.path.join(OUTPUT_DIR, f'sie_window_enrichment_eegmmidb.csv')
+    out_name = f'sie_window_enrichment_{label}.csv'
+    out_path = os.path.join(OUTPUT_DIR, out_name)
     results_df.to_csv(out_path, index=False)
     print(f"\nSaved: {out_path}")
     print(f"  N subjects processed: {len(results_df)}")
@@ -316,18 +367,22 @@ def analyze_results(results_df):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', default='eegmmidb', choices=['eegmmidb'])
-    parser.add_argument('--window', type=int, default=20,
-                        help='Window duration in seconds')
-    parser.add_argument('--buffer', type=float, default=5.0,
-                        help='Buffer between event and baseline windows')
+    parser.add_argument('--dataset', required=True,
+                        choices=['eegmmidb', 'lemon', 'dortmund', 'chbmp', 'hbn', 'tdbrain'])
+    parser.add_argument('--condition', default=None)
+    parser.add_argument('--session', default='1')
+    parser.add_argument('--release', default='R1')
+    parser.add_argument('--window', type=int, default=20)
+    parser.add_argument('--buffer', type=float, default=5.0)
     parser.add_argument('--min-events', type=int, default=3)
     args = parser.parse_args()
 
-    if args.dataset == 'eegmmidb':
-        results_df = run_eegmmidb(
-            window_sec=args.window, buffer_sec=args.buffer,
-            min_events=args.min_events)
+    results_df = run_dataset(
+        dataset=args.dataset, condition=args.condition,
+        session=args.session, release=args.release,
+        window_sec=args.window, buffer_sec=args.buffer,
+        min_events=args.min_events)
+    if len(results_df) > 0:
         analyze_results(results_df)
 
 
