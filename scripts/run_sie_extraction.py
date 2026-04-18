@@ -358,9 +358,18 @@ def load_mpeng_concatenated(subject_id, data_dir='/Volumes/T9/mpeng'):
 
     Rashed, Shirmohammadi & Hefeeda (2025), IEEE Data Descriptions.
     Filename: <id>_<sub>_<e>_<i>_<s>_<ex>.csv where e/i/s/ex are Likert scores (0-4).
+
+    Supports both layouts:
+      - Canonical archive: <data_dir>/Samples/<id>/EEG/*.csv
+      - Legacy flat:       <data_dir>/<id>_*.csv
     """
-    pattern = os.path.join(data_dir, f'{subject_id}_*.csv')
+    # Try canonical per-subject structure first
+    pattern = os.path.join(data_dir, 'Samples', subject_id, 'EEG', '*.csv')
     files = sorted(globfn_top(pattern))
+    if not files:
+        # Fall back to flat structure
+        pattern = os.path.join(data_dir, f'{subject_id}_*.csv')
+        files = sorted(globfn_top(pattern))
     if not files:
         return None
     raws = []
@@ -759,14 +768,21 @@ def main():
 
     elif args.dataset == 'mpeng':
         data_dir = '/Volumes/T9/mpeng'
-        files = globfn_top(os.path.join(data_dir, '*.csv'))
-        subjects_seen = set()
-        subjects = []
-        for f in sorted(files):
-            sub_num = os.path.basename(f).split('_')[0]
-            if sub_num not in subjects_seen:
-                subjects_seen.add(sub_num)
-                subjects.append((f'mpeng_{sub_num}', None))
+        # Canonical: Samples/<id>/EEG/*.csv. Fall back to flat <id>_*.csv if no Samples/.
+        samples_dir = os.path.join(data_dir, 'Samples')
+        if os.path.isdir(samples_dir):
+            sub_ids = sorted([d for d in os.listdir(samples_dir)
+                              if os.path.isdir(os.path.join(samples_dir, d))])
+            subjects = [(f'mpeng_{sub}', None) for sub in sub_ids]
+        else:
+            files = globfn_top(os.path.join(data_dir, '*.csv'))
+            subjects_seen = set()
+            subjects = []
+            for f in sorted(files):
+                sub_num = os.path.basename(f).split('_')[0]
+                if sub_num not in subjects_seen:
+                    subjects_seen.add(sub_num)
+                    subjects.append((f'mpeng_{sub_num}', None))
         out_dir = os.path.join(OUTPUT_BASE, 'mpeng')
         process_subjects(subjects, 'mpeng', out_dir, 'MultiPENG (concatenated per subject)',
                          loader_kwargs={'condition': 'task_concat'}, parallel=n_parallel)
