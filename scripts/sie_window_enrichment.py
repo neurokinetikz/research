@@ -242,7 +242,11 @@ def run_dataset(dataset, condition=None, session='1', release='R1',
     """Run window enrichment analysis on any dataset."""
     sie_dir, make_loader = get_loader_for(dataset, condition, session, release)
 
-    label = f"{dataset}{f'_{condition}' if condition else ''}{f'_R{release[1:]}' if dataset=='hbn' else ''}"
+    ses_suffix = '' if session == '1' else f'_ses{session}'
+    label = (f"{dataset}"
+             f"{f'_{condition}' if condition else ''}"
+             f"{f'_R{release[1:]}' if dataset == 'hbn' else ''}"
+             f"{ses_suffix}")
     print(f"\n{'='*80}")
     print(f"SIE Window Enrichment: {label}")
     print(f"SIE dir: {sie_dir}, Window={window_sec}s, buffer={buffer_sec}s, min_events={min_events}")
@@ -281,6 +285,13 @@ def run_dataset(dataset, condition=None, session='1', release='R1',
     results_df = pd.DataFrame(results)
     out_name = f'sie_window_enrichment_{label}.csv'
     out_path = os.path.join(OUTPUT_DIR, out_name)
+    if os.path.exists(out_path):
+        raise FileExistsError(
+            f"Refusing to overwrite {out_path}. "
+            f"Rename the existing file or delete it explicitly. "
+            f"(This guard exists because silent overwrites between "
+            f"ses-1/ses-2 runs previously produced ~100 subjects of data loss.)"
+        )
     results_df.to_csv(out_path, index=False)
     print(f"\nSaved: {out_path}")
     print(f"  N subjects processed: {len(results_df)}")

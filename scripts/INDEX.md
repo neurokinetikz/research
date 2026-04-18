@@ -284,6 +284,20 @@ analyses remain discoverable without moving files on disk.
 | analyze_sie_phase2_3.py | Phase 2 and 3 SIE follow-up: developmental trajectory, cognitive correlates, and clinical associations |
 | analyze_sie_full_clean.py | Full clean SIE analysis combining replication, age/state/correlate analyses, PLV, and artifact filtering |
 
+## SIE Window Enrichment & Real-Time Visualization
+
+| Script | Description |
+|--------|-------------|
+| sie_window_enrichment.py | Per-event window-enrichment extractor: 20 s pre/ignition/post windows concatenated per subject, adaptive-resolution FOOOF per condition, Voronoi enrichment profile per band |
+| gcp_run_window_enrichment.sh | GCP runner: spawns VM, pulls `exports_sie/` from GCS, runs `sie_window_enrichment.py` for one dataset × condition, pushes CSV back, deletes VM |
+| gcp_run_all_window_enrichment.sh | Orchestrates window-enrichment jobs across all remaining datasets × conditions with up to 8 concurrent VMs (macOS bash 3.2 compatible) |
+| analyze_sie_window_enrichment_pooled.py | Primary pooled analysis across 15 dataset × condition CSVs (N≈1,200): per-dataset t-tests, inverse-variance weighted meta-analysis, cross-dataset sign-agreement, FDR correction |
+| analyze_sie_window_enrichment_followups.py | V1 follow-up checks (6): effect-size × dataset-size stratification, conservation test (Σ per-bin within band), beta_low attractor φ-lattice/Schumann check, dose-response × n_events, EC vs EO (95-metric), peak-generation vs redistribution |
+| analyze_sie_window_enrichment_followups_v2.py | V2 follow-up checks (3): n_peaks-independence test for redistribution, dose-response curve shape binned by n_events, EC vs EO on FDR-surviving metrics only |
+| analyze_sie_window_enrichment_followups_v3.py | V3 follow-up checks (2): trait-baseline correlation (pre-window metrics vs n_events), partialed conservation test (Σ intercept after regressing out per-subject n_peaks change) |
+| analyze_sie_window_enrichment_presubmission.py | Pre-submission checks (3): n_events × recording-duration confound, within-subject theta-alpha composite dissociation (ρ≈+0.21), inter-event-interval × alpha regression-to-mean test |
+| sie_lattice_realtime_viz.py | Per-channel PSD grid with φ-lattice Voronoi bin overlays. Static mode (pre/ignition/post triplet) or animation mode (sliding-window multitaper PSDs → MP4/GIF). Boundary bins always partially visible; other bins ramp from 8% to 90% alpha as peak z-score exceeds 2.5 SD. Log-φ x-axis option so φ-octaves take equal display width. |
+
 ## Visualization & Figure Generation
 
 | Script | Description |
