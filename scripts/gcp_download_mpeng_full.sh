@@ -68,6 +68,8 @@ fi
 echo ">>> Downloading + extracting on VM..."
 gcloud compute ssh $VM_NAME --zone=$ZONE --command="
     set -e
+    # eeg-extraction-image-100gb lacks 'unzip' by default
+    sudo apt-get install -y unzip 2>&1 | tail -2
     sudo mkdir -p /Volumes
     sudo mount /dev/disk/by-id/google-eeg-data /Volumes
     echo '>>> Disk mounted. Free space:'
