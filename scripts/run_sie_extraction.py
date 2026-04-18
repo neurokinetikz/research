@@ -268,6 +268,136 @@ def load_hbn(set_path):
 
 
 # =========================================================================
+# DISCOVERY-COHORT LOADERS (consumer-grade, Michael's self + 3 public datasets)
+# =========================================================================
+
+def _emotiv_csv_to_raw(csv_path, notch_hz=60):
+    """Load an Emotiv CSV (EPOC X, Insight 2, PhySF, MultiPENG, VEP) into MNE Raw.
+
+    Auto-detects EEG columns (those prefixed with 'EEG.' except metadata columns).
+    Skips optional header metadata row. Returns None on failure.
+    """
+    try:
+        with open(csv_path) as f:
+            first = f.readline()
+        skip = 1 if first.startswith('title:') or first.startswith('name:') else 0
+        df = pd.read_csv(csv_path, skiprows=skip, low_memory=False)
+    except Exception:
+        return None
+
+    meta_cols = {'EEG.Counter', 'EEG.Interpolated', 'EEG.RawCq', 'EEG.Battery',
+                 'EEG.BatteryPercent', 'EEG.MarkerHardware'}
+    eeg_cols = [c for c in df.columns if c.startswith('EEG.') and c not in meta_cols]
+    if len(eeg_cols) < 4:
+        return None
+
+    data = df[eeg_cols].apply(pd.to_numeric, errors='coerce').dropna(how='all').values.T.astype(np.float64)
+    if data.shape[1] < 1000:
+        return None
+
+    data = data * 1e-6  # microvolts → Volts
+
+    ch_names = [c.replace('EEG.', '') for c in eeg_cols]
+    fs = 128.0  # Emotiv EPOC X, Insight 2, PhySF, MultiPENG, VEP all at 128 Hz
+    info = mne.create_info(ch_names=ch_names, sfreq=fs, ch_types='eeg')
+    raw = mne.io.RawArray(data, info, verbose=False)
+
+    nyq = fs / 2.0
+    if nyq > notch_hz + 2:
+        raw.notch_filter(notch_hz, verbose=False)
+    raw.filter(FILTER_LO, min(59, nyq - 1), verbose=False)
+    return raw
+
+
+def load_muse(csv_path):
+    """Load Muse headband CSV. 4 EEG channels (TP9, AF7, AF8, TP10), variable fs."""
+    try:
+        df = pd.read_csv(csv_path, usecols=['timestamps', 'eeg_1', 'eeg_2', 'eeg_3', 'eeg_4'],
+                         low_memory=False)
+    except Exception:
+        return None
+    df = df.dropna(subset=['eeg_1', 'eeg_2', 'eeg_3', 'eeg_4'])
+    if len(df) < 1000:
+        return None
+    ts = df['timestamps'].values.astype(float)
+    fs_est = 1.0 / np.median(np.diff(ts))
+    fs = 256.0 if 200 < fs_est < 320 else float(np.round(fs_est))
+    # Canonical Muse mapping (from lib/utilities.py load_eeg_csv):
+    # eeg_1→AF7, eeg_2→AF8, eeg_3→TP9, eeg_4→TP10
+    data = df[['eeg_1', 'eeg_2', 'eeg_3', 'eeg_4']].values.T.astype(np.float64) * 1e-6
+    ch_names = ['AF7', 'AF8', 'TP9', 'TP10']
+    info = mne.create_info(ch_names=ch_names, sfreq=fs, ch_types='eeg')
+    raw = mne.io.RawArray(data, info, verbose=False)
+    if fs > 2 * TARGET_FS:
+        raw.resample(TARGET_FS, verbose=False)
+    nyq = raw.info['sfreq'] / 2.0
+    if nyq > 62:
+        raw.notch_filter(60, verbose=False)  # Michael US → 60 Hz
+    raw.filter(FILTER_LO, min(59, nyq - 1), verbose=False)
+    return raw
+
+
+def load_epoc_self(csv_path):
+    """Michael's Emotiv EPOC X self-recordings. 14 channels, 128 Hz. US → 60 Hz notch."""
+    return _emotiv_csv_to_raw(csv_path, notch_hz=60)
+
+
+def load_insight_self(csv_path):
+    """Michael's Emotiv Insight 2 self-recordings. 5 channels, 128 Hz. US → 60 Hz notch."""
+    return _emotiv_csv_to_raw(csv_path, notch_hz=60)
+
+
+def load_physf(csv_path):
+    """PhySF dataset: 14-ch EPOC X EEG, 128 Hz, 25 subjects. German/European → 50 Hz notch."""
+    return _emotiv_csv_to_raw(csv_path, notch_hz=50)
+
+
+def load_mpeng_concatenated(subject_id, data_dir='/Volumes/T9/mpeng'):
+    """MultiPENG: concatenate all trials for one subject into one Raw. 14-ch EPOC X, 128 Hz."""
+    pattern = os.path.join(data_dir, f'{subject_id}_*.csv')
+    files = sorted(globfn_top(pattern))
+    if not files:
+        return None
+    raws = []
+    for f in files:
+        r = _emotiv_csv_to_raw(f, notch_hz=50)  # MultiPENG origin unclear; 50 Hz safer for EU subjects
+        if r is not None:
+            raws.append(r)
+    if not raws:
+        return None
+    if len(raws) == 1:
+        return raws[0]
+    try:
+        return mne.concatenate_raws(raws)
+    except Exception:
+        return None
+
+
+def load_vep_concatenated(subject_id, data_dir='/Volumes/T9/vep'):
+    """VEP: 14-ch EPOC X, 128 Hz. Individual files ~60 s each (2 per subject),
+    concatenated per subject to exceed the 120 s minimum-duration threshold.
+    subject_id is the filename stem (e.g., 'sub10').
+    """
+    pattern = os.path.join(data_dir, f'{subject_id}_*.csv')
+    files = sorted(globfn_top(pattern))
+    if not files:
+        return None
+    raws = []
+    for f in files:
+        r = _emotiv_csv_to_raw(f, notch_hz=60)
+        if r is not None:
+            raws.append(r)
+    if not raws:
+        return None
+    if len(raws) == 1:
+        return raws[0]
+    try:
+        return mne.concatenate_raws(raws)
+    except Exception:
+        return None
+
+
+# =========================================================================
 # WORKER
 # =========================================================================
 
@@ -313,6 +443,18 @@ def _sie_one_subject(args):
                                session=_WORKER_LOADER_KWARGS.get('session', None))
         elif _WORKER_LOADER_NAME == 'srm':
             raw = load_srm(sub_id, ses=_WORKER_LOADER_KWARGS.get('ses', 't1'))
+        elif _WORKER_LOADER_NAME == 'muse':
+            raw = load_muse(load_arg)
+        elif _WORKER_LOADER_NAME == 'epoc_self':
+            raw = load_epoc_self(load_arg)
+        elif _WORKER_LOADER_NAME == 'insight_self':
+            raw = load_insight_self(load_arg)
+        elif _WORKER_LOADER_NAME == 'physf':
+            raw = load_physf(load_arg)
+        elif _WORKER_LOADER_NAME == 'mpeng':
+            raw = load_mpeng_concatenated(sub_id.replace('mpeng_', ''))
+        elif _WORKER_LOADER_NAME == 'vep':
+            raw = load_vep_concatenated(sub_id.replace('vep_', ''))
         else:
             return {'subject_id': sub_id, 'status': 'error', 'n_events': 0}
 
@@ -461,7 +603,8 @@ def main():
     parser = argparse.ArgumentParser(
         description='SIE detection across research-grade EEG datasets')
     parser.add_argument('--dataset', type=str, required=True,
-                        choices=['eegmmidb', 'lemon', 'dortmund', 'chbmp', 'hbn', 'tdbrain', 'srm'])
+                        choices=['eegmmidb', 'lemon', 'dortmund', 'chbmp', 'hbn', 'tdbrain', 'srm',
+                                 'muse', 'epoc_self', 'insight_self', 'physf', 'mpeng', 'vep'])
     parser.add_argument('--release', type=str, default='R1',
                         help='HBN release (R1-R6 or all)')
     parser.add_argument('--condition', type=str, default=None,
@@ -569,6 +712,73 @@ def main():
                          f'TDBRAIN {cond} ses-{ses or "1"}',
                          loader_kwargs={'condition': cond, 'session': ses},
                          parallel=n_parallel)
+
+    elif args.dataset == 'muse':
+        data_dir = '/Volumes/T9/muse'
+        files = sorted(globfn_top(os.path.join(data_dir, 'Muse-*.csv')))
+        subjects = [(f'muse_{os.path.basename(f).replace(".csv", "")[:60]}', f) for f in files]
+        out_dir = os.path.join(OUTPUT_BASE, 'muse')
+        process_subjects(subjects, 'muse', out_dir, 'Muse (Michael)',
+                         loader_kwargs={'condition': 'EC_meditation'}, parallel=n_parallel)
+
+    elif args.dataset == 'epoc_self':
+        data_dir = '/Volumes/T9/epoc'
+        files = sorted(globfn_top(os.path.join(data_dir, '*.csv')))
+        subjects = [(f'epoc_self_{os.path.basename(f).replace(".csv", "")[:60]}', f) for f in files]
+        out_dir = os.path.join(OUTPUT_BASE, 'epoc_self')
+        process_subjects(subjects, 'epoc_self', out_dir, 'EPOC X (Michael)',
+                         loader_kwargs={'condition': 'EC_meditation'}, parallel=n_parallel)
+
+    elif args.dataset == 'insight_self':
+        data_dir = '/Volumes/T9/insight'
+        files = sorted(globfn_top(os.path.join(data_dir, '*.csv')))
+        subjects = [(f'insight_self_{os.path.basename(f).replace(".csv", "")[:60]}', f) for f in files]
+        out_dir = os.path.join(OUTPUT_BASE, 'insight_self')
+        process_subjects(subjects, 'insight_self', out_dir, 'Insight 2 (Michael)',
+                         loader_kwargs={'condition': 'EC_meditation'}, parallel=n_parallel)
+
+    elif args.dataset == 'physf':
+        data_dir = '/Volumes/T9/PhySF'
+        files = sorted(globfn_top(os.path.join(data_dir, 's*_*.csv')))
+        subjects = []
+        for f in files:
+            base = os.path.basename(f).replace('.csv', '')
+            parts = base.split('_', 1)
+            if len(parts) != 2:
+                continue
+            sub, cond = parts
+            subjects.append((f'physf_{base}', f))
+        out_dir = os.path.join(OUTPUT_BASE, 'physf')
+        process_subjects(subjects, 'physf', out_dir, 'PhySF',
+                         loader_kwargs={'condition': 'flow_nonflow'}, parallel=n_parallel)
+
+    elif args.dataset == 'mpeng':
+        data_dir = '/Volumes/T9/mpeng'
+        files = globfn_top(os.path.join(data_dir, '*.csv'))
+        subjects_seen = set()
+        subjects = []
+        for f in sorted(files):
+            sub_num = os.path.basename(f).split('_')[0]
+            if sub_num not in subjects_seen:
+                subjects_seen.add(sub_num)
+                subjects.append((f'mpeng_{sub_num}', None))
+        out_dir = os.path.join(OUTPUT_BASE, 'mpeng')
+        process_subjects(subjects, 'mpeng', out_dir, 'MultiPENG (concatenated per subject)',
+                         loader_kwargs={'condition': 'task_concat'}, parallel=n_parallel)
+
+    elif args.dataset == 'vep':
+        data_dir = '/Volumes/T9/vep'
+        files = globfn_top(os.path.join(data_dir, 'sub*.csv'))
+        subjects_seen = set()
+        subjects = []
+        for f in sorted(files):
+            sub = os.path.basename(f).split('_')[0]  # sub10, sub11, ...
+            if sub not in subjects_seen:
+                subjects_seen.add(sub)
+                subjects.append((f'vep_{sub}', None))
+        out_dir = os.path.join(OUTPUT_BASE, 'vep')
+        process_subjects(subjects, 'vep', out_dir, 'VEP (concatenated per subject)',
+                         loader_kwargs={'condition': 'perception_concat'}, parallel=n_parallel)
 
     elif args.dataset == 'srm':
         data_dir = '/Volumes/T9/srm_resting_eeg'

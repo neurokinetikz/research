@@ -43,6 +43,14 @@ JOBS=(
     # TDBRAIN: 1226 subjects, EC and EO (clinical psychiatric, ages 5-88)
     "tdbrain   . 1"
     "tdbrain   EO 1"
+
+    # Discovery cohort (Michael's self-recordings + 3 consumer-grade public datasets)
+    "muse          . 1"
+    "epoc_self     . 1"
+    "insight_self  . 1"
+    "physf         . 1"
+    "mpeng         . 1"
+    "vep           . 1"
 )
 TOTAL=${#JOBS[@]}
 NEXT=0
