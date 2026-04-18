@@ -353,14 +353,19 @@ def load_physf(csv_path):
 
 
 def load_mpeng_concatenated(subject_id, data_dir='/Volumes/T9/mpeng'):
-    """MultiPENG: concatenate all trials for one subject into one Raw. 14-ch EPOC X, 128 Hz."""
+    """MultiPENG: 14-ch EPOC X, 128 Hz. University of Ottawa, Canada (60 Hz mains).
+    Concatenates all trials per subject to exceed the 120 s minimum.
+
+    Rashed, Shirmohammadi & Hefeeda (2025), IEEE Data Descriptions.
+    Filename: <id>_<sub>_<e>_<i>_<s>_<ex>.csv where e/i/s/ex are Likert scores (0-4).
+    """
     pattern = os.path.join(data_dir, f'{subject_id}_*.csv')
     files = sorted(globfn_top(pattern))
     if not files:
         return None
     raws = []
     for f in files:
-        r = _emotiv_csv_to_raw(f, notch_hz=50)  # MultiPENG origin unclear; 50 Hz safer for EU subjects
+        r = _emotiv_csv_to_raw(f, notch_hz=60)
         if r is not None:
             raws.append(r)
     if not raws:
