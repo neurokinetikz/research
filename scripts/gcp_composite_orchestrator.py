@@ -160,6 +160,17 @@ gcloud compute instances delete "$NAME" --zone={ZONE} --quiet
 
 def launch_vm(job_id, dataset, cli_args, dry_run=False):
     vm = vm_name(job_id)
+    # Skip if VM already exists (from prior run or currently running)
+    r = sh(f"gcloud compute instances describe {vm} "
+           f"--zone={ZONE} --format='value(name)' 2>/dev/null",
+            check=False)
+    if r.returncode == 0 and r.stdout.strip() == vm:
+        print(f"  [EXISTS] {vm} already running — skip")
+        return False
+    # Skip if already succeeded in bucket
+    if job_done(job_id) == 'success':
+        print(f"  [SKIP] {job_id} already has _SUCCESS in bucket")
+        return None  # signal: don't re-enqueue, just drop
     startup = build_startup_script(job_id, dataset, cli_args)
     startup_file = f'/tmp/startup_{job_id}.sh'
     with open(startup_file, 'w') as f:
@@ -244,11 +255,17 @@ def main():
         while capacity > 0 and pending:
             job_id, dataset, cli_args, est = pending.pop(0)
             ok = launch_vm(job_id, dataset, cli_args, dry_run=args.dry_run)
-            if ok:
+            if ok is True:
                 active[job_id] = time.time()
                 capacity -= 1
+            elif ok is None:
+                # Already succeeded (bucket _SUCCESS) — drop from queue
+                finished[job_id] = 'success'
             else:
-                finished[job_id] = 'launch_failed'
+                # False: launch failed (quota / name collision) — re-enqueue
+                print(f"  [REQUEUE] {job_id} after launch failure")
+                pending.append((job_id, dataset, cli_args, est))
+                break  # stop trying to launch more this cycle
 
         if args.dry_run:
             print("Dry run complete.")
