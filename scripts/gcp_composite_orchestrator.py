@@ -45,26 +45,21 @@ MAX_CONCURRENT = 8
 
 # ===== JOB QUEUE (longest jobs first) =====
 # Tuple fields: (job_id, dataset, cli_args_list, estimated_min[, detector])
-# detector defaults to 'composite' (S₄). Use 'composite_s3' to drop MSC
-# (required for 128-ch HBN and long-record EEGMMIDB).
+# detector defaults to 'composite' (S₄). MSC is now vectorized (100× faster
+# via numpy rfft Welch) — S₃ variant no longer needed for HBN.
 JOB_QUEUE = [
-    # --- S₃ validation (re-extracts LEMON EC with MSC-free detector to
-    # confirm S₃ reproduces the B62 Figure-3 / B48 numbers before scaling
-    # to HBN) ---
-    ('lemon_s3_validate', 'lemon', [], 20, 'composite_s3'),
-
-    # --- HBN (128-ch EGI, 11 releases) — S₃ only, MSC dropped ---
-    ('hbn_R1', 'hbn', ['--release', 'R1'], 60, 'composite_s3'),
-    ('hbn_R2', 'hbn', ['--release', 'R2'], 60, 'composite_s3'),
-    ('hbn_R3', 'hbn', ['--release', 'R3'], 60, 'composite_s3'),
-    ('hbn_R4', 'hbn', ['--release', 'R4'], 60, 'composite_s3'),
-    ('hbn_R5', 'hbn', ['--release', 'R5'], 60, 'composite_s3'),
-    ('hbn_R6', 'hbn', ['--release', 'R6'], 60, 'composite_s3'),
-    ('hbn_R7', 'hbn', ['--release', 'R7'], 60, 'composite_s3'),
-    ('hbn_R8', 'hbn', ['--release', 'R8'], 60, 'composite_s3'),
-    ('hbn_R9', 'hbn', ['--release', 'R9'], 60, 'composite_s3'),
-    ('hbn_R10', 'hbn', ['--release', 'R10'], 60, 'composite_s3'),
-    ('hbn_R11', 'hbn', ['--release', 'R11'], 60, 'composite_s3'),
+    # --- HBN (128-ch EGI, 11 releases) — S₄ with fast MSC ---
+    ('hbn_R1', 'hbn', ['--release', 'R1'], 60),
+    ('hbn_R2', 'hbn', ['--release', 'R2'], 60),
+    ('hbn_R3', 'hbn', ['--release', 'R3'], 60),
+    ('hbn_R4', 'hbn', ['--release', 'R4'], 60),
+    ('hbn_R5', 'hbn', ['--release', 'R5'], 60),
+    ('hbn_R6', 'hbn', ['--release', 'R6'], 60),
+    ('hbn_R7', 'hbn', ['--release', 'R7'], 60),
+    ('hbn_R8', 'hbn', ['--release', 'R8'], 60),
+    ('hbn_R9', 'hbn', ['--release', 'R9'], 60),
+    ('hbn_R10', 'hbn', ['--release', 'R10'], 60),
+    ('hbn_R11', 'hbn', ['--release', 'R11'], 60),
 
     # --- Already-extracted S₄ jobs (still listed so re-runs skip via
     # _SUCCESS marker) ---
