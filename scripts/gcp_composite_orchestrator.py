@@ -138,12 +138,20 @@ git fetch --all && git reset --hard origin/main || echo "git pull failed, using 
 rm -rf /home/neurokinetikz/research/exports_sie/*_composite \
        /home/neurokinetikz/research/exports_sie/*_composite_s3 2>/dev/null
 
+# Cap BLAS/MKL/OpenMP threads so 16 Python workers don't spawn 16×N threads
+# and saturate the 32-vCPU VM (prior runs hit load 124 on 32 cores).
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
+export BLIS_NUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
+
 # Run extraction with {detector} detector (suffix {out_suffix})
-SIE_WORKERS=28 python3 -u scripts/run_sie_extraction.py \\
+SIE_WORKERS=16 python3 -u scripts/run_sie_extraction.py \\
     --dataset {dataset} \\
     --detector {detector} \\
     --out_suffix {out_suffix} \\
-    --parallel 28 \\
+    --parallel 16 \\
     {args_str}
 EXIT=$?
 
