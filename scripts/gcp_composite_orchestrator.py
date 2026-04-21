@@ -46,21 +46,12 @@ MAX_CONCURRENT = 8
 # ===== JOB QUEUE (longest jobs first) =====
 # (job_id, dataset, cli_args_list, estimated_min)
 JOB_QUEUE = [
-    # Largest HBN releases first (LEMON EC already done separately)
-    ('hbn_R10', 'hbn', ['--release', 'R10'], 90),
-    ('hbn_R7', 'hbn', ['--release', 'R7'], 70),
-    ('hbn_R4', 'hbn', ['--release', 'R4'], 60),
-    ('hbn_R5', 'hbn', ['--release', 'R5'], 60),
+    # HBN DEFERRED: 128-channel EGI makes composite MSC pathologically slow
+    # (5x slower than LEMON). Need MSC channel-subsampling optimization
+    # before re-enabling HBN. For now, skip all 11 HBN releases.
+    #
     ('tdbrain_EC', 'tdbrain', ['--condition', 'EC'], 120),
     ('tdbrain_EO', 'tdbrain', ['--condition', 'EO'], 120),
-    ('hbn_R11', 'hbn', ['--release', 'R11'], 55),
-    ('hbn_R9', 'hbn', ['--release', 'R9'], 55),
-    # Medium
-    ('hbn_R8', 'hbn', ['--release', 'R8'], 45),
-    ('hbn_R3', 'hbn', ['--release', 'R3'], 40),
-    ('hbn_R2', 'hbn', ['--release', 'R2'], 30),
-    ('hbn_R6', 'hbn', ['--release', 'R6'], 30),
-    ('hbn_R1', 'hbn', ['--release', 'R1'], 30),
     ('lemon_EO', 'lemon', ['--condition', 'EO'], 20),
     # Dortmund 8 conditions (each as separate job)
     ('dortmund_EC_pre_s1', 'dortmund', ['--condition', 'EC-pre', '--session', '1'], 20),
