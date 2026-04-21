@@ -76,12 +76,30 @@ def process_subject(args):
     if len(events) == 0:
         return None
     try:
-        if cohort == 'hbn':
+        if cohort.startswith('hbn'):
             raw = load_hbn(load_arg)
-        elif cohort == 'tdbrain':
-            raw = load_tdbrain(sub_id, condition='EC')
+        elif cohort.startswith('tdbrain'):
+            # heuristic: events key contains _EO for eyes-open
+            cond = 'EO' if '_EO' in os.environ.get('COHORT', '') else 'EC'
+            raw = load_tdbrain(sub_id, condition=cond)
         elif cohort == 'lemon':
-            raw = load_lemon(sub_id, condition='EC')
+            cond = 'EO' if 'lemon_EO' in os.environ.get('COHORT', '') else 'EC'
+            raw = load_lemon(sub_id, condition=cond)
+        elif cohort == 'dortmund':
+            from scripts.run_sie_extraction import load_dortmund
+            coh = os.environ.get('COHORT', '')
+            task = 'EyesOpen' if '_EO' in coh else 'EyesClosed'
+            acq = 'post' if '_post' in coh else 'pre'
+            ses = '2' if '_ses2' in coh else '1'
+            raw = load_dortmund(sub_id, task=task, acq=acq, ses=ses)
+        elif cohort == 'chbmp':
+            from scripts.run_sie_extraction import load_chbmp
+            raw = load_chbmp(sub_id)
+        elif cohort == 'srm':
+            from scripts.run_sie_extraction import load_srm
+            raw = load_srm(sub_id, ses='t1')
+        else:
+            return None
         else:
             return None
     except Exception:
@@ -114,13 +132,15 @@ def process_subject(args):
 
 
 def build_tasks(cohort):
-    if cohort == 'lemon':
-        summary = pd.read_csv(os.path.join(EVENTS_ROOT, 'lemon',
+    if cohort.startswith('lemon'):
+        # 'lemon' or 'lemon_composite' or 'lemon_<suffix>'
+        events_key = cohort
+        summary = pd.read_csv(os.path.join(EVENTS_ROOT, events_key,
                                             'extraction_summary.csv'))
         ok = summary[(summary['status']=='ok') & (summary['n_events']>=2)]
         tasks = []
         for _, r in ok.iterrows():
-            ep = os.path.join(EVENTS_ROOT, 'lemon',
+            ep = os.path.join(EVENTS_ROOT, events_key,
                               f'{r["subject_id"]}_sie_events.csv')
             if os.path.isfile(ep):
                 tasks.append(('lemon', r['subject_id'], ep, None))
@@ -145,16 +165,48 @@ def build_tasks(cohort):
             if os.path.isfile(ep) and os.path.isfile(sp):
                 tasks.append(('hbn', sub, ep, sp))
         return tasks
-    if cohort == 'tdbrain':
-        summary = pd.read_csv(os.path.join(EVENTS_ROOT, 'tdbrain',
+    if cohort.startswith('tdbrain'):
+        # tdbrain, tdbrain_composite, tdbrain_EO, tdbrain_EO_composite
+        events_key = cohort
+        summary = pd.read_csv(os.path.join(EVENTS_ROOT, events_key,
                                             'extraction_summary.csv'))
         ok = summary[(summary['status']=='ok') & (summary['n_events']>=2)]
         tasks = []
         for _, r in ok.iterrows():
             sub = r['subject_id']
-            ep = os.path.join(EVENTS_ROOT, 'tdbrain', f'{sub}_sie_events.csv')
+            ep = os.path.join(EVENTS_ROOT, events_key,
+                              f'{sub}_sie_events.csv')
             if os.path.isfile(ep):
                 tasks.append(('tdbrain', sub, ep, None))
+        return tasks
+    # Generic fallback: any cohort whose events dir exists under
+    # EVENTS_ROOT. Loader is inferred from cohort prefix.
+    events_key = cohort
+    sum_path = os.path.join(EVENTS_ROOT, events_key, 'extraction_summary.csv')
+    if os.path.isfile(sum_path):
+        # Infer loader from prefix; must match run_sie_extraction loader names
+        prefix_to_loader = {
+            'dortmund': 'dortmund', 'chbmp': 'chbmp',
+            'srm': 'srm', 'eegmmidb': 'eegmmidb',
+            'muse': 'muse', 'epoc_self': 'epoc_self',
+            'insight_self': 'insight_self', 'physf': 'physf',
+            'mpeng': 'mpeng', 'vep': 'vep',
+        }
+        loader = None
+        for p, ln in prefix_to_loader.items():
+            if cohort.startswith(p):
+                loader = ln; break
+        if loader is None:
+            raise ValueError(f"cannot infer loader for cohort {cohort}")
+        summary = pd.read_csv(sum_path)
+        ok = summary[(summary['status']=='ok') & (summary['n_events']>=2)]
+        tasks = []
+        for _, r in ok.iterrows():
+            sub = r['subject_id']
+            ep = os.path.join(EVENTS_ROOT, events_key,
+                              f'{sub}_sie_events.csv')
+            if os.path.isfile(ep):
+                tasks.append((loader, sub, ep, None))
         return tasks
     raise ValueError(cohort)
 
