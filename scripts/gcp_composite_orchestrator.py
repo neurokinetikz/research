@@ -142,11 +142,14 @@ export BLIS_NUM_THREADS=1
 export NUMEXPR_NUM_THREADS=1
 
 # Run extraction with {detector} detector (suffix {out_suffix})
-SIE_WORKERS=16 python3 -u scripts/run_sie_extraction.py \\
+# 28 workers on 32 vCPUs → ~87% core use; 4 cores reserved for parent/OS.
+# Safe now that MSC is vectorized (single-threaded numpy rfft — no BLAS
+# thread explosion even with OMP_NUM_THREADS=1 unset).
+SIE_WORKERS=28 python3 -u scripts/run_sie_extraction.py \\
     --dataset {dataset} \\
     --detector {detector} \\
     --out_suffix {out_suffix} \\
-    --parallel 16 \\
+    --parallel 28 \\
     {args_str}
 EXIT=$?
 
