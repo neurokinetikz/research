@@ -563,11 +563,19 @@ def process_subjects(subjects, loader_name, out_dir, dataset_label,
                      loader_kwargs=None, parallel=1):
     global _WORKER_LOADER_NAME, _WORKER_LOADER_KWARGS, _WORKER_OUT_DIR
 
+    # CLI-global injection: out_suffix, detector, composite_threshold
+    # (set by main() into module globals before calling process_subjects)
+    if '_CLI_OUT_SUFFIX' in globals() and _CLI_OUT_SUFFIX:
+        out_dir = out_dir + _CLI_OUT_SUFFIX
     os.makedirs(out_dir, exist_ok=True)
     t_start = time.time()
 
     loader_kwargs = loader_kwargs or {}
     loader_kwargs['_dataset_label'] = dataset_label
+    if '_CLI_DETECTOR' in globals() and _CLI_DETECTOR:
+        loader_kwargs.setdefault('detector', _CLI_DETECTOR)
+    if '_CLI_THRESHOLD' in globals() and _CLI_THRESHOLD is not None:
+        loader_kwargs.setdefault('composite_threshold', _CLI_THRESHOLD)
 
     log.info(f"\n{dataset_label} (SIE detection): {len(subjects)} subjects")
     log.info(f"  Output: {out_dir}")
@@ -649,6 +657,14 @@ def main():
                         help='Composite-S threshold (default 1.5)')
     args = parser.parse_args()
 
+    # Expose CLI flags as module-level globals so process_subjects can
+    # inject them uniformly across all dataset branches (out_suffix,
+    # detector, composite_threshold).
+    global _CLI_OUT_SUFFIX, _CLI_DETECTOR, _CLI_THRESHOLD
+    _CLI_OUT_SUFFIX = args.out_suffix or ''
+    _CLI_DETECTOR = args.detector
+    _CLI_THRESHOLD = args.composite_threshold
+
     n_parallel = args.parallel
 
     if args.dataset == 'eegmmidb':
@@ -667,7 +683,7 @@ def main():
         files = sorted(globfn_top(os.path.join(data_dir, f'sub-*_{cond}.set')))
         subjects = [(os.path.basename(f).replace(f'_{cond}.set', ''), None) for f in files]
         suffix = f'_EO' if cond == 'EO' else ''
-        out_dir = os.path.join(OUTPUT_BASE, f'lemon{suffix}{args.out_suffix}')
+        out_dir = os.path.join(OUTPUT_BASE, f'lemon{suffix}')
         lk = {'condition': cond}
         if args.detector is not None:
             lk['detector'] = args.detector
@@ -725,8 +741,7 @@ def main():
                 if sub_id not in seen:
                     subjects.append((sub_id, f))
                     seen.add(sub_id)
-            out_dir = os.path.join(OUTPUT_BASE,
-                                    f'hbn_{release}{args.out_suffix}')
+            out_dir = os.path.join(OUTPUT_BASE, f'hbn_{release}')
             lk = {}
             if args.z_thresh is not None:
                 lk['z_thresh'] = args.z_thresh
