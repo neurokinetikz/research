@@ -115,7 +115,12 @@ source /home/neurokinetikz/eeg_env/bin/activate || true
 
 # Pull latest research repo from git remote (assumes base image has ~/research cloned)
 cd /home/neurokinetikz/research
+git config --global --add safe.directory /home/neurokinetikz/research
 git fetch --all && git reset --hard origin/main || echo "git pull failed, using baked-in code"
+
+# Clean stale _composite leftovers from base image (e.g., lemon_composite)
+# so upload glob only finds this job's output
+rm -rf /home/neurokinetikz/research/exports_sie/*_composite 2>/dev/null
 
 # Run extraction with composite detector
 SIE_WORKERS=28 python3 -u scripts/run_sie_extraction.py \\
