@@ -85,6 +85,122 @@ def bandpass_safe(x: np.ndarray, fs: float, f1: float, f2: float, order=4) -> np
     return signal.filtfilt(b,a,x,axis=-1)
 
 
+# =========================================================================
+# Composite detector v2 — four-stream coherence-aware detection
+# (port from scripts/sie_composite_detector_v2.py, B61-validated)
+# =========================================================================
+def _composite_robust_z(x: np.ndarray) -> np.ndarray:
+    med = np.nanmedian(x)
+    mad = np.nanmedian(np.abs(x - med)) * 1.4826
+    if not np.isfinite(mad) or mad < 1e-9:
+        return x - med
+    return (x - med) / mad
+
+
+def _composite_streams(Y: np.ndarray, fs: float,
+                        f0: float = 7.83, half_bw: float = 0.6,
+                        R_band: Tuple[float, float] = (7.2, 8.4),
+                        step_sec: float = 0.1, win_sec: float = 1.0):
+    """Compute envelope, Kuramoto R, PLV, MSC at step_sec resolution.
+
+    Y : (n_channels, n_samples) EEG in µV.
+    Returns (t, env, R, PLV, MSC) arrays at centers of win_sec windows.
+    """
+    y = Y.mean(axis=0)
+    yb = bandpass_safe(y, fs, f0 - half_bw, f0 + half_bw)
+    env = np.abs(signal.hilbert(yb))
+
+    Xb = bandpass_safe(Y, fs, R_band[0], R_band[1])
+    ph = np.angle(signal.hilbert(Xb, axis=-1))
+    ref_b = np.median(Xb, axis=0)
+    ph_ref = np.angle(signal.hilbert(ref_b))
+    dphi = ph - ph_ref[None, :]
+    ref_raw = np.median(Y, axis=0)
+
+    nwin = int(round(win_sec * fs))
+    nstep = int(round(step_sec * fs))
+    nperseg_msc = max(int(round(0.5 * fs)), 32)
+
+    centers, env_v, R_v, P_v, M_v = [], [], [], [], []
+    for i in range(0, Y.shape[1] - nwin + 1, nstep):
+        seg_ph = ph[:, i:i+nwin]
+        R_t = np.abs(np.mean(np.exp(1j * seg_ph), axis=0))
+        R_v.append(float(np.mean(R_t)))
+        pseg = dphi[:, i:i+nwin]
+        plv = np.abs(np.mean(np.exp(1j * pseg), axis=1))
+        P_v.append(float(np.mean(plv)))
+        env_v.append(float(np.mean(env[i:i+nwin])))
+        ref_seg = ref_raw[i:i+nwin]
+        msc_per_ch = []
+        for ci in range(Y.shape[0]):
+            try:
+                f_c, Cxy = signal.coherence(Y[ci, i:i+nwin], ref_seg, fs=fs,
+                                              nperseg=min(nperseg_msc, nwin))
+                msc_per_ch.append(float(Cxy[int(np.argmin(np.abs(f_c - f0)))]))
+            except Exception:
+                pass
+        M_v.append(float(np.mean(msc_per_ch)) if msc_per_ch else np.nan)
+        centers.append((i + nwin/2) / fs)
+    return (np.array(centers), np.array(env_v), np.array(R_v),
+            np.array(P_v), np.array(M_v))
+
+
+def _composite_S(env, R, P, M):
+    zE = _composite_robust_z(env)
+    zR = _composite_robust_z(R)
+    zP = _composite_robust_z(P)
+    zM = _composite_robust_z(M)
+    return np.cbrt(
+        np.clip(zE, 0, None) * np.clip(zR, 0, None) *
+        np.clip(zP, 0, None) * np.clip(zM, 0, None)
+    )
+
+
+def _composite_refine_onset(t, env, R, P, M, t_detect,
+                             search=(-3.0, 0.4), baseline=(-5.0, -3.0)):
+    rel = t - t_detect
+    base_mask = (rel >= baseline[0]) & (rel < baseline[1])
+    srch_mask = (rel >= search[0]) & (rel <= search[1])
+    if not base_mask.any() or not srch_mask.any():
+        return t_detect
+
+    def lz(x):
+        if base_mask.sum() < 3:
+            return x - np.nanmean(x)
+        mu = np.nanmean(x[base_mask])
+        sd = np.nanstd(x[base_mask])
+        if not np.isfinite(sd) or sd < 1e-9: sd = 1.0
+        return (x - mu) / sd
+    score = lz(env) + lz(R) + lz(P) + lz(M)
+    score_m = np.where(srch_mask, score, np.inf)
+    return float(t[int(np.nanargmin(score_m))])
+
+
+def detect_composite_onsets(Y: np.ndarray, fs: float,
+                              threshold: float = 1.5,
+                              min_isi_sec: float = 2.0,
+                              edge_sec: float = 5.0,
+                              f0: float = 7.83) -> np.ndarray:
+    """Run composite v2 detection and return onset times (seconds, relative
+    to start of recording). Each onset is the joint-dip nadir preceding the
+    S-peak detection trigger."""
+    t, env, R, P, M = _composite_streams(Y, fs, f0=f0)
+    S = _composite_S(env, R, P, M)
+    mask = (t >= t[0] + edge_sec) & (t <= t[-1] - edge_sec)
+    S_m = S.copy()
+    S_m[~mask] = -np.inf
+    peak_idx, _ = signal.find_peaks(
+        S_m,
+        distance=max(1, int(round(min_isi_sec / (t[1] - t[0] if len(t) > 1 else 0.1)))),
+        height=threshold,
+    )
+    onsets = []
+    for pi in peak_idx:
+        t_on = _composite_refine_onset(t, env, R, P, M, float(t[pi]))
+        onsets.append(t_on)
+    return np.array(sorted(onsets))
+
+
 def _sr_envelope_z_series(y: np.ndarray, fs: float, f0: float,
                           half_bw: float, smooth_sec: float) -> np.ndarray:
     """Envelope z-score for a monaural SR band."""
@@ -625,6 +741,8 @@ def detect_ignitions_session(
     fooof_match_method: str = 'power',  # 'distance', 'power', 'average'
     nperseg_sec: float = 4.0,  # Spectral resolution control (seconds)
     additional_windows: Optional[List[Tuple[float, float]]] = None,  # Extra windows to analyze
+    detector: str = 'envelope',  # 'envelope' (legacy) or 'composite' (v2)
+    composite_threshold: float = 1.5,  # S-peak threshold for composite detector
     make_passport: bool = True,
     show: bool = True,
     verbose: bool = True,
@@ -658,15 +776,29 @@ def detect_ignitions_session(
             sr_env_cache[key] = _sr_envelope_z_series(y, fs, f0, bw, smooth_sec)
         return sr_env_cache[key]
 
-    z = _get_sr_env_z(center_hz, half_bw_scalar)
-    mask = z >= z_thresh
-    on_idx = np.where(np.diff(mask.astype(int)) == 1)[0] + 1
+    if detector == 'composite':
+        # Composite v2 detection: four-stream coherence-aware, produces onset
+        # timestamps at joint-dip nadirs (see B61 for validation).
+        onsets_raw = detect_composite_onsets(Y, fs,
+                                               threshold=composite_threshold,
+                                               min_isi_sec=min_isi_sec,
+                                               f0=center_hz)
+        # Keep only onsets within recording bounds (with a safety margin)
+        t_lo, t_hi = float(t[0]), float(t[-1])
+        onsets = onsets_raw[(onsets_raw >= t_lo + 1.0) &
+                              (onsets_raw <= t_hi - 1.0)].astype(float)
+        # Also compute envelope-z for downstream summaries (used by Stage 3+)
+        z = _get_sr_env_z(center_hz, half_bw_scalar)
+    else:
+        z = _get_sr_env_z(center_hz, half_bw_scalar)
+        mask = z >= z_thresh
+        on_idx = np.where(np.diff(mask.astype(int)) == 1)[0] + 1
 
-    onsets, last_t = [], -np.inf
-    for i in on_idx:
-        if t[i] - last_t >= min_isi_sec:
-            onsets.append(t[i]); last_t = t[i]
-    onsets = np.array(onsets, float)
+        onsets, last_t = [], -np.inf
+        for i in on_idx:
+            if t[i] - last_t >= min_isi_sec:
+                onsets.append(t[i]); last_t = t[i]
+        onsets = np.array(onsets, float)
 
     # --- 2) ignition windows (merge) ---
     ign: List[Tuple[float,float]] = []

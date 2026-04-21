@@ -492,10 +492,18 @@ def _sie_one_subject(args):
         dataset = _WORKER_LOADER_KWARGS.get('_dataset_label', _WORKER_LOADER_NAME)
         condition = _WORKER_LOADER_KWARGS.get('condition', 'EC')
 
+        detect_kwargs = {}
+        if 'z_thresh' in _WORKER_LOADER_KWARGS:
+            detect_kwargs['z_thresh'] = _WORKER_LOADER_KWARGS['z_thresh']
+        if 'detector' in _WORKER_LOADER_KWARGS:
+            detect_kwargs['detector'] = _WORKER_LOADER_KWARGS['detector']
+        if 'composite_threshold' in _WORKER_LOADER_KWARGS:
+            detect_kwargs['composite_threshold'] = _WORKER_LOADER_KWARGS['composite_threshold']
         result, ign_windows = detect_ignitions_mne(
             raw,
             session_name=sub_id,
             out_dir=tmp_dir,
+            **detect_kwargs,
         )
 
         # Save per-event CSV
@@ -627,6 +635,18 @@ def main():
                         help='Session number for Dortmund (1 or 2)')
     parser.add_argument('--parallel', type=int, default=1,
                         help='Number of parallel workers (default: 1 = sequential)')
+    parser.add_argument('--z_thresh', type=float, default=None,
+                        help='Override Stage-1 envelope z-threshold (default 2.5)')
+    parser.add_argument('--out_suffix', type=str, default='',
+                        help='Suffix to append to output dir (e.g. _z20 for the '
+                             'loose-threshold HBN re-extraction)')
+    parser.add_argument('--n_subjects', type=int, default=None,
+                        help='Truncate subject list to first N (for timing tests)')
+    parser.add_argument('--detector', type=str, default=None,
+                        choices=['envelope', 'composite'],
+                        help='Stage-1 detector (default: envelope)')
+    parser.add_argument('--composite_threshold', type=float, default=None,
+                        help='Composite-S threshold (default 1.5)')
     args = parser.parse_args()
 
     n_parallel = args.parallel
@@ -647,9 +667,16 @@ def main():
         files = sorted(globfn_top(os.path.join(data_dir, f'sub-*_{cond}.set')))
         subjects = [(os.path.basename(f).replace(f'_{cond}.set', ''), None) for f in files]
         suffix = f'_EO' if cond == 'EO' else ''
-        out_dir = os.path.join(OUTPUT_BASE, f'lemon{suffix}')
+        out_dir = os.path.join(OUTPUT_BASE, f'lemon{suffix}{args.out_suffix}')
+        lk = {'condition': cond}
+        if args.detector is not None:
+            lk['detector'] = args.detector
+        if args.composite_threshold is not None:
+            lk['composite_threshold'] = args.composite_threshold
+        if args.n_subjects is not None:
+            subjects = subjects[:args.n_subjects]
         process_subjects(subjects, 'lemon', out_dir, f'LEMON {cond}',
-                         loader_kwargs={'condition': cond}, parallel=n_parallel)
+                         loader_kwargs=lk, parallel=n_parallel)
 
     elif args.dataset == 'dortmund':
         data_dir = '/Volumes/T9/dortmund_data_dl'
@@ -698,8 +725,15 @@ def main():
                 if sub_id not in seen:
                     subjects.append((sub_id, f))
                     seen.add(sub_id)
-            out_dir = os.path.join(OUTPUT_BASE, f'hbn_{release}')
+            out_dir = os.path.join(OUTPUT_BASE,
+                                    f'hbn_{release}{args.out_suffix}')
+            lk = {}
+            if args.z_thresh is not None:
+                lk['z_thresh'] = args.z_thresh
+            if args.n_subjects is not None:
+                subjects = subjects[:args.n_subjects]
             process_subjects(subjects, 'hbn', out_dir, f'HBN {release}',
+                             loader_kwargs=lk or None,
                              parallel=n_parallel)
 
     elif args.dataset == 'tdbrain':
