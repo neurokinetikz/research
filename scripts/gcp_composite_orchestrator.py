@@ -94,8 +94,8 @@ def sh(cmd, check=True, capture=True):
 
 
 def vm_name(job_id):
-    """Deterministic worker VM name."""
-    return f'sie-worker-{job_id.replace("_", "-")}'
+    """Deterministic worker VM name (GCE requires lowercase, dashes only)."""
+    return f'sie-worker-{job_id.replace("_", "-").lower()}'
 
 
 def build_startup_script(job_id, dataset, cli_args):
