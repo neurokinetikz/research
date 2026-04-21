@@ -160,13 +160,13 @@ gcloud compute instances delete "$NAME" --zone={ZONE} --quiet
 
 def launch_vm(job_id, dataset, cli_args, dry_run=False):
     vm = vm_name(job_id)
-    # Skip if VM already exists (from prior run or currently running)
+    # Skip if VM already exists — treat as active (will poll for _SUCCESS)
     r = sh(f"gcloud compute instances describe {vm} "
            f"--zone={ZONE} --format='value(name)' 2>/dev/null",
             check=False)
     if r.returncode == 0 and r.stdout.strip() == vm:
-        print(f"  [EXISTS] {vm} already running — skip")
-        return False
+        print(f"  [EXISTS] {vm} already running — track as active")
+        return 'existing'
     # Skip if already succeeded in bucket
     if job_done(job_id) == 'success':
         print(f"  [SKIP] {job_id} already has _SUCCESS in bucket")
@@ -258,14 +258,18 @@ def main():
             if ok is True:
                 active[job_id] = time.time()
                 capacity -= 1
+            elif ok == 'existing':
+                # VM already running — track as active (will poll for success)
+                active[job_id] = time.time()
+                capacity -= 1
             elif ok is None:
                 # Already succeeded (bucket _SUCCESS) — drop from queue
                 finished[job_id] = 'success'
             else:
-                # False: launch failed (quota / name collision) — re-enqueue
+                # False: launch failed (quota) — re-enqueue + break this cycle
                 print(f"  [REQUEUE] {job_id} after launch failure")
                 pending.append((job_id, dataset, cli_args, est))
-                break  # stop trying to launch more this cycle
+                break
 
         if args.dry_run:
             print("Dry run complete.")
