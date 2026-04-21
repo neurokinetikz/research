@@ -44,16 +44,33 @@ GCS_BUCKET = 'gs://sie-composite-v2-extractions'
 MAX_CONCURRENT = 8
 
 # ===== JOB QUEUE (longest jobs first) =====
-# (job_id, dataset, cli_args_list, estimated_min)
+# Tuple fields: (job_id, dataset, cli_args_list, estimated_min[, detector])
+# detector defaults to 'composite' (S₄). Use 'composite_s3' to drop MSC
+# (required for 128-ch HBN and long-record EEGMMIDB).
 JOB_QUEUE = [
-    # HBN DEFERRED: 128-channel EGI makes composite MSC pathologically slow
-    # (5x slower than LEMON). Need MSC channel-subsampling optimization
-    # before re-enabling HBN. For now, skip all 11 HBN releases.
-    #
+    # --- S₃ validation (re-extracts LEMON EC with MSC-free detector to
+    # confirm S₃ reproduces the B62 Figure-3 / B48 numbers before scaling
+    # to HBN) ---
+    ('lemon_s3_validate', 'lemon', [], 20, 'composite_s3'),
+
+    # --- HBN (128-ch EGI, 11 releases) — S₃ only, MSC dropped ---
+    ('hbn_R1', 'hbn', ['--release', 'R1'], 60, 'composite_s3'),
+    ('hbn_R2', 'hbn', ['--release', 'R2'], 60, 'composite_s3'),
+    ('hbn_R3', 'hbn', ['--release', 'R3'], 60, 'composite_s3'),
+    ('hbn_R4', 'hbn', ['--release', 'R4'], 60, 'composite_s3'),
+    ('hbn_R5', 'hbn', ['--release', 'R5'], 60, 'composite_s3'),
+    ('hbn_R6', 'hbn', ['--release', 'R6'], 60, 'composite_s3'),
+    ('hbn_R7', 'hbn', ['--release', 'R7'], 60, 'composite_s3'),
+    ('hbn_R8', 'hbn', ['--release', 'R8'], 60, 'composite_s3'),
+    ('hbn_R9', 'hbn', ['--release', 'R9'], 60, 'composite_s3'),
+    ('hbn_R10', 'hbn', ['--release', 'R10'], 60, 'composite_s3'),
+    ('hbn_R11', 'hbn', ['--release', 'R11'], 60, 'composite_s3'),
+
+    # --- Already-extracted S₄ jobs (still listed so re-runs skip via
+    # _SUCCESS marker) ---
     ('tdbrain_EC', 'tdbrain', ['--condition', 'EC'], 120),
     ('tdbrain_EO', 'tdbrain', ['--condition', 'EO'], 120),
     ('lemon_EO', 'lemon', ['--condition', 'EO'], 20),
-    # Dortmund 8 conditions (each as separate job)
     ('dortmund_EC_pre_s1', 'dortmund', ['--condition', 'EC-pre', '--session', '1'], 20),
     ('dortmund_EC_pre_s2', 'dortmund', ['--condition', 'EC-pre', '--session', '2'], 20),
     ('dortmund_EC_post_s1', 'dortmund', ['--condition', 'EC-post', '--session', '1'], 20),
@@ -62,13 +79,8 @@ JOB_QUEUE = [
     ('dortmund_EO_pre_s2', 'dortmund', ['--condition', 'EO-pre', '--session', '2'], 20),
     ('dortmund_EO_post_s1', 'dortmund', ['--condition', 'EO-post', '--session', '1'], 20),
     ('dortmund_EO_post_s2', 'dortmund', ['--condition', 'EO-post', '--session', '2'], 20),
-    # Other research-grade (EEGMMIDB excluded: 28-min concat recordings
-    # cause composite-detector pathological runtimes — needs separate
-    # handling)
     ('chbmp', 'chbmp', [], 20),
     ('srm', 'srm', [], 20),
-    # Discovery-cohort (consumer-grade) — MPENG excluded from overnight
-    # batch (900 files, large; separate handling)
     ('vep', 'vep', [], 15),
     ('physf', 'physf', [], 15),
     ('epoc_self', 'epoc_self', [], 10),
@@ -89,9 +101,10 @@ def vm_name(job_id):
     return f'sie-worker-{job_id.replace("_", "-").lower()}'
 
 
-def build_startup_script(job_id, dataset, cli_args):
+def build_startup_script(job_id, dataset, cli_args, detector='composite'):
     """Return a bash startup script the worker runs on boot."""
     args_str = ' '.join(cli_args)
+    out_suffix = '_composite_s3' if detector == 'composite_s3' else '_composite'
     return f"""#!/bin/bash
 set -e
 LOG=/var/log/sie-worker.log
@@ -115,18 +128,21 @@ source /home/neurokinetikz/eeg_env/bin/activate || true
 
 # Pull latest research repo from git remote (assumes base image has ~/research cloned)
 cd /home/neurokinetikz/research
-git config --global --add safe.directory /home/neurokinetikz/research
+# git config needs HOME set; startup runs as root with HOME unset
+export HOME=/root
+git config --global --add safe.directory /home/neurokinetikz/research 2>&1 || true
 git fetch --all && git reset --hard origin/main || echo "git pull failed, using baked-in code"
 
-# Clean stale _composite leftovers from base image (e.g., lemon_composite)
-# so upload glob only finds this job's output
-rm -rf /home/neurokinetikz/research/exports_sie/*_composite 2>/dev/null
+# Clean stale _composite and _composite_s3 leftovers from base image so
+# upload glob only finds this job's output
+rm -rf /home/neurokinetikz/research/exports_sie/*_composite \
+       /home/neurokinetikz/research/exports_sie/*_composite_s3 2>/dev/null
 
-# Run extraction with composite detector
+# Run extraction with {detector} detector (suffix {out_suffix})
 SIE_WORKERS=28 python3 -u scripts/run_sie_extraction.py \\
     --dataset {dataset} \\
-    --detector composite \\
-    --out_suffix _composite \\
+    --detector {detector} \\
+    --out_suffix {out_suffix} \\
     --parallel 28 \\
     {args_str}
 EXIT=$?
@@ -135,7 +151,7 @@ EXIT=$?
 OUT_DIR=/home/neurokinetikz/research/exports_sie
 if [ $EXIT -eq 0 ]; then
   # Find the output dir name (depends on dataset/condition)
-  for d in $OUT_DIR/*_composite; do
+  for d in $OUT_DIR/*{out_suffix}; do
     if [ -d "$d" ]; then
       NAME=$(basename "$d")
       gcloud storage cp -r "$d" {GCS_BUCKET}/{job_id}/
@@ -154,7 +170,7 @@ gcloud compute instances delete "$NAME" --zone={ZONE} --quiet
 """
 
 
-def launch_vm(job_id, dataset, cli_args, dry_run=False):
+def launch_vm(job_id, dataset, cli_args, dry_run=False, detector='composite'):
     vm = vm_name(job_id)
     # Skip if VM already exists — treat as active (will poll for _SUCCESS)
     r = sh(f"gcloud compute instances describe {vm} "
@@ -167,7 +183,7 @@ def launch_vm(job_id, dataset, cli_args, dry_run=False):
     if job_done(job_id) == 'success':
         print(f"  [SKIP] {job_id} already has _SUCCESS in bucket")
         return None  # signal: don't re-enqueue, just drop
-    startup = build_startup_script(job_id, dataset, cli_args)
+    startup = build_startup_script(job_id, dataset, cli_args, detector=detector)
     startup_file = f'/tmp/startup_{job_id}.sh'
     with open(startup_file, 'w') as f:
         f.write(startup)
@@ -249,22 +265,22 @@ def main():
         running_vms = list_running_workers() if not args.dry_run else list(active)
         capacity = MAX_CONCURRENT - len(running_vms)
         while capacity > 0 and pending:
-            job_id, dataset, cli_args, est = pending.pop(0)
-            ok = launch_vm(job_id, dataset, cli_args, dry_run=args.dry_run)
+            entry = pending.pop(0)
+            job_id, dataset, cli_args, est = entry[:4]
+            detector = entry[4] if len(entry) >= 5 else 'composite'
+            ok = launch_vm(job_id, dataset, cli_args,
+                            dry_run=args.dry_run, detector=detector)
             if ok is True:
                 active[job_id] = time.time()
                 capacity -= 1
             elif ok == 'existing':
-                # VM already running — track as active (will poll for success)
                 active[job_id] = time.time()
                 capacity -= 1
             elif ok is None:
-                # Already succeeded (bucket _SUCCESS) — drop from queue
                 finished[job_id] = 'success'
             else:
-                # False: launch failed (quota) — re-enqueue + break this cycle
                 print(f"  [REQUEUE] {job_id} after launch failure")
-                pending.append((job_id, dataset, cli_args, est))
+                pending.append(entry)
                 break
 
         if args.dry_run:
