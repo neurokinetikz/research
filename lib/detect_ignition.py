@@ -201,6 +201,101 @@ def detect_composite_onsets(Y: np.ndarray, fs: float,
     return np.array(sorted(onsets))
 
 
+# =========================================================================
+# Composite detector S₃ — three-stream (env × R × PLV), MSC dropped
+# ~35× faster than S₄ on 64-ch LEMON, larger speedup on 128-ch HBN.
+# Validated on LEMON: 71-95% event overlap with S₄ at comparable event count.
+# =========================================================================
+def _composite_streams_s3(Y: np.ndarray, fs: float,
+                           f0: float = 7.83, half_bw: float = 0.6,
+                           R_band: Tuple[float, float] = (7.2, 8.4),
+                           step_sec: float = 0.1, win_sec: float = 1.0):
+    """Compute envelope, Kuramoto R, PLV at step_sec resolution (no MSC).
+
+    Y : (n_channels, n_samples) EEG in µV.
+    Returns (t, env, R, PLV) arrays at centers of win_sec windows.
+    """
+    y = Y.mean(axis=0)
+    yb = bandpass_safe(y, fs, f0 - half_bw, f0 + half_bw)
+    env = np.abs(signal.hilbert(yb))
+
+    Xb = bandpass_safe(Y, fs, R_band[0], R_band[1])
+    ph = np.angle(signal.hilbert(Xb, axis=-1))
+    ref_b = np.median(Xb, axis=0)
+    ph_ref = np.angle(signal.hilbert(ref_b))
+    dphi = ph - ph_ref[None, :]
+
+    nwin = int(round(win_sec * fs))
+    nstep = int(round(step_sec * fs))
+
+    centers, env_v, R_v, P_v = [], [], [], []
+    for i in range(0, Y.shape[1] - nwin + 1, nstep):
+        seg_ph = ph[:, i:i+nwin]
+        R_t = np.abs(np.mean(np.exp(1j * seg_ph), axis=0))
+        R_v.append(float(np.mean(R_t)))
+        pseg = dphi[:, i:i+nwin]
+        plv = np.abs(np.mean(np.exp(1j * pseg), axis=1))
+        P_v.append(float(np.mean(plv)))
+        env_v.append(float(np.mean(env[i:i+nwin])))
+        centers.append((i + nwin/2) / fs)
+    return (np.array(centers), np.array(env_v), np.array(R_v),
+            np.array(P_v))
+
+
+def _composite_S3(env, R, P):
+    zE = _composite_robust_z(env)
+    zR = _composite_robust_z(R)
+    zP = _composite_robust_z(P)
+    return np.cbrt(
+        np.clip(zE, 0, None) * np.clip(zR, 0, None) *
+        np.clip(zP, 0, None)
+    )
+
+
+def _composite_refine_onset_s3(t, env, R, P, t_detect,
+                                 search=(-3.0, 0.4), baseline=(-5.0, -3.0)):
+    rel = t - t_detect
+    base_mask = (rel >= baseline[0]) & (rel < baseline[1])
+    srch_mask = (rel >= search[0]) & (rel <= search[1])
+    if not base_mask.any() or not srch_mask.any():
+        return t_detect
+
+    def lz(x):
+        if base_mask.sum() < 3:
+            return x - np.nanmean(x)
+        mu = np.nanmean(x[base_mask])
+        sd = np.nanstd(x[base_mask])
+        if not np.isfinite(sd) or sd < 1e-9: sd = 1.0
+        return (x - mu) / sd
+    score = lz(env) + lz(R) + lz(P)
+    score_m = np.where(srch_mask, score, np.inf)
+    return float(t[int(np.nanargmin(score_m))])
+
+
+def detect_composite_onsets_s3(Y: np.ndarray, fs: float,
+                                 threshold: float = 1.5,
+                                 min_isi_sec: float = 2.0,
+                                 edge_sec: float = 5.0,
+                                 f0: float = 7.83) -> np.ndarray:
+    """S₃ variant of composite detector. Drops MSC stream for ~35×+ speedup.
+    Onset refinement uses 3-stream joint-dip nadir."""
+    t, env, R, P = _composite_streams_s3(Y, fs, f0=f0)
+    S = _composite_S3(env, R, P)
+    mask = (t >= t[0] + edge_sec) & (t <= t[-1] - edge_sec)
+    S_m = S.copy()
+    S_m[~mask] = -np.inf
+    peak_idx, _ = signal.find_peaks(
+        S_m,
+        distance=max(1, int(round(min_isi_sec / (t[1] - t[0] if len(t) > 1 else 0.1)))),
+        height=threshold,
+    )
+    onsets = []
+    for pi in peak_idx:
+        t_on = _composite_refine_onset_s3(t, env, R, P, float(t[pi]))
+        onsets.append(t_on)
+    return np.array(sorted(onsets))
+
+
 def _sr_envelope_z_series(y: np.ndarray, fs: float, f0: float,
                           half_bw: float, smooth_sec: float) -> np.ndarray:
     """Envelope z-score for a monaural SR band."""
@@ -741,7 +836,7 @@ def detect_ignitions_session(
     fooof_match_method: str = 'power',  # 'distance', 'power', 'average'
     nperseg_sec: float = 4.0,  # Spectral resolution control (seconds)
     additional_windows: Optional[List[Tuple[float, float]]] = None,  # Extra windows to analyze
-    detector: str = 'envelope',  # 'envelope' (legacy) or 'composite' (v2)
+    detector: str = 'envelope',  # 'envelope' (legacy), 'composite' (v2 S₄), or 'composite_s3' (S₃ no-MSC)
     composite_threshold: float = 1.5,  # S-peak threshold for composite detector
     make_passport: bool = True,
     show: bool = True,
@@ -783,11 +878,19 @@ def detect_ignitions_session(
                                                threshold=composite_threshold,
                                                min_isi_sec=min_isi_sec,
                                                f0=center_hz)
-        # Keep only onsets within recording bounds (with a safety margin)
         t_lo, t_hi = float(t[0]), float(t[-1])
         onsets = onsets_raw[(onsets_raw >= t_lo + 1.0) &
                               (onsets_raw <= t_hi - 1.0)].astype(float)
-        # Also compute envelope-z for downstream summaries (used by Stage 3+)
+        z = _get_sr_env_z(center_hz, half_bw_scalar)
+    elif detector == 'composite_s3':
+        # S₃ variant: three-stream (env × R × PLV), MSC dropped for speed.
+        onsets_raw = detect_composite_onsets_s3(Y, fs,
+                                                  threshold=composite_threshold,
+                                                  min_isi_sec=min_isi_sec,
+                                                  f0=center_hz)
+        t_lo, t_hi = float(t[0]), float(t[-1])
+        onsets = onsets_raw[(onsets_raw >= t_lo + 1.0) &
+                              (onsets_raw <= t_hi - 1.0)].astype(float)
         z = _get_sr_env_z(center_hz, half_bw_scalar)
     else:
         z = _get_sr_env_z(center_hz, half_bw_scalar)

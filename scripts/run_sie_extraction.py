@@ -651,7 +651,7 @@ def main():
     parser.add_argument('--n_subjects', type=int, default=None,
                         help='Truncate subject list to first N (for timing tests)')
     parser.add_argument('--detector', type=str, default=None,
-                        choices=['envelope', 'composite'],
+                        choices=['envelope', 'composite', 'composite_s3'],
                         help='Stage-1 detector (default: envelope)')
     parser.add_argument('--composite_threshold', type=float, default=None,
                         help='Composite-S threshold (default 1.5)')
