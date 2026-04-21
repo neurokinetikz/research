@@ -745,10 +745,16 @@ def _directed_flow_scores(
     f_lo: float,
     f_hi: float,
     *,
-    maxlag: int = 6
+    maxlag: int = 6,
+    max_channels: int = 64,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Compute per-channel directed flow (in/out) using bivariate Granger within [f_lo,f_hi].
+
+    For n_channels > max_channels, the Granger matrix is computed only on an
+    evenly-spaced subset of channels (pair count is O(n²) — 128-ch HBN is
+    4× slower than 64-ch otherwise). Unsampled channels receive NaN flow
+    scores; downstream seed scoring already treats NaN as 'ambiguous'.
     """
     n, T = X.shape
     if n < 2 or T < 8:
@@ -763,10 +769,26 @@ def _directed_flow_scores(
     std = X_band.std(axis=1, keepdims=True) + 1e-12
     X_norm = X_band / std
 
-    F = _granger_bivariate_matrix(X_norm, maxlag=maxlag)
-    denom = float(max(1, n - 1))
-    flow_out = np.nansum(F, axis=1) / denom
-    flow_in = np.nansum(F, axis=0) / denom
+    if n <= max_channels:
+        F = _granger_bivariate_matrix(X_norm, maxlag=maxlag)
+        denom = float(max(1, n - 1))
+        flow_out = np.nansum(F, axis=1) / denom
+        flow_in = np.nansum(F, axis=0) / denom
+        return flow_in, flow_out, F
+
+    idx = np.linspace(0, n - 1, max_channels).astype(int)
+    Fsub = _granger_bivariate_matrix(X_norm[idx], maxlag=maxlag)
+    denom = float(max(1, len(idx) - 1))
+    sub_out = np.nansum(Fsub, axis=1) / denom
+    sub_in = np.nansum(Fsub, axis=0) / denom
+    flow_out = np.full(n, np.nan)
+    flow_in = np.full(n, np.nan)
+    flow_out[idx] = sub_out
+    flow_in[idx] = sub_in
+    F = np.zeros((n, n))
+    for a, ai in enumerate(idx):
+        for b, bi in enumerate(idx):
+            F[ai, bi] = Fsub[a, b]
     return flow_in, flow_out, F
 
 
