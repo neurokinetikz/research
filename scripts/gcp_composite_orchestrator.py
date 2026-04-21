@@ -71,12 +71,13 @@ JOB_QUEUE = [
     ('dortmund_EO_pre_s2', 'dortmund', ['--condition', 'EO-pre', '--session', '2'], 20),
     ('dortmund_EO_post_s1', 'dortmund', ['--condition', 'EO-post', '--session', '1'], 20),
     ('dortmund_EO_post_s2', 'dortmund', ['--condition', 'EO-post', '--session', '2'], 20),
-    # Other research-grade
-    ('eegmmidb', 'eegmmidb', [], 20),
+    # Other research-grade (EEGMMIDB excluded: 28-min concat recordings
+    # cause composite-detector pathological runtimes — needs separate
+    # handling)
     ('chbmp', 'chbmp', [], 20),
     ('srm', 'srm', [], 20),
-    # Discovery-cohort (consumer-grade)
-    ('mpeng', 'mpeng', [], 30),
+    # Discovery-cohort (consumer-grade) — MPENG excluded from overnight
+    # batch (900 files, large; separate handling)
     ('vep', 'vep', [], 15),
     ('physf', 'physf', [], 15),
     ('epoc_self', 'epoc_self', [], 10),
@@ -106,16 +107,17 @@ LOG=/var/log/sie-worker.log
 exec > >(tee -a $LOG) 2>&1
 echo "=== SIE worker {job_id} start: $(date -u) ==="
 
-# Wait for disk mount (attached as /dev/sdb by GCP)
-sleep 15
-# Ensure T9 symlink exists
-if [ ! -e /Volumes/T9 ]; then
-  mkdir -p /Volumes
-  # The eeg-data disk boots to /mnt/disks/eeg-data via cloud-init on base image
-  if [ -d /mnt/disks/eeg-data/T9 ]; then
-    ln -sf /mnt/disks/eeg-data/T9 /Volumes/T9
-  fi
+# Mount eeg-data-disk read-only at /mnt/eeg-data (matches base image's
+# /Volumes/T9 -> /mnt/eeg-data/T9 symlink)
+mkdir -p /mnt/eeg-data
+sleep 15  # wait for block device to settle
+DEV=$(lsblk -no NAME,SIZE | awk '$2 == "2.5T" {{print "/dev/"$1; exit}}')
+if [ -z "$DEV" ]; then
+  DEV=/dev/sdb
 fi
+echo "Mounting $DEV (read-only) at /mnt/eeg-data"
+mount -o ro $DEV /mnt/eeg-data || {{ echo "mount failed"; exit 2; }}
+ls /mnt/eeg-data/T9/lemon_data >/dev/null || {{ echo "T9 not readable"; exit 3; }}
 
 # Activate eeg_env (preserved in base image)
 source /home/neurokinetikz/eeg_env/bin/activate || true
