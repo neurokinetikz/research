@@ -36,7 +36,7 @@ import sys
 
 PROJECT = 'claude-493017'
 ZONE = 'us-central1-a'
-IMAGE = 'sie-worker-base-composite'
+IMAGE = 'sie-worker-base-composite-v2'
 IMAGE_FAMILY = 'sie-workers'
 MACHINE_TYPE = 'c2d-standard-32'
 DATA_DISK = 'eeg-data-disk'
