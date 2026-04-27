@@ -33,9 +33,14 @@ from scripts.run_sie_extraction import load_lemon
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), '..', 'outputs', 'schumann',
                         'images', 'coupling')
-EVENTS_DIR = os.path.join(os.path.dirname(__file__), '..', 'exports_sie', 'lemon')
+LEMON_COHORT = os.environ.get('LEMON_COHORT', 'lemon')  # 'lemon' or 'lemon_composite'
+EVENTS_DIR = os.path.join(os.path.dirname(__file__), '..', 'exports_sie',
+                           LEMON_COHORT)
+_quality_fn = ('per_event_quality.csv' if LEMON_COHORT == 'lemon'
+               else f'per_event_quality_{LEMON_COHORT}.csv')
 QUALITY_CSV = os.path.join(os.path.dirname(__file__), '..', 'outputs',
-                            'schumann', 'images', 'quality', 'per_event_quality.csv')
+                            'schumann', 'images', 'quality', _quality_fn)
+OUT_SUFFIX = '' if LEMON_COHORT == 'lemon' else f'_{LEMON_COHORT}'
 os.makedirs(OUT_DIR, exist_ok=True)
 warnings.filterwarnings('ignore')
 import mne
@@ -215,7 +220,7 @@ def main():
         results = pool.map(process_subject, tasks)
     results = [r for r in results if r is not None]
     df = pd.DataFrame(results)
-    df.to_csv(os.path.join(OUT_DIR, 'paper_figure3_revised_data.csv'), index=False)
+    df.to_csv(os.path.join(OUT_DIR, f'paper_figure3_revised{OUT_SUFFIX}_data.csv'), index=False)
     print(f"Successful: {len(df)}")
 
     good = df.dropna(subset=['sr1_ratio_posterior', 'sr1_ratio_anterior',
@@ -322,12 +327,12 @@ def main():
     fig.text(0.5, -0.06, caption, ha='center', va='top',
               fontsize=8.5, style='italic', wrap=True)
 
-    plt.savefig(os.path.join(OUT_DIR, 'paper_figure3_revised.png'),
+    plt.savefig(os.path.join(OUT_DIR, f'paper_figure3_revised{OUT_SUFFIX}.png'),
                  dpi=180, bbox_inches='tight')
-    plt.savefig(os.path.join(OUT_DIR, 'paper_figure3_revised.pdf'),
+    plt.savefig(os.path.join(OUT_DIR, f'paper_figure3_revised{OUT_SUFFIX}.pdf'),
                  bbox_inches='tight')
     plt.close()
-    print(f"\nSaved: {OUT_DIR}/paper_figure3_revised.png")
+    print(f"\nSaved: {OUT_DIR}/paper_figure3_revised{OUT_SUFFIX}.png")
 
 
 if __name__ == '__main__':

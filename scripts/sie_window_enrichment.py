@@ -49,8 +49,12 @@ OUTPUT_DIR = os.path.join(os.path.dirname(__file__), '..', 'outputs')
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
-def load_sie_events_for_dataset(dataset_dir):
-    """Load SIE events from per-subject CSVs, filter MSC artifacts."""
+def load_sie_events_for_dataset(dataset_dir, q4_only=False, quality_csv=None):
+    """Load SIE events from per-subject CSVs, filter MSC artifacts.
+
+    If q4_only=True and quality_csv is provided, also filter to per-subject
+    Q4 (top quartile by template_rho).
+    """
     LABELS = ['sr1', 'sr1.5', 'sr2', 'sr2o', 'sr2.5', 'sr3', 'sr4', 'sr5', 'sr6']
     msc_cols = [f'msc_{lbl}_v' for lbl in LABELS]
 
@@ -71,6 +75,28 @@ def load_sie_events_for_dataset(dataset_dir):
     events['msc_mean'] = events[msc_cols].mean(axis=1)
     # MSC artifact filter
     events = events[events['msc_mean'] < 0.9].copy()
+
+    # Optional Q4 filter via per-subject template_rho quartile
+    if q4_only:
+        if quality_csv is None or not os.path.isfile(quality_csv):
+            print(f"Q4 mode requested but quality CSV not found: {quality_csv}")
+            return pd.DataFrame()
+        qual = pd.read_csv(quality_csv).dropna(subset=['template_rho']).copy()
+        def _qcut(g):
+            if g.nunique() < 4:
+                return pd.Series(['NA'] * len(g), index=g.index)
+            return pd.qcut(g, 4, labels=['Q1','Q2','Q3','Q4'], duplicates='drop')
+        qual['rho_q'] = qual.groupby('subject_id')['template_rho'].transform(_qcut)
+        q4 = qual[qual['rho_q'] == 'Q4'][['subject_id', 't0_net']].copy()
+        q4['t0r'] = q4['t0_net'].round(3)
+        q4_set = set(zip(q4['subject_id'], q4['t0r']))
+        events['t0r'] = events['t0_net'].round(3)
+        before = len(events)
+        events = events[events.apply(
+            lambda r: (r['subject_id'], r['t0r']) in q4_set, axis=1
+        )].drop(columns=['t0r']).copy()
+        print(f"Q4 filter: {before} -> {len(events)} events "
+              f"({events['subject_id'].nunique()} subjects)")
     return events
 
 
@@ -192,14 +218,21 @@ def process_subject(sub_id, raw_loader_fn, events_df, window_sec=20,
     }
 
 
-def get_loader_for(dataset, condition=None, session='1', release='R1'):
-    """Return a function that loads a given subject from a given dataset."""
+def get_loader_for(dataset, condition=None, session='1', release='R1',
+                   composite=False):
+    """Return a function that loads a given subject from a given dataset.
+
+    If composite=True, use the composite-v2 event directories
+    (e.g. exports_sie/lemon_composite) instead of Stage 1 envelope events.
+    """
+    suffix_comp = '_composite' if composite else ''
     if dataset == 'eegmmidb':
-        sie_dir = 'eegmmidb'
+        sie_dir = f'eegmmidb{suffix_comp}'
         def make_loader(sub_id):
             return lambda: load_eegmmidb(int(sub_id[1:]))
     elif dataset == 'lemon':
-        sie_dir = 'lemon' if (not condition or condition == 'EC') else 'lemon_EO'
+        base = 'lemon' if (not condition or condition == 'EC') else 'lemon_EO'
+        sie_dir = f'{base}{suffix_comp}'
         cond = condition or 'EC'
         def make_loader(sub_id):
             return lambda: load_lemon(sub_id, condition=cond)
@@ -209,15 +242,16 @@ def get_loader_for(dataset, condition=None, session='1', release='R1'):
         acq = 'post' if cond.endswith('post') else 'pre'
         suffix = '' if (cond == 'EC-pre' and session == '1') else f'_{cond.replace("-", "_")}'
         ses_suffix = f'_ses2' if session == '2' else ''
-        sie_dir = f'dortmund{suffix}{ses_suffix}'
+        base = f'dortmund{suffix}{ses_suffix}'
+        sie_dir = f'{base}{suffix_comp}'
         def make_loader(sub_id):
             return lambda: load_dortmund(sub_id, task=task, acq=acq, ses=session)
     elif dataset == 'chbmp':
-        sie_dir = 'chbmp'
+        sie_dir = f'chbmp{suffix_comp}'
         def make_loader(sub_id):
             return lambda: load_chbmp(sub_id)
     elif dataset == 'hbn':
-        sie_dir = f'hbn_{release}'
+        sie_dir = f'hbn_{release}{suffix_comp}'
         release_dir = f'/Volumes/T9/hbn_data/cmi_bids_{release}'
         def make_loader(sub_id):
             import glob as g
@@ -228,7 +262,8 @@ def get_loader_for(dataset, condition=None, session='1', release='R1'):
             return lambda: load_hbn(files[0])
     elif dataset == 'tdbrain':
         cond = condition or 'EC'
-        sie_dir = 'tdbrain' if cond == 'EC' else 'tdbrain_EO'
+        base = 'tdbrain' if cond == 'EC' else 'tdbrain_EO'
+        sie_dir = f'{base}{suffix_comp}'
         def make_loader(sub_id):
             return lambda: load_tdbrain(sub_id, condition=cond, session=session if session != '1' else None)
     else:
@@ -238,9 +273,11 @@ def get_loader_for(dataset, condition=None, session='1', release='R1'):
 
 
 def run_dataset(dataset, condition=None, session='1', release='R1',
-                 window_sec=20, buffer_sec=5.0, min_events=3):
+                 window_sec=20, buffer_sec=5.0, min_events=3,
+                 q4_only=False, composite=False):
     """Run window enrichment analysis on any dataset."""
-    sie_dir, make_loader = get_loader_for(dataset, condition, session, release)
+    sie_dir, make_loader = get_loader_for(dataset, condition, session, release,
+                                           composite=composite)
 
     ses_suffix = '' if session == '1' else f'_ses{session}'
     label = (f"{dataset}"
@@ -248,11 +285,21 @@ def run_dataset(dataset, condition=None, session='1', release='R1',
              f"{f'_R{release[1:]}' if dataset == 'hbn' else ''}"
              f"{ses_suffix}")
     print(f"\n{'='*80}")
-    print(f"SIE Window Enrichment: {label}")
+    print(f"SIE Window Enrichment: {label}{' (Q4)' if q4_only else ''}")
     print(f"SIE dir: {sie_dir}, Window={window_sec}s, buffer={buffer_sec}s, min_events={min_events}")
     print(f"{'='*80}\n")
 
-    events_df = load_sie_events_for_dataset(sie_dir)
+    quality_csv = None
+    if q4_only:
+        # sie_dir is e.g. 'lemon_composite' (no _composite for stage1 dirs).
+        # Quality CSVs follow per_event_quality_<sie_dir>.csv pattern.
+        quality_csv = os.path.join(
+            os.path.dirname(__file__), '..',
+            'outputs', 'schumann', 'images', 'quality',
+            f'per_event_quality_{sie_dir}.csv',
+        )
+    events_df = load_sie_events_for_dataset(sie_dir, q4_only=q4_only,
+                                              quality_csv=quality_csv)
     if len(events_df) == 0:
         print(f"No events found in {sie_dir}, aborting")
         return pd.DataFrame()
@@ -283,7 +330,7 @@ def run_dataset(dataset, condition=None, session='1', release='R1',
                       f"({n_ok} ok, {rate:.1f}/min)")
 
     results_df = pd.DataFrame(results)
-    out_name = f'sie_window_enrichment_{label}.csv'
+    out_name = f'sie_window_enrichment_{"q4_" if q4_only else ""}{label}.csv'
     out_path = os.path.join(OUTPUT_DIR, out_name)
     if os.path.exists(out_path):
         raise FileExistsError(
@@ -386,13 +433,20 @@ def main():
     parser.add_argument('--window', type=int, default=20)
     parser.add_argument('--buffer', type=float, default=5.0)
     parser.add_argument('--min-events', type=int, default=2)
+    parser.add_argument('--q4', action='store_true',
+                        help='Restrict to per-subject Q4 (top template_rho quartile). '
+                             'Implies --composite.')
+    parser.add_argument('--composite', action='store_true',
+                        help='Use composite-v2 events (exports_sie/<dataset>_composite/) '
+                             'rather than Stage 1 envelope events.')
     args = parser.parse_args()
-
+    composite = args.composite or args.q4
     results_df = run_dataset(
         dataset=args.dataset, condition=args.condition,
         session=args.session, release=args.release,
         window_sec=args.window, buffer_sec=args.buffer,
-        min_events=args.min_events)
+        min_events=args.min_events,
+        q4_only=args.q4, composite=composite)
     if len(results_df) > 0:
         analyze_results(results_df)
 

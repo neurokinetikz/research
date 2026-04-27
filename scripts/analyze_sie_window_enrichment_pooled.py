@@ -50,12 +50,33 @@ def fdr_bh(pvals, alpha=0.05):
     return np.zeros(n, dtype=bool)
 
 
-def load_all():
-    files = sorted(glob.glob(os.path.join(OUT_DIR, 'sie_window_enrichment_*.csv')))
+def load_all(include_ses2=False):
+    """Load per-dataset window enrichment CSVs under SCOPE env var.
+
+    SCOPE='all' (default): load sie_window_enrichment_<dataset>.csv
+    SCOPE='sw': load sie_window_enrichment_sw_<dataset>.csv
+
+    Skips derived analysis outputs and ses-2 files by default.
+    """
+    scope = os.environ.get('SCOPE', 'all')
+    if scope == 'sw':
+        pattern = 'sie_window_enrichment_sw_*.csv'
+        prefix = 'sie_window_enrichment_sw_'
+    else:
+        # All-events: match files NOT starting with sw_, q4_
+        pattern = 'sie_window_enrichment_*.csv'
+        prefix = 'sie_window_enrichment_'
+    files = sorted(glob.glob(os.path.join(OUT_DIR, pattern)))
+    skip_bases = {'stats', 'pooled_summary', 'pooled_replication'}
     dfs = {}
     for f in files:
-        base = os.path.basename(f).replace('sie_window_enrichment_', '').replace('.csv', '')
-        if base == 'stats':
+        base = os.path.basename(f).replace(prefix, '').replace('.csv', '')
+        # For all-events scope, also skip files that are sw_ or q4_ prefixed
+        if scope == 'all' and (base.startswith('sw_') or base.startswith('q4_')):
+            continue
+        if base in skip_bases:
+            continue
+        if not include_ses2 and base.endswith('_ses2'):
             continue
         df = pd.read_csv(f)
         if 'status' in df.columns:
@@ -235,13 +256,15 @@ def main():
 
     # Replication table
     rep = replication_table(per_ds_stats)
-    rep_path = os.path.join(OUT_DIR, 'sie_window_enrichment_pooled_replication.csv')
+    _scope = os.environ.get('SCOPE', 'all')
+    _tag = '' if _scope == 'all' else f'_{_scope}'
+    rep_path = os.path.join(OUT_DIR, f'sie_window_enrichment_pooled_replication{_tag}.csv')
     rep.to_csv(rep_path, index=False)
     print(f'\nWrote replication table → {rep_path}')
 
     # Pooled analysis
     pooled = pool_effects(per_ds_stats)
-    pooled_path = os.path.join(OUT_DIR, 'sie_window_enrichment_pooled_summary.csv')
+    pooled_path = os.path.join(OUT_DIR, f'sie_window_enrichment_pooled_summary{_tag}.csv')
     pooled.sort_values('pooled_p').to_csv(pooled_path, index=False)
     print(f'Wrote pooled summary   → {pooled_path}')
 

@@ -267,6 +267,21 @@ def load_hbn(set_path):
     return raw
 
 
+def load_hbn_by_subject(sub_id, release='R4',
+                         data_dir='/Volumes/T9/hbn_data'):
+    """Resolve HBN (sub_id, release) → set_path, then load via load_hbn.
+
+    Used by composite cross-cohort analysis scripts that uniformly call
+    LOADER(sub_id, **kwargs). The release-specific subdirectory holds the
+    Resting-State EEGLAB .set file.
+    """
+    set_path = os.path.join(data_dir, f'cmi_bids_{release}', sub_id,
+                             'eeg', f'{sub_id}_task-RestingState_eeg.set')
+    if not os.path.isfile(set_path):
+        return None
+    return load_hbn(set_path)
+
+
 # =========================================================================
 # DISCOVERY-COHORT LOADERS (consumer-grade, Michael's self + 3 public datasets)
 # =========================================================================

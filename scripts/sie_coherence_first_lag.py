@@ -35,10 +35,14 @@ mne.set_log_level('ERROR')
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), '..', 'outputs', 'schumann',
                         'images', 'coupling')
-EVENTS_DIR = os.path.join(os.path.dirname(__file__), '..', 'exports_sie', 'lemon')
+LEMON_COHORT = os.environ.get('LEMON_COHORT', 'lemon')
+EVENTS_DIR = os.path.join(os.path.dirname(__file__), '..', 'exports_sie',
+                           LEMON_COHORT)
+_qfn = ('per_event_quality.csv' if LEMON_COHORT == 'lemon'
+        else f'per_event_quality_{LEMON_COHORT}.csv')
 QUALITY_CSV = os.path.join(os.path.dirname(__file__), '..', 'outputs',
-                            'schumann', 'images', 'quality',
-                            'per_event_quality.csv')
+                            'schumann', 'images', 'quality', _qfn)
+OUT_SUFFIX = '' if LEMON_COHORT == 'lemon' else f'_{LEMON_COHORT}'
 os.makedirs(OUT_DIR, exist_ok=True)
 
 F0 = 7.83
@@ -120,7 +124,8 @@ def process_subject(args):
     q_sub = qual[qual['subject_id'] == sub_id].copy()
     q_sub['t0_round'] = q_sub['t0_net'].round(3)
     events['t0_round'] = events['t0_net'].round(3)
-    events = events.merge(q_sub[['t0_round', 'rho_q']], on='t0_round', how='left')
+    events = events.merge(q_sub[['t0_round', 'rho_q', 'template_rho']],
+                          on='t0_round', how='left')
     if len(events) == 0:
         return None
     try:
@@ -153,6 +158,7 @@ def process_subject(args):
             'subject_id': sub_id,
             't0_net': t0,
             'rho_q': ev.get('rho_q'),
+            'template_rho': ev.get('template_rho'),
             'R_onset_s': R_onset,
             'env_onset_s': env_onset,
             'lag_env_minus_R_s': env_onset - R_onset,
@@ -179,7 +185,7 @@ def main():
         if r is not None:
             all_rows.extend(r)
     df = pd.DataFrame(all_rows)
-    out_csv = os.path.join(OUT_DIR, 'coherence_first_lag.csv')
+    out_csv = os.path.join(OUT_DIR, f'coherence_first_lag{OUT_SUFFIX}.csv')
     df.to_csv(out_csv, index=False)
     print(f"Successful events: {len(df)}  subjects: {df['subject_id'].nunique()}")
 
@@ -211,6 +217,25 @@ def main():
     all_sub = _summ('All events', df)
     q1_sub = _summ('Q1', df[df['rho_q']=='Q1'])
     q4_sub = _summ('Q4', df[df['rho_q']=='Q4'])
+
+    # Soft-weighted: per-subject template_rho-weighted mean lag.
+    df_sw = df.dropna(subset=['template_rho', 'lag_env_minus_R_s']).copy()
+    df_sw['w'] = df_sw['template_rho'].clip(lower=0.0)
+    if len(df_sw) > 0:
+        ws = df_sw.groupby('subject_id').apply(
+            lambda g: (g['w'] * g['lag_env_minus_R_s']).sum() / g['w'].sum()
+            if g['w'].sum() > 0 else np.nan
+        ).dropna()
+        if len(ws) >= 3:
+            try:
+                _, p_sw = wilcoxon(ws.values)
+            except ValueError:
+                p_sw = np.nan
+            pct_neg_sw = (ws < 0).mean() * 100
+            print(f"  {'SW (template_rho)':15s}  "
+                  f"subjects={len(ws):3d}  "
+                  f"per-subject SW-weighted-mean median={np.median(ws):+.2f}s  "
+                  f"% sub<0={pct_neg_sw:.0f}%  Wilcoxon p={p_sw:.2g}")
 
     # ===== FIGURE =====
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
@@ -282,7 +307,7 @@ def main():
                   'R(t) and envelope z(t) onsets per event (LEMON Q-all)',
                   fontsize=12, y=1.02)
     fig.tight_layout()
-    out_png = os.path.join(OUT_DIR, 'coherence_first_lag.png')
+    out_png = os.path.join(OUT_DIR, f'coherence_first_lag{OUT_SUFFIX}.png')
     plt.savefig(out_png, dpi=180, bbox_inches='tight')
     plt.savefig(out_png.replace('.png', '.pdf'), bbox_inches='tight')
     plt.close()

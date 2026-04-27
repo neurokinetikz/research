@@ -25,6 +25,12 @@ analyses remain discoverable without moving files on disk.
 | power_analysis_paper.py | Sensitivity power analysis and achieved power for all key statistical tests |
 | paper3_step0_freeze_numbers.py | Freezes numbers for Paper 3 by computing measurement-quality gradient |
 | e8_poster.py | Conference poster figure visualizing E8 energy flow simulation results |
+| paper_fig1_event_architecture.py | Schumann-canonical Fig 1: four-stream peri-event trajectory (env, R, PLV, MSC) with six-phase shading from LEMON EC nadir-aligned multistream CSV |
+| paper_fig2_atmospheric_pinning.py | Schumann-canonical Fig 2: per-cohort IAF vs SR1 across 16 cohorts; cohort-mean SR1 spread (0.15 Hz) vs IAF spread (1.39 Hz) showing 9× larger IAF drift |
+| paper_fig3_sr_beta_developmental_gradient.py | Schumann-canonical Fig 3: per-cohort SR×β coupling ρ ordered clinical→adult→pediatric, plus pooled within-pediatric age-binned ρ from 5-7 yr (0.77) to 14-17 yr (0.63) |
+| paper_fig4_four_cohort_regimes.py | Schumann-canonical Fig 4: 4-regime ordination on IEI×envelope-nadir and SR×β-ρ × β-SR-lag axes |
+| paper_fig5_phi_lattice_beta_sr1.py | Schumann-canonical Fig 5: per-cohort β-peak vs SR1-peak with φ²=2.618 reference line; 16-cohort β/SR1 ratio bars cluster at 2.57 ± 0.04 |
+| paper_fig6_topographic_variation.py | Schumann-canonical Fig 6: SR1 topomap panels (5 cohorts cropped from existing 16hz_topography PNGs) plus pediatric central-scalp schematic |
 
 ## Manuscript Support & Release Packaging
 

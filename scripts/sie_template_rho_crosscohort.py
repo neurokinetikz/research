@@ -100,8 +100,6 @@ def process_subject(args):
             raw = load_srm(sub_id, ses='t1')
         else:
             return None
-        else:
-            return None
     except Exception:
         return None
     if raw is None:
@@ -146,12 +144,17 @@ def build_tasks(cohort):
                 tasks.append(('lemon', r['subject_id'], ep, None))
         return tasks
     if cohort.startswith('hbn'):
-        # cohort e.g. 'hbn_R4' or 'hbn' (default R4)
+        # cohort e.g. 'hbn_R4', 'hbn_R4_composite', or 'hbn' (default R4)
         if cohort == 'hbn':
             release = 'R4'
         else:
-            release = cohort.split('_', 1)[1]
-        events_key = f'hbn_{release}'
+            # Strip leading 'hbn_' and any trailing '_composite' suffix
+            rest = cohort[4:]
+            if rest.endswith('_composite'):
+                rest = rest[:-len('_composite')]
+            release = rest
+        events_key = f'hbn_{release}_composite' if '_composite' in cohort \
+                    else f'hbn_{release}'
         summary = pd.read_csv(os.path.join(EVENTS_ROOT, events_key,
                                             'extraction_summary.csv'))
         ok = summary[(summary['status']=='ok') & (summary['n_events']>=2)]
