@@ -9,9 +9,8 @@ exports*/
 # Raw wiki data
 raw
 
-# Outputs (keep only markdown reports)
-outputs/*
-!outputs/*.md
+# Outputs (locally tracked, not in git)
+outputs/
 
 # Papers (locally tracked, not in git)
 papers/
